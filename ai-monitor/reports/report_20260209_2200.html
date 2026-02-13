@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="dark" />
+  <title>AI 릴리스 워치 (최근 24시간)</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+    :root {
+      --bg0: #070A10;
+      --bg1: #0B1020;
+      --panel: rgba(255,255,255,.06);
+      --panel2: rgba(255,255,255,.035);
+      --line: rgba(240,244,255,.12);
+      --text: rgba(240,244,255,.92);
+      --muted: rgba(240,244,255,.62);
+      --muted2: rgba(240,244,255,.46);
+      --a: #5BF2C6;
+      --b: #5BB6FF;
+      --c: #FFD36E;
+      --danger: #FF5B7A;
+      --shadow: 0 12px 40px rgba(0,0,0,.35);
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+	    body {
+	      margin: 0;
+	      color: var(--text);
+	      font-family: "Space Grotesk", "Noto Sans KR", ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif;
+      background:
+        radial-gradient(1200px 800px at 20% 10%, rgba(91,182,255,.18), transparent 60%),
+        radial-gradient(900px 700px at 80% 20%, rgba(91,242,198,.14), transparent 62%),
+        radial-gradient(1000px 900px at 50% 100%, rgba(255,211,110,.10), transparent 55%),
+        linear-gradient(180deg, var(--bg0), var(--bg1));
+      overflow-x: hidden;
+    }
+    .grid {
+      background-image:
+        linear-gradient(to right, rgba(255,255,255,.05) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255,255,255,.05) 1px, transparent 1px);
+      background-size: 56px 56px;
+      background-position: center;
+      mask-image: radial-gradient(650px 500px at 50% 0%, black 40%, transparent 80%);
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: .35;
+    }
+    .wrap {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 28px 18px 56px;
+      position: relative;
+    }
+    header {
+      display: flex;
+      gap: 18px;
+      justify-content: space-between;
+      align-items: flex-end;
+      padding: 18px 18px 22px;
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,.075), rgba(255,255,255,.03));
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+    .title {
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+    }
+    .subtitle {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .meta {
+      text-align: right;
+      color: var(--muted);
+      font-size: 12px;
+      font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+    }
+    .meta strong {
+      color: var(--text);
+      font-weight: 500;
+    }
+    .section {
+      margin-top: 20px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.04);
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0,0,0,.22);
+    }
+    .section-h {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      padding: 16px 18px;
+      background: rgba(255,255,255,.035);
+      border-bottom: 1px solid var(--line);
+    }
+    .section-h .h {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+    .section-h .note {
+      font-size: 12px;
+      color: var(--muted2);
+      font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+    }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 12px;
+      padding: 14px;
+    }
+    .cards .card {
+      grid-column: span 6;
+    }
+    @media (max-width: 900px) {
+      .cards .card { grid-column: span 12; }
+      header { flex-direction: column; align-items: flex-start; }
+      .meta { text-align: left; }
+    }
+    .card {
+      display: block;
+      text-decoration: none;
+      color: inherit;
+      border: 1px solid rgba(255,255,255,.10);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border-radius: 14px;
+      padding: 14px 14px 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.18);
+      transition: transform .18s ease, border-color .18s ease, background .18s ease;
+    }
+    .card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(255,255,255,.22);
+      background: linear-gradient(180deg, rgba(255,255,255,.085), rgba(255,255,255,.035));
+    }
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .card-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+    .card-time {
+      color: var(--muted2);
+      font-size: 12px;
+      font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+      white-space: nowrap;
+    }
+    .card-title {
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      line-height: 1.3;
+      margin-bottom: 8px;
+    }
+    .card-summary {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      background: rgba(255,255,255,.07);
+      border: 1px solid rgba(255,255,255,.10);
+      color: rgba(240,244,255,.86);
+    }
+    .badge-openai { border-color: rgba(91,182,255,.35); background: rgba(91,182,255,.12); }
+    .badge-anthropic { border-color: rgba(255,211,110,.35); background: rgba(255,211,110,.10); }
+    .badge-google { border-color: rgba(91,242,198,.35); background: rgba(91,242,198,.10); }
+    .badge-digest { border-color: rgba(255,91,122,.30); background: rgba(255,91,122,.10); }
+    .src {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      letter-spacing: .06em;
+      font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.05);
+      color: rgba(240,244,255,.72);
+    }
+    .src-x { border-color: rgba(91,182,255,.35); color: rgba(91,182,255,.95); }
+    .src-rss { border-color: rgba(91,242,198,.35); color: rgba(91,242,198,.95); }
+    .src-web { border-color: rgba(255,211,110,.35); color: rgba(255,211,110,.95); }
+    .src-digest { border-color: rgba(255,91,122,.35); color: rgba(255,91,122,.95); }
+    .empty {
+      padding: 18px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .empty.small {
+      padding: 10px 0;
+      color: var(--muted2);
+    }
+    .providers {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 14px;
+      padding: 14px;
+    }
+    @media (max-width: 1100px) {
+      .providers { grid-template-columns: 1fr; }
+    }
+    .provider {
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.03);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+    .provider-h {
+      padding: 14px 14px 10px;
+      border-bottom: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.03);
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+    }
+    .provider-title {
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+    .provider-sub {
+      color: var(--muted2);
+      font-size: 12px;
+      font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+    }
+    .feed-block {
+      padding: 12px 14px 4px;
+    }
+    .feed-h {
+      font-size: 12px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--muted2);
+      margin-bottom: 10px;
+      font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+    }
+    .feed {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      padding-bottom: 10px;
+    }
+    .health {
+      margin: 0;
+      padding: 12px 28px 18px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+    footer {
+      margin-top: 22px;
+      color: var(--muted2);
+      font-size: 12px;
+      font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+      text-align: center;
+      opacity: .9;
+    }
+  </style>
+</head>
+<body>
+  <div class="grid"></div>
+  <div class="wrap">
+	    <header>
+	      <div>
+	        <div class="title">AI 릴리스 워치</div>
+	        <div class="subtitle">OpenAI, Anthropic, Google AI 공식 업데이트. 범위: 최근 24시간 (컷오프: 2026-02-08 22:00 KST).</div>
+	      </div>
+	      <div class="meta">
+	        <div><strong>생성</strong> 2026-02-09 22:00 KST</div>
+	        <div><strong>소스</strong> X(Nitter), RSS, 웹, Google News RSS</div>
+	      </div>
+	    </header>
+
+	    <div class="section">
+	      <div class="section-h">
+	        <div class="h">하이라이트 (중요 업데이트)</div>
+	        <div class="note">키워드 시그널 점수 기준</div>
+	      </div>
+	      <div class="cards">
+	        <div class="empty">최근 24시간 내 중요한 업데이트가 없습니다.</div>
+	      </div>
+	    </div>
+
+	    <div class="section">
+	      <div class="section-h">
+	        <div class="h">공식 채널</div>
+	        <div class="note">제공사별</div>
+	      </div>
+	      <div class="providers">
+	        
+	            <section class="provider">
+	              <div class="provider-h">
+	                <div class="provider-title">OpenAI</div>
+	                <div class="provider-sub">최근 24시간</div>
+	              </div>
+	              <div class="feed-block"><div class="feed-h">공식 X</div><div class="empty small">항목 없음</div></div><div class="feed-block"><div class="feed-h">공식 블로그/뉴스</div><div class="empty small">항목 없음</div></div>
+	            </section>
+            
+
+	            <section class="provider">
+	              <div class="provider-h">
+	                <div class="provider-title">Anthropic</div>
+	                <div class="provider-sub">최근 24시간</div>
+	              </div>
+	              <div class="feed-block"><div class="feed-h">공식 X</div><div class="empty small">항목 없음</div></div><div class="feed-block"><div class="feed-h">공식 블로그/뉴스</div><div class="empty small">항목 없음</div></div>
+	            </section>
+            
+
+	            <section class="provider">
+	              <div class="provider-h">
+	                <div class="provider-title">Google AI</div>
+	                <div class="provider-sub">최근 24시간</div>
+	              </div>
+	              <div class="feed-block"><div class="feed-h">공식 X</div><div class="empty small">항목 없음</div></div><div class="feed-block"><div class="feed-h">공식 블로그/뉴스</div><div class="empty small">항목 없음</div></div>
+	            </section>
+            
+	      </div>
+	    </div>
+
+	    <div class="section">
+	      <div class="section-h">
+	        <div class="h">AI 소식 정리</div>
+	        <div class="note">Google News RSS (쿼리: when:1d)</div>
+	      </div>
+	      <div class="cards">
+	        <div class="empty">다이제스트 항목이 없습니다.</div>
+	      </div>
+	    </div>
+
+	    <div class="section">
+	      <div class="section-h">
+	        <div class="h">소스 상태</div>
+	        <div class="note">가져오기/파싱 오류</div>
+	      </div>
+	      <ul class="health"><li>Nitter OpenAI: https://nitter.poast.org: URLError: [Errno 8] nodename nor servname provided, or not known</li>
+<li>RSS openai: https://openai.com/news/rss.xml: URLError: [Errno 8] nodename nor servname provided, or not known</li>
+<li>Nitter AnthropicAI: https://nitter.poast.org: URLError: [Errno 8] nodename nor servname provided, or not known</li>
+<li>https://www.anthropic.com/news: URLError: [Errno 8] nodename nor servname provided, or not known</li>
+<li>Nitter GoogleAI: https://nitter.poast.org: URLError: [Errno 8] nodename nor servname provided, or not known</li>
+<li>Nitter GoogleDeepMind: https://nitter.poast.org: URLError: [Errno 8] nodename nor servname provided, or not known</li>
+<li>RSS google_ai: https://blog.google/innovation-and-ai/technology/ai/rss/: URLError: [Errno 8] nodename nor servname provided, or not known</li>
+<li>RSS google_ai: https://deepmind.google/blog/rss.xml: URLError: [Errno 8] nodename nor servname provided, or not known</li>
+<li>Google News RSS: URLError: [Errno 8] nodename nor servname provided, or not known ((OpenAI OR Anthropic OR Google DeepMind OR Gemini OR Claude OR GPT) (announced OR launches OR released OR preview OR API) when:1d)</li>
+<li>Google News RSS: URLError: [Errno 8] nodename nor servname provided, or not known ((new AI model OR foundation model OR multimodal) (announced OR released) when:1d)</li>
+<li>Google News RSS: URLError: [Errno 8] nodename nor servname provided, or not known ((AI agent OR coding agent OR tool use) (announced OR released OR update) when:1d)</li></ul>
+	    </div>
+
+	    <footer>
+	      ai-monitor/ai_agent.py로 생성. 범위: 최근 24시간.
+	    </footer>
+  </div>
+</body>
+</html>

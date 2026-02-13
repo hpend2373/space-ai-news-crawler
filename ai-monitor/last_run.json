@@ -1,0 +1,56 @@
+{
+  "generated_at_local": "2026-02-13T11:52:58.343452+09:00",
+  "window_hours": 24,
+  "cutoff_utc": "2026-02-12T02:52:58.343452+00:00",
+  "attempts_used": 4,
+  "translation": {
+    "enabled": true,
+    "provider": "google_gtx",
+    "target_lang": "ko",
+    "show_original": false,
+    "timeout_seconds": 10,
+    "cache_file": "/Users/minyeop/SPACE/ai-monitor/.cache/translation_cache.json",
+    "cache_hits": 0,
+    "cache_misses": 0,
+    "errors": 0
+  },
+  "dashboard_updated": false,
+  "total_failure": true,
+  "counts": {
+    "official_items": 0,
+    "digest_items": 0,
+    "x_trending_items": 0,
+    "highlights": 0,
+    "source_health_warnings": 21,
+    "expected_sources": 14
+  },
+  "files": {
+    "dashboard_html": "/Users/minyeop/SPACE/ai-monitor/dashboard.html",
+    "dashboard_md": "/Users/minyeop/SPACE/ai-monitor/dashboard.md",
+    "report_html": "/Users/minyeop/SPACE/ai-monitor/reports/report_20260213_1152.html",
+    "report_md": "/Users/minyeop/SPACE/ai-monitor/reports/report_20260213_1152.md"
+  },
+  "source_health": [
+    "Nitter OpenAI: https://nitter.tiekoetter.com: URLError: [Errno 8] nodename nor servname provided, or not known",
+    "Nitter OpenAI: https://nitter.poast.org: URLError: [Errno 8] nodename nor servname provided, or not known",
+    "RSS openai: https://openai.com/news/rss.xml: URLError: [Errno 8] nodename nor servname provided, or not known",
+    "Nitter AnthropicAI: https://nitter.tiekoetter.com: URLError: [Errno 8] nodename nor servname provided, or not known",
+    "Nitter AnthropicAI: https://nitter.poast.org: URLError: [Errno 8] nodename nor servname provided, or not known",
+    "https://www.anthropic.com/news: URLError: [Errno 8] nodename nor servname provided, or not known",
+    "Nitter GoogleAI: https://nitter.tiekoetter.com: URLError: [Errno 8] nodename nor servname provided, or not known",
+    "Nitter GoogleAI: https://nitter.poast.org: URLError: [Errno 8] nodename nor servname provided, or not known",
+    "RSS google_ai: https://blog.google/innovation-and-ai/technology/ai/rss/: URLError: [Errno 8] nodename nor servname provided, or not known",
+    "Nitter GoogleDeepMind: https://nitter.tiekoetter.com: URLError: [Errno 8] nodename nor servname provided, or not known",
+    "Nitter GoogleDeepMind: https://nitter.poast.org: URLError: [Errno 8] nodename nor servname provided, or not known",
+    "RSS deepmind: https://deepmind.google/blog/rss.xml: URLError: [Errno 8] nodename nor servname provided, or not known",
+    "Nitter NotebookLM: https://nitter.tiekoetter.com: URLError: [Errno 8] nodename nor servname provided, or not known",
+    "Nitter NotebookLM: https://nitter.poast.org: URLError: [Errno 8] nodename nor servname provided, or not known",
+    "Google News RSS: URLError: [Errno 8] nodename nor servname provided, or not known ((OpenAI OR Anthropic OR Google DeepMind OR Gemini OR Claude OR GPT) (announced OR launches OR released OR preview OR API) when:1d)",
+    "Google News RSS: URLError: [Errno 8] nodename nor servname provided, or not known ((new AI model OR foundation model OR multimodal) (announced OR released) when:1d)",
+    "Google News RSS: URLError: [Errno 8] nodename nor servname provided, or not known ((AI agent OR coding agent OR tool use) (announced OR released OR update) when:1d)",
+    "X 트렌딩 q1 (OpenAI OR Anthropic OR GoogleAI OR Google…): https://nitter.tiekoetter.com: URLError: [Errno 8] nodename nor servname provided, or not known",
+    "X 트렌딩 q1 (OpenAI OR Anthropic OR GoogleAI OR Google…): https://nitter.poast.org: URLError: [Errno 8] nodename nor servname provided, or not known",
+    "X 트렌딩 q2 (new AI model OR model release OR launch O…): https://nitter.tiekoetter.com: URLError: [Errno 8] nodename nor servname provided, or not known",
+    "X 트렌딩 q2 (new AI model OR model release OR launch O…): https://nitter.poast.org: URLError: [Errno 8] nodename nor servname provided, or not known"
+  ]
+}

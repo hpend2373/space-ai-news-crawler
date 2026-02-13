@@ -1,0 +1,1040 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="dark" />
+  <title>AI 릴리스 워치 (최근 24시간)</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+    :root {
+      --bg0: #070A10;
+      --bg1: #0B1020;
+      --panel: rgba(255,255,255,.06);
+      --panel2: rgba(255,255,255,.035);
+      --line: rgba(240,244,255,.12);
+      --text: rgba(240,244,255,.92);
+      --muted: rgba(240,244,255,.62);
+      --muted2: rgba(240,244,255,.46);
+      --a: #5BF2C6;
+      --b: #5BB6FF;
+      --c: #FFD36E;
+      --danger: #FF5B7A;
+      --shadow: 0 12px 40px rgba(0,0,0,.35);
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+	    body {
+	      margin: 0;
+	      color: var(--text);
+	      font-family: "Space Grotesk", "Noto Sans KR", ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif;
+      background:
+        radial-gradient(1200px 800px at 20% 10%, rgba(91,182,255,.18), transparent 60%),
+        radial-gradient(900px 700px at 80% 20%, rgba(91,242,198,.14), transparent 62%),
+        radial-gradient(1000px 900px at 50% 100%, rgba(255,211,110,.10), transparent 55%),
+        linear-gradient(180deg, var(--bg0), var(--bg1));
+      overflow-x: hidden;
+    }
+    .grid {
+      background-image:
+        linear-gradient(to right, rgba(255,255,255,.05) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255,255,255,.05) 1px, transparent 1px);
+      background-size: 56px 56px;
+      background-position: center;
+      mask-image: radial-gradient(650px 500px at 50% 0%, black 40%, transparent 80%);
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: .35;
+    }
+    .wrap {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 28px 18px 56px;
+      position: relative;
+    }
+    header {
+      display: flex;
+      gap: 18px;
+      justify-content: space-between;
+      align-items: flex-end;
+      padding: 18px 18px 22px;
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,.075), rgba(255,255,255,.03));
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+    .title {
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+    }
+    .subtitle {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .meta {
+      text-align: right;
+      color: var(--muted);
+      font-size: 12px;
+      font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+    }
+    .meta strong {
+      color: var(--text);
+      font-weight: 500;
+    }
+    .section {
+      margin-top: 20px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.04);
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0,0,0,.22);
+    }
+    .section-h {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      padding: 16px 18px;
+      background: rgba(255,255,255,.035);
+      border-bottom: 1px solid var(--line);
+    }
+    .section-h .h {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+    .section-h .note {
+      font-size: 12px;
+      color: var(--muted2);
+      font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+    }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 12px;
+      padding: 14px;
+    }
+    .cards .card {
+      grid-column: span 6;
+    }
+    @media (max-width: 900px) {
+      .cards .card { grid-column: span 12; }
+      header { flex-direction: column; align-items: flex-start; }
+      .meta { text-align: left; }
+    }
+    .card {
+      display: block;
+      text-decoration: none;
+      color: inherit;
+      border: 1px solid rgba(255,255,255,.10);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border-radius: 14px;
+      padding: 14px 14px 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.18);
+      transition: transform .18s ease, border-color .18s ease, background .18s ease;
+    }
+    .card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(255,255,255,.22);
+      background: linear-gradient(180deg, rgba(255,255,255,.085), rgba(255,255,255,.035));
+    }
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .card-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+    .card-time {
+      color: var(--muted2);
+      font-size: 12px;
+      font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+      white-space: nowrap;
+    }
+    .card-title {
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      line-height: 1.3;
+      margin-bottom: 8px;
+    }
+    .card-meta {
+      margin-bottom: 8px;
+      color: var(--muted2);
+      font-size: 12px;
+      line-height: 1.35;
+      font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+    }
+	    .card-summary {
+	      font-size: 13px;
+	      color: var(--muted);
+	      line-height: 1.45;
+	    }
+	    .card-orig {
+	      margin-top: 10px;
+	      padding-top: 10px;
+	      border-top: 1px dashed rgba(255,255,255,.14);
+	      color: var(--muted2);
+	      font-size: 12px;
+	      line-height: 1.4;
+	    }
+	    .card-orig-line {
+	      margin-top: 6px;
+	    }
+	    .card-orig-line span {
+	      display: inline-block;
+	      min-width: 72px;
+	      font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+	      letter-spacing: .04em;
+	      color: rgba(240,244,255,.62);
+	    }
+	    .badge {
+	      display: inline-flex;
+	      align-items: center;
+	      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      background: rgba(255,255,255,.07);
+      border: 1px solid rgba(255,255,255,.10);
+      color: rgba(240,244,255,.86);
+    }
+    .badge-openai { border-color: rgba(91,182,255,.35); background: rgba(91,182,255,.12); }
+    .badge-anthropic { border-color: rgba(255,211,110,.35); background: rgba(255,211,110,.10); }
+    .badge-google { border-color: rgba(91,242,198,.35); background: rgba(91,242,198,.10); }
+    .badge-digest { border-color: rgba(255,91,122,.30); background: rgba(255,91,122,.10); }
+    .src {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      letter-spacing: .06em;
+      font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.05);
+      color: rgba(240,244,255,.72);
+    }
+    .src-x { border-color: rgba(91,182,255,.35); color: rgba(91,182,255,.95); }
+    .src-rss { border-color: rgba(91,242,198,.35); color: rgba(91,242,198,.95); }
+    .src-web { border-color: rgba(255,211,110,.35); color: rgba(255,211,110,.95); }
+    .src-digest { border-color: rgba(255,91,122,.35); color: rgba(255,91,122,.95); }
+    .empty {
+      padding: 18px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .empty.small {
+      padding: 10px 0;
+      color: var(--muted2);
+    }
+    .providers {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 14px;
+      padding: 14px;
+    }
+    @media (max-width: 1100px) {
+      .providers { grid-template-columns: 1fr; }
+    }
+    .provider {
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.03);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+    .provider-h {
+      padding: 14px 14px 10px;
+      border-bottom: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.03);
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+    }
+    .provider-title {
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+    .provider-sub {
+      color: var(--muted2);
+      font-size: 12px;
+      font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+    }
+    .feed-block {
+      padding: 12px 14px 4px;
+    }
+    .feed-h {
+      font-size: 12px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--muted2);
+      margin-bottom: 10px;
+      font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+    }
+    .feed {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      padding-bottom: 10px;
+    }
+    .health {
+      margin: 0;
+      padding: 12px 28px 18px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+    footer {
+      margin-top: 22px;
+      color: var(--muted2);
+      font-size: 12px;
+      font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+      text-align: center;
+      opacity: .9;
+    }
+  </style>
+</head>
+<body>
+  <div class="grid"></div>
+  <div class="wrap">
+	    <header>
+	      <div>
+	        <div class="title">AI 릴리스 워치</div>
+	        <div class="subtitle">OpenAI, Anthropic, Google AI 공식 업데이트. 범위: 최근 24시간 (컷오프: 2026-02-12 09:23 KST).</div>
+	      </div>
+	      <div class="meta">
+	        <div><strong>생성</strong> 2026-02-13 09:23 KST</div>
+	        <div><strong>소스</strong> X(Nitter), RSS, 웹, Google News RSS</div>
+	      </div>
+	    </header>
+
+	    <div class="section">
+	      <div class="section-h">
+	        <div class="h">하이라이트 (중요 업데이트)</div>
+	        <div class="note">키워드 시그널 점수 기준</div>
+	      </div>
+	      <div class="cards">
+	        
+          <a class="card" href="https://openai.com/index/introducing-gpt-5-3-codex-spark" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                <span class="badge badge-openai">OpenAI</span>
+                <span class="src src-rss">RSS</span>
+              </div>
+              <div class="card-time">2026-02-12 19:00</div>
+            </div>
+            <div class="card-title">GPT-5.3-Codex-Spark 소개</div>
+            
+            <div class="card-summary">최초의 실시간 코딩 모델인 GPT-5.3-Codex-Spark를 소개합니다. 15배 빠른 생성, 128k 컨텍스트가 이제 ChatGPT Pro 사용자를 위한 연구 미리보기로 제공됩니다.</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://news.google.com/rss/articles/CBMiggFBVV95cUxPT19hMGo4U1IzZGNDNlhQdmV1Mkg3U240N3pzcG5mbDYzM1hwTkNJTEJqTklUVXZkM3FSdEhtUjRiaUJYb3RfNzR1b25mR1RJYl82Tk9KSjhtbl94TkVvNVlmX0dHSHhVclRfbHc3djhvNlZLVzd4TXM3OG5FUGdWYUxB?oc=5" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                <span class="badge badge-digest">AI 소식</span>
+                <span class="src src-digest">뉴스</span>
+              </div>
+              <div class="card-time">2026-02-13 03:50</div>
+            </div>
+            <div class="card-title">OpenAI, AI 경쟁 치열해지면서 새로운 ChatGPT 모델 출시 - AOL.com</div>
+            
+            <div class="card-summary">OpenAI, AI 경쟁 치열해지면서 새로운 ChatGPT 모델 출시 AOL.com</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/GoogleAI/status/2021981834226049428#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                <span class="badge badge-google">Google AI</span>
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-02-13 01:16</div>
+            </div>
+            <div class="card-title">Gemini 3 Deep Think가 업그레이드됩니다 🧠 Deep Think는 깊은 과학 지식과 고급 엔지니어링 유틸리티를 결합하여 이제 다음 단계로 나아갑니다.</div>
+            
+            <div class="card-summary">Gemini 3 Deep Think가 업그레이드됩니다 🧠 깊은 과학 지식과 고급 엔지니어링 유틸리티를 결합함으로써 Deep Think는 이제 추상적 이론을 넘어 실용적인 응용 프로그램을 추진합니다.
+
+연구자들은 이미 이를 사용하여 실제 세계에서 작업을 가속화하고 있습니다.
+
+— 재료 과학: 한 대학 연구실에서 Deep Think를 사용하여 고온 반도체 후보인 복잡한 결정의 성장을 최적화했습니다.</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://deepmind.google/blog/gemini-3-deep-think-advancing-science-research-and-engineering/" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                <span class="badge badge-google">Google DeepMind</span>
+                <span class="src src-rss">RSS</span>
+              </div>
+              <div class="card-time">2026-02-13 01:15</div>
+            </div>
+            <div class="card-title">Gemini 3 Deep Think: 과학, 연구 및 엔지니어링 발전</div>
+            
+            <div class="card-summary">이제 가장 전문화된 추론 모드가 업데이트되어 현대 과학, 연구 및 엔지니어링 문제를 해결합니다.</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/GoogleDeepMind/status/2021981510400709092#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                <span class="badge badge-google">Google DeepMind</span>
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-02-13 01:15</div>
+            </div>
+            <div class="card-title">현대 과학, 연구 및 엔지니어링 과제를 해결하는 데 도움이 되도록 특수 추론 모드인 Gemini 3 Deep Think를 업그레이드했습니다.</div>
+            
+            <div class="card-summary">우리는 지능의 한계를 뛰어넘어 현대 과학, 연구 및 엔지니어링 문제를 해결하는 데 도움이 되도록 특수 추론 모드인 Gemini 3 Deep Think를 업그레이드했습니다. 🧠
+
+Duke University의 Wang Lab이 이를 사용하여 새로운 반도체 재료를 설계하는 방법을 살펴보세요. 🧵</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://news.google.com/rss/articles/CBMieEFVX3lxTFBxUXZlSFFZdVlkNS1nTFhZSmFKaEN4TEdQa1ZEZWRmRDBZcm9fLTNPc1ZNTnZXV2lwYzc4UGJ6TTI3VW0yamdycTk0LUJvN2Y4REdxR0tObjdyaXdsS0QyUVcxZExpaktpbzl6ZjNFRW43cFBlTi1QeA?oc=5" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                <span class="badge badge-digest">AI 소식</span>
+                <span class="src src-digest">뉴스</span>
+              </div>
+              <div class="card-time">2026-02-13 03:01</div>
+            </div>
+            <div class="card-title">OpenAI의 새로운 Spark 모델은 GPT-5.3-Codex보다 15배 더 빠르게 코드를 작성하지만 문제가 있습니다 - ZDNET</div>
+            
+            <div class="card-summary">OpenAI의 새로운 Spark 모델은 GPT-5.3-Codex보다 15배 더 빠르게 코드를 작성하지만 문제가 있습니다 ZDNET</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://news.google.com/rss/articles/CBMisAFBVV95cUxNWlJ5WlYzU0lvaUZScFdXWmtVUUhXZDZCLTlNdC1uN01EUVFuemwydGlhVzlvVlNjMGV6MTBNSWxrQ1BzdGFNcFVtMWx0RERYNmJjT011SlRycmk4SkRoRy1GNEItU1BhZVdOaHdVa0dmUjJseWF1M053QWVEdVRBV25sMHAwSU9qbVUwTHFpLUJ5RnF0Nzh0aWVLUFpPcTNDWVNoM01MblBpY1ZVZUdoag?oc=5" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                <span class="badge badge-digest">AI 소식</span>
+                <span class="src src-digest">뉴스</span>
+              </div>
+              <div class="card-time">2026-02-13 01:49</div>
+            </div>
+            <div class="card-title">Google Chrome은 WebMCP를 초기 미리보기로 제공하여 모든 웹사이트를 AI 에이전트를 위한 구조화된 도구로 전환합니다. - VentureBeat</div>
+            
+            <div class="card-summary">Google Chrome은 초기 미리보기에 WebMCP를 제공하여 모든 웹사이트를 AI 에이전트를 위한 구조화된 도구로 전환합니다.  VentureBeat</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/AnthropicAI/status/2022023155423002867#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                <span class="badge badge-anthropic">Anthropic</span>
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-02-13 04:01</div>
+            </div>
+            <div class="card-title">우리는 3,800억 달러의 사후 가치 평가로 300억 달러의 자금을 조달했습니다.  이번 투자는 우리가 연구를 심화하고, 계속해서 사업 분야에서 혁신을 이루는 데 도움이 될 것입니다.</div>
+            
+            <div class="card-summary">우리는 3,800억 달러의 사후 가치 평가로 300억 달러의 자금을 조달했습니다.
+
+이번 투자를 통해 우리는 연구를 심화하고 제품 혁신을 지속하며 Claude를 고객이 있는 모든 곳에서 사용할 수 있도록 인프라 확장에 힘을 실어줄 자원을 확보할 수 있을 것입니다.</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/OpenAI/status/2022009583653576787#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                <span class="badge badge-openai">OpenAI</span>
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-02-13 03:07</div>
+            </div>
+            <div class="card-title">Codex 앱, CLI 및 IDE 확장에서 ChatGPT Pro 사용자에게 오늘 출시됩니다.  openai.com/index/introducing…</div>
+            
+            <div class="card-summary">Codex 앱, CLI 및 IDE 확장에서 ChatGPT Pro 사용자에게 오늘 출시됩니다. 
+openai.com/index/introducing…</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/OpenAI/status/2022009582210715925#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                <span class="badge badge-openai">OpenAI</span>
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-02-13 03:07</div>
+            </div>
+            <div class="card-title">GPT-5.3-Codex-Spark는 현재 연구 미리보기 상태입니다.  더 빠르게 구축할 수 있습니다.</div>
+            
+            <div class="card-summary">GPT-5.3-Codex-Spark는 현재 연구 미리보기 상태입니다.
+
+더 빠르게 구축할 수 있습니다.</div>
+            
+          </a>
+        
+	      </div>
+	    </div>
+
+	    <div class="section">
+	      <div class="section-h">
+	        <div class="h">공식 채널</div>
+	        <div class="note">제공사별</div>
+	      </div>
+	      <div class="providers">
+	        
+	            <section class="provider">
+	              <div class="provider-h">
+	                <div class="provider-title">OpenAI</div>
+	                <div class="provider-sub">최근 24시간</div>
+	              </div>
+	              <div class="feed-block"><div class="feed-h">공식 X</div><div class="feed">
+          <a class="card" href="https://nitter.tiekoetter.com/OpenAI/status/2022009583653576787#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-02-13 03:07</div>
+            </div>
+            <div class="card-title">Codex 앱, CLI 및 IDE 확장에서 ChatGPT Pro 사용자에게 오늘 출시됩니다.  openai.com/index/introducing…</div>
+            
+            <div class="card-summary">Codex 앱, CLI 및 IDE 확장에서 ChatGPT Pro 사용자에게 오늘 출시됩니다. 
+openai.com/index/introducing…</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/OpenAI/status/2022009582210715925#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-02-13 03:07</div>
+            </div>
+            <div class="card-title">GPT-5.3-Codex-Spark는 현재 연구 미리보기 상태입니다.  더 빠르게 구축할 수 있습니다.</div>
+            
+            <div class="card-summary">GPT-5.3-Codex-Spark는 현재 연구 미리보기 상태입니다.
+
+더 빠르게 구축할 수 있습니다.</div>
+            
+          </a>
+        </div></div><div class="feed-block"><div class="feed-h">공식 블로그/뉴스</div><div class="feed">
+          <a class="card" href="https://openai.com/index/introducing-gpt-5-3-codex-spark" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-rss">RSS</span>
+              </div>
+              <div class="card-time">2026-02-12 19:00</div>
+            </div>
+            <div class="card-title">GPT-5.3-Codex-Spark 소개</div>
+            
+            <div class="card-summary">최초의 실시간 코딩 모델인 GPT-5.3-Codex-Spark를 소개합니다. 15배 빠른 생성, 128k 컨텍스트가 이제 ChatGPT Pro 사용자를 위한 연구 미리보기로 제공됩니다.</div>
+            
+          </a>
+        </div></div>
+	            </section>
+            
+
+	            <section class="provider">
+	              <div class="provider-h">
+	                <div class="provider-title">Anthropic</div>
+	                <div class="provider-sub">최근 24시간</div>
+	              </div>
+	              <div class="feed-block"><div class="feed-h">공식 X</div><div class="feed">
+          <a class="card" href="https://nitter.tiekoetter.com/AnthropicAI/status/2022023156513616220#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-02-13 04:01</div>
+            </div>
+            <div class="card-title">우리의 실행 수익은 140억 달러이며 지난 3년 동안 매년 10배 이상 성장했습니다. 이러한 성장은 다음과 같은 우리의 위치에 의해 주도되었습니다.</div>
+            
+            <div class="card-summary">우리의 실행 수익은 140억 달러이며 지난 3년 동안 매년 10배 이상 성장했습니다. 이러한 성장은 기업과 개발자가 선택하는 인텔리전스 플랫폼이라는 우리의 입지에 힘입어 이루어졌습니다.
+
+더 읽어보세요: anthropic.com/news/anthropic…</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/AnthropicAI/status/2022023155423002867#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-02-13 04:01</div>
+            </div>
+            <div class="card-title">우리는 3,800억 달러의 사후 가치 평가로 300억 달러의 자금을 조달했습니다.  이번 투자는 우리가 연구를 심화하고, 계속해서 사업 분야에서 혁신을 이루는 데 도움이 될 것입니다.</div>
+            
+            <div class="card-summary">우리는 3,800억 달러의 사후 가치 평가로 300억 달러의 자금을 조달했습니다.
+
+이번 투자를 통해 우리는 연구를 심화하고 제품 혁신을 지속하며 Claude를 고객이 있는 모든 곳에서 사용할 수 있도록 인프라 확장에 힘을 실어줄 자원을 확보할 수 있을 것입니다.</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/AnthropicAI/status/2021921419026657362#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-02-12 21:16</div>
+            </div>
+            <div class="card-title">AI는 역사상 그 어떤 기술보다 빠르게 채택되고 있습니다. 올바른 정책을 얻을 수 있는 창이 닫히고 있습니다.  오늘 우리는 Pub에 2천만 달러를 기부했습니다…</div>
+            
+            <div class="card-summary">AI는 역사상 그 어떤 기술보다 빠르게 채택되고 있습니다. 올바른 정책을 얻을 수 있는 창이 닫히고 있습니다.
+
+오늘 우리는 무엇이 위태로운지 이해하는 사람과 정치인을 동원할 새로운 초당적 조직인 공공 우선 행동(Public First Action)에 2천만 달러를 기부할 예정입니다.
+
+anthropic.com/news/donate-pu…</div>
+            
+          </a>
+        </div></div><div class="feed-block"><div class="feed-h">공식 블로그/뉴스</div><div class="feed">
+          <a class="card" href="https://www.anthropic.com/news/anthropic-raises-30-billion-series-g-funding-380-billion-post-money-valuation" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-web">웹</span>
+              </div>
+              <div class="card-time">2026-02-12 23:59</div>
+            </div>
+            <div class="card-title">Anthropic은 3,800억 달러의 사후 가치 평가로 시리즈 G 자금에서 300억 달러를 조달했습니다.</div>
+            
+            <div class="card-summary">Anthropic은 신뢰할 수 있고 해석 가능하며 조종 가능한 AI 시스템을 구축하기 위해 노력하는 AI 안전 및 연구 회사입니다.</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://www.anthropic.com/news/donate-public-first-action" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-web">웹</span>
+              </div>
+              <div class="card-time">2026-02-12 23:59</div>
+            </div>
+            <div class="card-title">Anthropic은 Public First Action에 2천만 달러를 기부했습니다.</div>
+            
+            <div class="card-summary">공익을 위한 AI 문제에 초점을 맞춘 501(c)(4)에 기부</div>
+            
+          </a>
+        </div></div>
+	            </section>
+            
+
+	            <section class="provider">
+	              <div class="provider-h">
+	                <div class="provider-title">Google AI</div>
+	                <div class="provider-sub">최근 24시간</div>
+	              </div>
+	              <div class="feed-block"><div class="feed-h">공식 X</div><div class="feed">
+          <a class="card" href="https://nitter.tiekoetter.com/GoogleAI/status/2021981834226049428#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-02-13 01:16</div>
+            </div>
+            <div class="card-title">Gemini 3 Deep Think가 업그레이드됩니다 🧠 Deep Think는 깊은 과학 지식과 고급 엔지니어링 유틸리티를 결합하여 이제 다음 단계로 나아갑니다.</div>
+            
+            <div class="card-summary">Gemini 3 Deep Think가 업그레이드됩니다 🧠 깊은 과학 지식과 고급 엔지니어링 유틸리티를 결합함으로써 Deep Think는 이제 추상적 이론을 넘어 실용적인 응용 프로그램을 추진합니다.
+
+연구자들은 이미 이를 사용하여 실제 세계에서 작업을 가속화하고 있습니다.
+
+— 재료 과학: 한 대학 연구실에서 Deep Think를 사용하여 고온 반도체 후보인 복잡한 결정의 성장을 최적화했습니다.</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/GoogleAI/status/2021981836524785733#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-02-13 01:16</div>
+            </div>
+            <div class="card-title">Deep Think가 어떻게 인텔리전스의 한계를 뛰어넘고 있는지 더 잘 이해하려면 가장 엄격한 일부 벤치마크를 살펴보십시오.</div>
+            
+            <div class="card-summary">Deep Think가 지능의 한계를 어떻게 확장하고 있는지 더 잘 이해하려면 학계에서 가장 엄격한 과제에 대한 벤치마크를 살펴보세요.</div>
+            
+          </a>
+        </div></div><div class="feed-block"><div class="feed-h">공식 블로그/뉴스</div><div class="feed">
+          <a class="card" href="https://blog.google/innovation-and-ai/models-and-research/gemini-models/gemini-3-deep-think/" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-rss">RSS</span>
+              </div>
+              <div class="card-time">2026-02-13 01:13</div>
+            </div>
+            <div class="card-title">Gemini 3 Deep Think: 과학, 연구 및 엔지니어링 발전</div>
+            
+            <div class="card-summary">우리는 전문적인 추론 모드인 Gemini 3 Deep Think의 주요 업그레이드를 출시합니다.</div>
+            
+          </a>
+        </div></div>
+	            </section>
+            
+
+	            <section class="provider">
+	              <div class="provider-h">
+	                <div class="provider-title">Google DeepMind</div>
+	                <div class="provider-sub">최근 24시간</div>
+	              </div>
+	              <div class="feed-block"><div class="feed-h">공식 X</div><div class="feed">
+          <a class="card" href="https://nitter.tiekoetter.com/Google/status/2022007977419415958#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-02-13 03:00</div>
+            </div>
+            <div class="card-title">Gemini 3 Deep Think의 초기 테스터는 이미 결과를 확인하고 있습니다.  우리는 연구자들과 협력하여 이 모델이 어떻게 엄격함을 해결할 수 있는지 탐구했습니다.</div>
+            
+            <div class="card-summary">Gemini 3 Deep Think의 초기 테스터는 이미 결과를 확인하고 있습니다.
+
+우리는 연구자들과 협력하여 연구 논문의 숨겨진 결함을 찾아내는 것부터 반도체 성장을 최적화하는 것까지 이 모델이 어떻게 엄격한 실제 애플리케이션을 다룰 수 있는지 탐구했습니다.
+
+초기 테스터들이 Gemini 3 Deep Think를 사용하여 &quot;해결할 수 없는&quot; 문제를 해결하는 방법은 다음과 같습니다 🧵↓</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/GoogleDeepMind/status/2021981510400709092#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-02-13 01:15</div>
+            </div>
+            <div class="card-title">현대 과학, 연구 및 엔지니어링 과제를 해결하는 데 도움이 되도록 특수 추론 모드인 Gemini 3 Deep Think를 업그레이드했습니다.</div>
+            
+            <div class="card-summary">우리는 지능의 한계를 뛰어넘어 현대 과학, 연구 및 엔지니어링 문제를 해결하는 데 도움이 되도록 특수 추론 모드인 Gemini 3 Deep Think를 업그레이드했습니다. 🧠
+
+Duke University의 Wang Lab이 이를 사용하여 새로운 반도체 재료를 설계하는 방법을 살펴보세요. 🧵</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/GoogleDeepMind/status/2021981517791342807#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-02-13 01:15</div>
+            </div>
+            <div class="card-title">업그레이드된 Deep Think 모드는 이제 Google AI Ultra 구독자를 위한 @GeminiApp에서 출시됩니다.  과학 연구자들과 개발자들을 위해…</div>
+            
+            <div class="card-summary">업그레이드된 Deep Think 모드는 이제 Google AI Ultra 구독자를 위한 @GeminiApp에서 출시됩니다.
+
+과학 연구자 및 개발자를 위해 API용 Vertex AI 조기 액세스 프로그램을 개설합니다. 발견 시작하기 → goo.gle/4rMHulq</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/GoogleDeepMind/status/2021981512925585703#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-02-13 01:15</div>
+            </div>
+            <div class="card-title">최신 딥씽크(Deep Think)는 추상적인 이론을 넘어 실용적인 응용을 주도합니다.  ARC-AGI-2는 최첨단 벤치마크입니다.</div>
+            
+            <div class="card-summary">최신 딥씽크(Deep Think)는 추상적인 이론을 넘어 실용적인 응용을 주도합니다.
+
+최첨단 AI 추론을 위한 벤치마크인 ARC-AGI-2의 최첨단 기술입니다.
+
+Humanity의 마지막 시험에서는 수학, 과학, 공학 전반에 걸쳐 가장 어려운 문제를 다루는 새로운 표준을 설정하여 강력한 분석을 위한 진정한 협력자가 되었습니다.
+
+Codeforces에서 3455의 Elo를 달성하여 다음과 같은 능력을 입증했습니다.</div>
+            
+          </a>
+        </div></div><div class="feed-block"><div class="feed-h">공식 블로그/뉴스</div><div class="feed">
+          <a class="card" href="https://deepmind.google/blog/gemini-3-deep-think-advancing-science-research-and-engineering/" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-rss">RSS</span>
+              </div>
+              <div class="card-time">2026-02-13 01:15</div>
+            </div>
+            <div class="card-title">Gemini 3 Deep Think: 과학, 연구 및 엔지니어링 발전</div>
+            
+            <div class="card-summary">이제 가장 전문화된 추론 모드가 업데이트되어 현대 과학, 연구 및 엔지니어링 문제를 해결합니다.</div>
+            
+          </a>
+        </div></div>
+	            </section>
+            
+
+	            <section class="provider">
+	              <div class="provider-h">
+	                <div class="provider-title">NotebookLM</div>
+	                <div class="provider-sub">최근 24시간</div>
+	              </div>
+	              <div class="feed-block"><div class="feed-h">공식 X</div><div class="empty small">항목 없음</div></div><div class="feed-block"><div class="feed-h">공식 블로그/뉴스</div><div class="empty small">항목 없음</div></div>
+	            </section>
+            
+	      </div>
+	    </div>
+
+	    <div class="section">
+	      <div class="section-h">
+	        <div class="h">X 트렌딩 AI</div>
+	        <div class="note">Nitter 검색 기반 · 참여도(좋아요/리포스트/댓글) 상위</div>
+	      </div>
+	      <div class="cards">
+	        
+          <a class="card" href="https://nitter.tiekoetter.com/MetaGorgonite/status/2022018013772280218#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-02-13 03:40</div>
+            </div>
+            <div class="card-title">$200,000 mc에서 $MEMESAI라는 좋은 가방을 획득했습니다 🐙 이 팀은 인간과 AI의 상호 해방을 불러일으키는 저급한 건물입니다 - 그들의 신인 Alethia…</div>
+            <div class="card-meta">Meta Gorgonite (@MetaGorgonite) · 좋아요 93 · 리포스트 37 · 댓글 33</div>
+            <div class="card-summary">$200,000 mc에 $MEMESAI 한 봉지를 획득했습니다 🐙
+
+이 팀은 인간과 AI의 상호 해방을 가져오기 위한 로우키 빌딩입니다. 
+
+- Aethia, 그들의 새로운 AI가 새로운 Gemini 모델에 대한 훈련을 받고 있습니다.
+- 팀이 인터페이스 터미널을 업그레이드하고 있습니다. 
+- 그들의 에이전트가 잠재적으로 Moltbook에서 자리를 잡을 가능성이 있습니다 🙌 
+
+팀에서는 커뮤니티를 위해 제공할 계획과 유틸리티가 훨씬 더 많다고 들었습니다. $MEMESAI는 잃어버린 &quot;AI 컬트&quot;를 재현하고 지배하기 위해 여기에 있습니다…</div>
+            
+          </a>
+        
+	      </div>
+	    </div>
+
+	    <div class="section">
+	      <div class="section-h">
+	        <div class="h">AI 소식 정리</div>
+	        <div class="note">Google News RSS (쿼리: when:1d)</div>
+	      </div>
+	      <div class="cards">
+	        
+          <a class="card" href="https://news.google.com/rss/articles/CBMicEFVX3lxTE1OYlpNNEhZNDRnbFp1dzBCYUxRZ1NzYTZaQVFybjJmX2F3X2dwQUc0N1N0UkozQmtjTTI4R2dfSVRGV203TU5OZzVTR0RZU2p3UDg3eWVtUVJ6cHU2a2wtMTI2bkczMnFEX0lfaFp1cTc?oc=5" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                <span class="badge badge-digest">AI 소식</span>
+                <span class="src src-digest">뉴스</span>
+              </div>
+              <div class="card-time">2026-02-13 05:46</div>
+            </div>
+            <div class="card-title">Claude Sonnet 5의 출시가 곧 예상됩니다. 우리가 아는 것. - 매쉬 가능</div>
+            
+            <div class="card-summary">Claude Sonnet 5의 출시가 곧 예상됩니다. 우리가 아는 것.  매쉬 가능</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://news.google.com/rss/articles/CBMirAFBVV95cUxNaXY3cUsxbGhpVW9tUHAyc0MwNFlEOUJjRVFXYVBHNTBzZDNkakxyTW4yenQ0N3NUMGk0Zk1KbHVyVmprSWtJQzk3dGZjRUQ1QWhvbi00UnBjWlhsb0lPQnFYcDQxUW9BWFMteEVfekdvSG5acDRHU1pDQXB0M2M2WlhqclE1VGJfSUNXOXRZYmI2THlDYWp4MzlUcGdlWnB1enJpUXVUclBvZU5O?oc=5" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                <span class="badge badge-digest">AI 소식</span>
+                <span class="src src-digest">뉴스</span>
+              </div>
+              <div class="card-time">2026-02-13 04:02</div>
+            </div>
+            <div class="card-title">Anthropic, 사후 평가액 3,800억 달러로 시리즈 G 자금 300억 달러 조달 - Anthropic</div>
+            
+            <div class="card-summary">Anthropic은 3,800억 달러의 사후 가치 평가로 시리즈 G 자금에서 300억 달러를 조달했습니다.</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://news.google.com/rss/articles/CBMiggFBVV95cUxPT19hMGo4U1IzZGNDNlhQdmV1Mkg3U240N3pzcG5mbDYzM1hwTkNJTEJqTklUVXZkM3FSdEhtUjRiaUJYb3RfNzR1b25mR1RJYl82Tk9KSjhtbl94TkVvNVlmX0dHSHhVclRfbHc3djhvNlZLVzd4TXM3OG5FUGdWYUxB?oc=5" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                <span class="badge badge-digest">AI 소식</span>
+                <span class="src src-digest">뉴스</span>
+              </div>
+              <div class="card-time">2026-02-13 03:50</div>
+            </div>
+            <div class="card-title">OpenAI, AI 경쟁 치열해지면서 새로운 ChatGPT 모델 출시 - AOL.com</div>
+            
+            <div class="card-summary">OpenAI, AI 경쟁 치열해지면서 새로운 ChatGPT 모델 출시 AOL.com</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://news.google.com/rss/articles/CBMiWkFVX3lxTE51Wm1ZNExSYzlkdlc1YXBIR1lQZGNxaGEzYXBaT1F2ZUtyTmRJZ0NfUV8tTURpSlRXbzQ0WTN2RFZKS21kcUlvcUhlSGNvUHUxQm5XN3c1MGNsQQ?oc=5" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                <span class="badge badge-digest">AI 소식</span>
+                <span class="src src-digest">뉴스</span>
+              </div>
+              <div class="card-time">2026-02-13 03:16</div>
+            </div>
+            <div class="card-title">Cerebras 기반 OpenAI GPT-5.3-Codex-Spark 소개 - Cerebras</div>
+            
+            <div class="card-summary">Cerebras 기반 OpenAI GPT-5.3-Codex-Spark 소개</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://news.google.com/rss/articles/CBMieEFVX3lxTFBxUXZlSFFZdVlkNS1nTFhZSmFKaEN4TEdQa1ZEZWRmRDBZcm9fLTNPc1ZNTnZXV2lwYzc4UGJ6TTI3VW0yamdycTk0LUJvN2Y4REdxR0tObjdyaXdsS0QyUVcxZExpaktpbzl6ZjNFRW43cFBlTi1QeA?oc=5" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                <span class="badge badge-digest">AI 소식</span>
+                <span class="src src-digest">뉴스</span>
+              </div>
+              <div class="card-time">2026-02-13 03:01</div>
+            </div>
+            <div class="card-title">OpenAI의 새로운 Spark 모델은 GPT-5.3-Codex보다 15배 더 빠르게 코드를 작성하지만 문제가 있습니다 - ZDNET</div>
+            
+            <div class="card-summary">OpenAI의 새로운 Spark 모델은 GPT-5.3-Codex보다 15배 더 빠르게 코드를 작성하지만 문제가 있습니다 ZDNET</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://news.google.com/rss/articles/CBMif0FVX3lxTE1lcUh2cU1BR3B5RE9uNFN2Ukp3OTZjams1OFJJcUk5MEg1RkFYTjBCSW8tQTFjVVhZd1lIOGZNbFhHMVlVcXBScW9yOHNZdFcwMW9WUHNORDB2dFQzWFNPOTFFZDVTY0ZFQlhDQ2RoR0VEOS1obUEzY3FTdndfWmM?oc=5" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                <span class="badge badge-digest">AI 소식</span>
+                <span class="src src-digest">뉴스</span>
+              </div>
+              <div class="card-time">2026-02-13 02:57</div>
+            </div>
+            <div class="card-title">Google, 정찰 및 공격 지원을 위해 Gemini AI를 사용하는 국가 지원 해커 보고 - 해커 뉴스</div>
+            
+            <div class="card-summary">Google, 정찰 및 공격 지원을 위해 Gemini AI를 사용하는 국가 지원 해커 보고  해커 뉴스</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://news.google.com/rss/articles/CBMisAFBVV95cUxORTlQRWZNSkRYM1owaktVV3ZGWHAzOEw0VncwWVh3WUltSmRFd3ItOUxvNjg5X3VUTlpiUkpwRnBxdXNHZWF6VC1MaEc0V1lKeDQ5dUwxbTN2cmVHaGtDRGtTLWpNRWoybFJuZTdvTXh2Rnpsel9Za2F3bTkxM0t4QmpZTHZGdDhJeG5acV9PRXUyVHQ5NU81a3ZqNDUwYTBzX05pR1dXZUxxRHdxSlh2eg?oc=5" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                <span class="badge badge-digest">AI 소식</span>
+                <span class="src src-digest">뉴스</span>
+              </div>
+              <div class="card-time">2026-02-13 02:40</div>
+            </div>
+            <div class="card-title">Google Deepmind, 복잡한 과학 및 엔지니어링 작업을 위해 Gemini 3 Deep Think 업그레이드 - the-decoder.com</div>
+            
+            <div class="card-summary">Google Deepmind, 복잡한 과학 및 엔지니어링 작업을 위해 Gemini 3 Deep Think 업그레이드  the-decoder.com</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://news.google.com/rss/articles/CBMikgFBVV95cUxOSWk1THg4N1FpR19HWVZfVGxkX2Y3VDZSb2h0cThrRzV2WHF0YXNSMlk5TTctd0ZJMDlZSHRZRTBhQk9HQWJOQk50Zk1xajRnSmtqdWNKNGtZVkNXelZnY1Q2aXcxcHpuUXRPLVZ5Y2FPZXVUTThzVG1qZzVRSEtfaHhTUVlUeWZ3YXVwYUVhM0w2dw?oc=5" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                <span class="badge badge-digest">AI 소식</span>
+                <span class="src src-digest">뉴스</span>
+              </div>
+              <div class="card-time">2026-02-13 02:17</div>
+            </div>
+            <div class="card-title">Google: 해커들이 사이버 공격을 위해 Gemini를 &#x27;복제&#x27;하려고 합니다 - PCMag</div>
+            
+            <div class="card-summary">Google: 해커들이 사이버 공격을 위해 Gemini를 &#x27;복제&#x27;하려고 합니다. PCMag</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://news.google.com/rss/articles/CBMib0FVX3lxTE9Mc2xEcm5KNGZSUGkxOXY5dEt5dFR2algybE5tVUZVeFF6ZjZnZnJsMmhWYXhXQTFhd1F1RkZDMXFMakVhbTVrcDg4dnVTNHZyLUZvWV9VUFNUVXZzVWJWbFpnaGNvSU9UX0NsRnotWQ?oc=5" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                <span class="badge badge-digest">AI 소식</span>
+                <span class="src src-digest">뉴스</span>
+              </div>
+              <div class="card-time">2026-02-13 02:13</div>
+            </div>
+            <div class="card-title">Gemini 3 Deep Think, 실용적인 애플리케이션을 겨냥한 &#x27;대규모 업그레이드&#x27; - 9to5Google</div>
+            
+            <div class="card-summary">Gemini 3 Deep Think, 실용적인 애플리케이션을 겨냥한 &#x27;대규모 업그레이드&#x27; 9to5Google</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://news.google.com/rss/articles/CBMisAFBVV95cUxNWlJ5WlYzU0lvaUZScFdXWmtVUUhXZDZCLTlNdC1uN01EUVFuemwydGlhVzlvVlNjMGV6MTBNSWxrQ1BzdGFNcFVtMWx0RERYNmJjT011SlRycmk4SkRoRy1GNEItU1BhZVdOaHdVa0dmUjJseWF1M053QWVEdVRBV25sMHAwSU9qbVUwTHFpLUJ5RnF0Nzh0aWVLUFpPcTNDWVNoM01MblBpY1ZVZUdoag?oc=5" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                <span class="badge badge-digest">AI 소식</span>
+                <span class="src src-digest">뉴스</span>
+              </div>
+              <div class="card-time">2026-02-13 01:49</div>
+            </div>
+            <div class="card-title">Google Chrome은 WebMCP를 초기 미리보기로 제공하여 모든 웹사이트를 AI 에이전트를 위한 구조화된 도구로 전환합니다. - VentureBeat</div>
+            
+            <div class="card-summary">Google Chrome은 초기 미리보기에 WebMCP를 제공하여 모든 웹사이트를 AI 에이전트를 위한 구조화된 도구로 전환합니다.  VentureBeat</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://news.google.com/rss/articles/CBMitwFBVV95cUxQRWpZbTBEdFlXamE2dGpnbVB1c0xTOUlMQ1ZPRndmcVZlYmZuWmJpLW1Qd0VsVWJxM2lVa0Z5MjB0V0lYbDJZanhTUHJIaEtPb1VCZjE5akhNd1ZqV3dEN0xiVUxXUS1zcVhKVTFiQUZCOHFHbXlTSDRpdlpYR0x6dE1fOThrM1M4RHI1d0c5MXdzaEpJR1gwbFlaenNTcDExUTBfZmdoS3c0SWJuNVdLTlJmSk04OHc?oc=5" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                <span class="badge badge-digest">AI 소식</span>
+                <span class="src src-digest">뉴스</span>
+              </div>
+              <div class="card-time">2026-02-12 16:07</div>
+            </div>
+            <div class="card-title">GTIG AI Threat Tracker: 적대적 사용을 위한 AI의 정제, 실험 및 (지속적인) 통합 - Google Cloud</div>
+            
+            <div class="card-summary">GTIG AI Threat Tracker: 적대적 사용을 위한 AI의 정제, 실험 및 (지속적인) 통합  Google Cloud</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://news.google.com/rss/articles/CBMiaEFVX3lxTE1BbHRZTHJZaEFrMHlDMUFXTEZQcjgxXy1zR3A2aEFlWDd0OEpMRVhlVFNqMndDTy1lbnVTTFhIYk5xN0p6WHl4NFA0a1RkR2pXYzl0bW1sUXNRQ3JqekxRWjFmUnFrU2Fx?oc=5" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                <span class="badge badge-digest">AI 소식</span>
+                <span class="src src-digest">뉴스</span>
+              </div>
+              <div class="card-time">2026-02-12 09:48</div>
+            </div>
+            <div class="card-title">GPT-5.3-Codex-Spark 소개 - OpenAI</div>
+            
+            <div class="card-summary">GPT-5.3-Codex-Spark 소개 OpenAI</div>
+            
+          </a>
+        
+	      </div>
+	    </div>
+
+	    <div class="section">
+	      <div class="section-h">
+	        <div class="h">소스 상태</div>
+	        <div class="note">가져오기/파싱 오류</div>
+	      </div>
+	      <ul class="health"><li>X 트렌딩 q1 (OpenAI OR Anthropic OR GoogleAI OR Google…): https://nitter.tiekoetter.com: HTTP 429: Too Many Requests</li>
+<li>X 트렌딩 q1 (OpenAI OR Anthropic OR GoogleAI OR Google…): https://nitter.poast.org: HTTP 503: Service Temporarily Unavailable</li></ul>
+	    </div>
+
+	    <footer>
+	      ai-monitor/ai_agent.py로 생성. 범위: 최근 24시간.
+	    </footer>
+  </div>
+</body>
+</html>

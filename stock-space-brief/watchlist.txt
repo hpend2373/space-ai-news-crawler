@@ -1,0 +1,15 @@
+# One per line. Ticker or company name.
+# Lines starting with # are comments.
+# Examples:
+# AAPL
+# MSFT
+# 005930.KS
+
+# Rocket Lab
+RKLB
+
+# Planet Labs
+PL
+
+# SpaceX (private company; treated as a keyword)
+SpaceX

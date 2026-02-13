@@ -1,0 +1,135 @@
+{
+  "filter": {
+    "hours": 24
+  },
+  "run": {
+    "retry_on_total_failure": {
+      "max_attempts": 4,
+      "delay_seconds": 20,
+      "backoff_multiplier": 2.0,
+      "max_delay_seconds": 180,
+      "jitter_seconds": 5
+    }
+  },
+  "nitter": {
+    "instances": [
+      "https://nitter.tiekoetter.com",
+      "https://nitter.poast.org"
+    ],
+    "timeout_seconds": 30,
+    "max_posts_per_handle": 12
+  },
+  "providers": [
+    {
+      "id": "openai",
+      "name": "OpenAI",
+      "x_handles": [
+        "OpenAI"
+      ],
+      "rss": [
+        "https://openai.com/news/rss.xml"
+      ],
+      "web": []
+    },
+    {
+      "id": "anthropic",
+      "name": "Anthropic",
+      "x_handles": [
+        "AnthropicAI"
+      ],
+      "rss": [],
+      "web": [
+        "https://www.anthropic.com/news"
+      ]
+    },
+    {
+      "id": "google_ai",
+      "name": "Google AI",
+      "x_handles": [
+        "GoogleAI"
+      ],
+      "rss": [
+        "https://blog.google/innovation-and-ai/technology/ai/rss/"
+      ],
+      "web": []
+    },
+    {
+      "id": "deepmind",
+      "name": "Google DeepMind",
+      "x_handles": [
+        "GoogleDeepMind"
+      ],
+      "rss": [
+        "https://deepmind.google/blog/rss.xml"
+      ],
+      "web": []
+    },
+    {
+      "id": "notebooklm",
+      "name": "NotebookLM",
+      "x_handles": [
+        "NotebookLM"
+      ],
+      "rss": [],
+      "web": []
+    }
+  ],
+  "x_trending": {
+    "enabled": true,
+    "queries": [
+      "OpenAI OR Anthropic OR GoogleAI OR GoogleDeepMind OR NotebookLM OR ChatGPT OR GPT OR Claude OR Gemini OR LLM OR AI",
+      "new AI model OR model release OR launch OR update OR API OR agent"
+    ],
+    "max_posts_per_query": 16,
+    "max_items_total": 10,
+    "min_score": 80
+  },
+  "digest": {
+    "google_news_rss_queries": [
+      "(OpenAI OR Anthropic OR Google DeepMind OR Gemini OR Claude OR GPT) (announced OR launches OR released OR preview OR API) when:1d",
+      "(new AI model OR foundation model OR multimodal) (announced OR released) when:1d",
+      "(AI agent OR coding agent OR tool use) (announced OR released OR update) when:1d"
+    ],
+    "max_items_total": 12
+  },
+  "translate": {
+    "enabled": true,
+    "provider": "google_gtx",
+    "target_lang": "ko",
+    "timeout_seconds": 10,
+    "show_original": false
+  },
+  "keywords": {
+    "high_signal": [
+      "introducing",
+      "announcing",
+      "launch",
+      "launched",
+      "released",
+      "available",
+      "preview",
+      "beta",
+      "update",
+      "new",
+      "model",
+      "api",
+      "gpt",
+      "claude",
+      "gemini",
+      "veo",
+      "agent",
+      "agents",
+      "reasoning",
+      "o1",
+      "o3"
+    ],
+    "low_signal": [
+      "hiring",
+      "job",
+      "event",
+      "webinar",
+      "talk",
+      "podcast"
+    ]
+  }
+}

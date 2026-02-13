@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Stock + Space Brief</title>
+  <style>
+    :root {
+      --bg: #f6f7fb;
+      --bg-grad: radial-gradient(1200px 600px at 10% -10%, #eef2ff 0%, rgba(238,242,255,0) 60%),
+                 radial-gradient(900px 500px at 90% -20%, #e8f5ff 0%, rgba(232,245,255,0) 55%);
+      --card: #ffffff;
+      --text: #0f172a;
+      --muted: #64748b;
+      --border: rgba(15, 23, 42, 0.08);
+      --shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+      --link: #2563eb;
+      --chip: rgba(15, 23, 42, 0.06);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+      color: var(--text);
+      background: var(--bg);
+      background-image: var(--bg-grad);
+    }
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 24px 20px 80px;
+    }
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      backdrop-filter: blur(12px);
+      background: rgba(255, 255, 255, 0.75);
+      border-bottom: 1px solid var(--border);
+    }
+    .header-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 16px 20px 18px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+    }
+    h1 {
+      font-size: 20px;
+      margin: 0;
+      letter-spacing: -0.2px;
+    }
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .chip {
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: var(--chip);
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+      margin-top: 18px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 18px 18px 16px;
+      box-shadow: var(--shadow);
+    }
+    .card h2 {
+      margin: 0 0 10px;
+      font-size: 16px;
+    }
+    .meta {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    .item {
+      margin: 8px 0;
+      line-height: 1.55;
+      font-size: 14px;
+    }
+	    .sources {
+	      margin-top: 8px;
+	      display: flex;
+	      flex-wrap: wrap;
+	      gap: 10px;
+	      font-size: 12px;
+	      color: var(--muted);
+	      align-items: center;
+	    }
+	    .sources span { margin-right: 2px; }
+	    .details, .details-empty {
+	      margin-top: 12px;
+	      padding-top: 10px;
+	      border-top: 1px dashed rgba(15, 23, 42, 0.12);
+	      color: var(--muted);
+	      font-size: 12px;
+	    }
+	    details.details > summary {
+	      cursor: pointer;
+	      list-style: none;
+	    }
+	    details.details > summary::-webkit-details-marker { display: none; }
+	    .newslist {
+	      margin: 10px 0 0;
+	      padding-left: 18px;
+	      color: var(--text);
+	      font-size: 13px;
+	    }
+	    .newslist li { margin: 10px 0; }
+	    .newslist .sub {
+	      margin-top: 3px;
+	      color: var(--muted);
+	      font-size: 12px;
+	    }
+	    a { color: var(--link); text-decoration: none; }
+	    a:hover { text-decoration: underline; }
+    @media (max-width: 860px) {
+      .grid { grid-template-columns: 1fr; }
+      .header-inner { gap: 10px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-inner">
+      <h1>Stock + Space Brief</h1>
+      <div class="chips">
+        <div class="chip">생성 시각: 2026-02-13 13:55 KST</div>
+        <div class="chip">신규 윈도우: 2026-02-13 13:53 KST ~ 2026-02-13 13:55 KST</div>
+        <div class="chip">검색 윈도우: 2026-02-12 13:55 KST ~ 2026-02-13 13:55 KST</div>
+        <div class="chip">워치리스트: 3</div>
+      </div>
+    </div>
+  </header>
+  <main class="container">
+    <section class="grid">
+
+      <article class="card">
+        <h2>Rocket Lab (RKLB)</h2>
+        <div class="meta">신규 큰 이슈 없음 (최근 24시간 전수 검색)</div>
+        <div class="item"><strong>무슨 일:</strong> 신규 큰 이슈 없음(최근 24시간 전수 검색 완료). (신규 기사 0건, 24시간 내 관련 기사 23건, 큰 이슈 기준 충족 0건)</div>
+        <div class="item"><strong>왜 중요한지:</strong> 단기 촉발 이벤트 부재 구간에서는 다음 공시/계약/일정 변경이 변동성의 핵심 변수가 됩니다. 참고 헤드라인: 2026-02-13 06:35 KST Rocket Lab Prepares To Launch Latest Hypersonic Test Mission for Defense Innovation Unit (Rocket Lab Updates) / 2026-02-13 06:30 KST Rocket Lab Prepares To Launch Latest Hypersonic Test Mission for Defense Innovation Unit (Rocket Lab IR) / 2026-02-13 09:38 KST Rocket Lab Sets Launch Date For DIU Hypersonic Test Mission - Aviation Week (Aviation Week)</div>
+        <div class="item"><strong>날짜:</strong> 2026-02-13 13:53 KST ~ 2026-02-13 13:55 KST</div>
+        <div class="sources"><span>대표 출처:</span><a href="https://rocketlabcorp.com/updates/">Rocket Lab Updates</a><a href="https://investors.rocketlabcorp.com/">Rocket Lab IR</a><a href="https://www.sec.gov/edgar/browse/?CIK=0001819994">SEC EDGAR (Rocket Lab)</a></div>
+        
+        <details class="details">
+          <summary>확인 기사 (신규 0 / 24시간 23)</summary>
+          <ol class="newslist"><li><a href="https://rocketlabcorp.com/updates/rocket-lab-prepares-to-launch-latest-hypersonic-test-mission-for-defense-innovation-unit/">Rocket Lab Prepares To Launch Latest Hypersonic Test Mission for Defense Innovation Unit</a><div class="sub">Rocket Lab Updates · 2026-02-13 06:35 KST</div></li><li><a href="https://investors.rocketlabcorp.com/news-releases/news-release-details/rocket-lab-prepares-launch-latest-hypersonic-test-mission">Rocket Lab Prepares To Launch Latest Hypersonic Test Mission for Defense Innovation Unit</a><div class="sub">Rocket Lab IR · 2026-02-13 06:30 KST</div></li><li><a href="https://news.google.com/rss/articles/CBMisgFBVV95cUxNOFlSMjVjb2xmM3ZfLW9kUTNYbXBienRTSG0xRFRGOFRxbklPXzZjcTJULXltUXNfWjE0WHpGUm0wUzhTSnlQaUVqcld2M19KNTlkQlZQdVdoMkwyV1NjYkZTTHBZS3Y2X1FEWnpfLUZJUjNzSzZpNFZleDV6YTB5VVB2X1A0ZmZMU1hkU2E2Um5WN0RnNDI3WUdSd3dWWF84VDFaa2x0MnhQN2hlRjFGajln?oc=5">Rocket Lab Sets Launch Date For DIU Hypersonic Test Mission - Aviation Week</a><div class="sub">Aviation Week · 2026-02-13 09:38 KST</div></li><li><a href="https://news.google.com/rss/articles/CBMirgFBVV95cUxQTzVwWkhCVU9wWUFEU0JCZDEtT0RWYTdVd0NNX19MRFJFQjl1QW1OamI4OHVhNmljV3lib3dLZmF3TE9QOGZjTnBpWFdTV3NXTzRjanhPNWNsUzNYVjRBU2VPNG1ZMFRoOXQ0blRKVDR2UWVPSXo4S3NrWGhYUkJuS3hidGIxazNXOHZHTngzM0twS2FGWUotTWZGNG9lYXhCX3Zyd290UzZtYi1aSEE?oc=5">Rocket Lab Sets Late-February Hypersonic Test for Defense Innovation Unit - 富途牛牛</a><div class="sub">富途牛牛 · 2026-02-13 08:20 KST</div></li><li><a href="https://news.google.com/rss/articles/CBMixAFBVV95cUxQMFoxRFBLUU92c3JfQ0FMQlFTVFVfUEo4dTEzSmotM3lpbE5CdHBjc2U1Y2ozaXV3UnVnQlJmbVg0ZFpMaHpUVjBVcG1vY2s0YUk4ZldfbWo5NjZKa3MwamdsdTI5UHB2eEcwS1FLbVlNM08yaS1KR0JyYnlTX0w4ckZkcjR6eXpnMXkzRUF5SHI0MjVrdkRxOFdQVFY5a0dUZkI4UGg0dHZOU2dyeTdieVJIaWNvWWxIUUJhRE9xQXZDRUpq?oc=5">Rocket Lab Sets Late-February Hypersonic Test for Defense Innovation Unit - marketscreener.com</a><div class="sub">marketscreener.com · 2026-02-13 07:55 KST</div></li><li><a href="https://news.google.com/rss/articles/CBMifkFVX3lxTE1DT1Y5aTMyLU9vRV9DSGhOUmYtZGRLRnF2YmpRTjR0OUJTSExGZzFZSjVqb0pXMFdfMjJaTGs2cTBwTzV5b2NJQ0NHLTlaRUdXY0dxQW1YQ2R6Y0tlMktwLXFrWExROWhHZnpuR1RVUEt4dWxfQUxiRDI0dTg4Zw?oc=5">Rocket Lab Announces New Launch Mission - Intellectia AI</a><div class="sub">Intellectia AI · 2026-02-13 06:43 KST</div></li></ol>
+        </details>
+      </article>
+      <article class="card">
+        <h2>Planet Labs (PL)</h2>
+        <div class="meta">신규 큰 이슈 없음 (최근 24시간 전수 검색)</div>
+        <div class="item"><strong>무슨 일:</strong> 신규 큰 이슈 없음(최근 24시간 전수 검색 완료). (신규 기사 0건, 24시간 내 관련 기사 2건, 큰 이슈 기준 충족 0건)</div>
+        <div class="item"><strong>왜 중요한지:</strong> 단기 촉발 이벤트 부재 구간에서는 다음 공시/계약/일정 변경이 변동성의 핵심 변수가 됩니다. 참고 헤드라인: 2026-02-13 02:03 KST 컨텍 자회사 TX스페이스, 위성업체 플래닛 랩스와 안테나 공급 계약 - MSN (MSN)</div>
+        <div class="item"><strong>날짜:</strong> 2026-02-13 13:53 KST ~ 2026-02-13 13:55 KST</div>
+        <div class="sources"><span>대표 출처:</span><a href="https://www.planet.com/pulse/">Planet Pulse</a><a href="https://www.sec.gov/edgar/browse/?CIK=0001836833">SEC EDGAR (Planet Labs)</a></div>
+        
+        <details class="details">
+          <summary>확인 기사 (신규 0 / 24시간 2)</summary>
+          <ol class="newslist"><li><a href="https://news.google.com/rss/articles/CBMipwNBVV95cUxNUmpWMVU3WkoyNFA0dmRGbnYxQWpSTEQ4SW05OHktVFN3Z2N0UnAtY3k2YTNQcDBITTRlNFlYa0lKcTUwWlFUTU9VbXg4TVItblNGRGFKUmVNZFI2QVBQWmpxTlphNm9NdjBLTzBjem1ET3BrVTh3RkNGbnUzUVk4N0JyU0dyRnJ1aWxrTnpJdjgwbFowU3BDeVdHUDlaQm02VzhlNmZDeXpGNmlYODlKZlVmTDdYOGNXS2YyRVh4Q21mSk1ONDhlRzhmU0UxOFdTLWNrZEpZZl9ybFlTMmlaTlpFZGVrU2RBbC0wX1BIZm9JdzVobTFSVzBlWjh2SmZINUtHYUtjYV9HeUJmQ21tWFBja19mQkVvb0xtR2lSVW43RndBc2hQWkF5SE0wTGZRbE84V3pSUlRDdnpadFAxanYxNUtWbHdzN3ZYWklKMWJvMDNBeWxYQzJ1VFhhc3dOVk1zOXBEUGpyZHRONGpYN3RZWUdmdWNSMUJEU1pWdVFmdTZmNmgtWWZpcnNab0xJUWhNcTQ2UEZTdElTRnZhc2sxMVB5cnM?oc=5">컨텍 자회사 TX스페이스, 위성업체 플래닛 랩스와 안테나 공급 계약 - MSN</a><div class="sub">MSN · 2026-02-13 02:03 KST</div></li></ol>
+        </details>
+      </article>
+      <article class="card">
+        <h2>SpaceX</h2>
+        <div class="meta">신규 큰 이슈 없음 (최근 24시간 전수 검색)</div>
+        <div class="item"><strong>무슨 일:</strong> 신규 큰 이슈 없음(최근 24시간 전수 검색 완료). (신규 기사 0건, 24시간 내 관련 기사 65건, 큰 이슈 기준 충족 0건)</div>
+        <div class="item"><strong>왜 중요한지:</strong> 단기 촉발 이벤트 부재 구간에서는 다음 공시/계약/일정 변경이 변동성의 핵심 변수가 됩니다. 참고 헤드라인: 2026-02-12 21:20 KST Launch companies debate how to compete against SpaceX (SpaceNews) / 2026-02-12 21:20 KST Launch companies debate how to compete against SpaceX - SpaceNews (SpaceNews) / 2026-02-13 00:54 KST Breakingviews - SpaceX index thrust preys on market FOMO - Reuters (Reuters)</div>
+        <div class="item"><strong>날짜:</strong> 2026-02-13 13:53 KST ~ 2026-02-13 13:55 KST</div>
+        <div class="sources"><span>대표 출처:</span><a href="https://www.nasa.gov/rss/dyn/breaking_news.rss">NASA Breaking News</a><a href="https://spacenews.com/">SpaceNews</a></div>
+        
+        <details class="details">
+          <summary>확인 기사 (신규 0 / 24시간 65)</summary>
+          <ol class="newslist"><li><a href="https://spacenews.com/launch-companies-debate-how-to-compete-against-spacex/">Launch companies debate how to compete against SpaceX</a><div class="sub">SpaceNews · 2026-02-12 21:20 KST</div></li><li><a href="https://news.google.com/rss/articles/CBMiggFBVV95cUxOWEl3VG9GRFEtYkF1cjdVdjJEa0twcC1kc0RGOUgzZkNFTGJOWGZVTnNIYmhYMURtemhZREZPYWFIU2VOcTYzZloyUVpVcXNZWWM3R2VMd1JtendGdzM2cU8tdV9pcC1sV3ZkSV9YQ0tfZ2hGUzhTRUZhMF9pdDJvOWlB?oc=5">Launch companies debate how to compete against SpaceX - SpaceNews</a><div class="sub">SpaceNews · 2026-02-12 21:20 KST</div></li><li><a href="https://news.google.com/rss/articles/CBMinwFBVV95cUxQT3RnTF9ZWEppN0wtN2NybUxYLTBxT1R0NzhqRzNrN0plMnNvT1BaNjFZc0ppOUhjRE1sRElKZzdFTUhuV2JGcWYyZkJlZEhlTk0tTW1vQ1QzWGo0bkFZSU9OOTVGaHo1TEFOempRS0VyV2hQZEhCd1pTRVl0Tk5RT1EwRkl4cGFtcHZZVkZLOFhpdk9TU3ZqbW5LRmZFcWc?oc=5">Breakingviews - SpaceX index thrust preys on market FOMO - Reuters</a><div class="sub">Reuters · 2026-02-13 00:54 KST</div></li><li><a href="https://news.google.com/rss/articles/CBMiXkFVX3lxTE5TNGMwRzU1bUFkeFp6Zl95RnBRYnVmZXZfZE1jaFRNNms4c1BhSWR3TFNkUXlLUGNDVjZsQU04SUJMRnB0ZmdNMklzMjloLS1DSnhUWmZVamUtTTRwb1E?oc=5">“미래에셋증권, 우주로 가는 증권주…스페이스X·xAI 재평가 모멘텀” - 뉴스투데이</a><div class="sub">뉴스투데이 · 2026-02-13 13:42 KST</div></li><li><a href="https://news.google.com/rss/articles/CBMif0FVX3lxTFBXd0ZHUlNIU1o2d3hGVlZPcWRqVW9OUzNTOGNHVERQSklHYUQzeTNObmZGWHdYdnNXSzVFUDlBcE5EclZXZ0NqdmZVTXhJbTRpNTRJTDZVMi11Q0hkc2RXcEp1N1YtZzVRbGhGRkowcXY1X1NXcWtwNllTbWF4YmM?oc=5">SpaceX prepares for Crew-12 launch with favorable conditions - Traders Union</a><div class="sub">Traders Union · 2026-02-13 12:45 KST</div></li><li><a href="https://news.google.com/rss/articles/CBMi2wFBVV95cUxPR2pjQUVlem9vaGN5cWRXMllOR1k5Zk5SY2pZMnkwNi1iMkdsUTNxOXk3RHBwU04zT2NZN3I5NjQyWUoyTGZOWWVJU21ma01NcTVHMWI1NmtuX0p5dk16LVNPS25QSjZxQWtzMVlmRDJlUjlNb0F2eFFtXzNCcE52SUwxSWt6cWEyVnVKc3h0blpSQ1RYc0x1UVZ3Z0FrelV4a3ZYbWYzUTNEMzA2YmpiMnNTVmtIalJ5LWF0N0E2QURtUEw2TjY4RnFNQWI5bUdVSHBnRnFRMHZ1RkXSAeABQVVfeXFMTzZBY0ZHaTlHcWtxOXZkdS1tRnZKdnBESjBMZEQ0RWpWSHJMY2xGWUE5R0lNUGhqNHcxdXhUZXI0M2l6MTczU2VXMjBOWDE1SFJHd204UDVOcnFXOTRsRmhlQWR6ZXQzRDVCdk5CX2c3WGRFWUtkVVJFbFhiRjNsMmxBSkk2UkhYNjhuOFktRXV4am1IaHZDWGJ3anZkSHFGOExabVRLbUd5X3ZoSUlQeWt0Z3BKT0xiT3JsNUo3S3Vvck5WMXlIZjc4aFFxWnplclhsczNxWXJJLUp6RVN4bVM?oc=5">SpaceX Crew-12 to send four astronauts to Space Station today. All about it - India Today</a><div class="sub">India Today · 2026-02-13 12:00 KST</div></li></ol>
+        </details>
+      </article>
+      <article class="card">
+        <h2>우주경제</h2>
+        <div class="meta">신규 큰 이슈 없음 (최근 24시간 전수 검색 완료)</div>
+        <div class="item"><strong>무슨 일:</strong> 신규 큰 이슈 없음(최근 24시간 전수 검색 완료). (신규 기사 0건, 24시간 내 관련 기사 21건, 큰 이슈 기준 충족 0건)</div>
+        <div class="item"><strong>왜 중요한지:</strong> 이벤트 부재 구간에서는 다음 정책/예산/대형 계약 발표가 단기 기대를 좌우할 수 있습니다. 참고 헤드라인: 2026-02-13 06:11 KST NASA Selects Vast for Sixth Private Mission to Space Station (NASA Breaking News) / 2026-02-13 07:27 KST Space startups find more paths to liquidity as investors warm to maturing sector (SpaceNews) / 2026-02-13 06:53 KST First Ariane 64 launches Amazon Leo satellites (SpaceNews)</div>
+        <div class="item"><strong>날짜:</strong> 2026-02-13 13:53 KST ~ 2026-02-13 13:55 KST</div>
+        <div class="sources"><span>대표 출처:</span><a href="https://spacenews.com/">SpaceNews</a><a href="https://www.nasa.gov/rss/dyn/breaking_news.rss">NASA Breaking News</a><a href="https://news.google.com/">Google News</a></div>
+        
+        <details class="details">
+          <summary>확인 기사 (신규 0 / 24시간 21)</summary>
+          <ol class="newslist"><li><a href="https://www.nasa.gov/news-release/nasa-selects-vast-for-sixth-private-mission-to-space-station/">NASA Selects Vast for Sixth Private Mission to Space Station</a><div class="sub">NASA Breaking News · 2026-02-13 06:11 KST</div></li><li><a href="https://spacenews.com/space-startups-find-more-paths-to-liquidity-as-investors-warm-to-maturing-sector/">Space startups find more paths to liquidity as investors warm to maturing sector</a><div class="sub">SpaceNews · 2026-02-13 07:27 KST</div></li><li><a href="https://spacenews.com/first-ariane-64-launches-amazon-leo-satellites/">First Ariane 64 launches Amazon Leo satellites</a><div class="sub">SpaceNews · 2026-02-13 06:53 KST</div></li><li><a href="https://spacenews.com/axiom-space-raises-additional-350-million/">Axiom Space raises additional $350 million</a><div class="sub">SpaceNews · 2026-02-13 06:00 KST</div></li><li><a href="https://spacenews.com/thinkom-gets-military-contract-to-supply-portable-ground-stations-for-satellite-communications/">ThinKom gets military contract to supply portable ground stations for satellite communications</a><div class="sub">SpaceNews · 2026-02-13 04:07 KST</div></li><li><a href="https://spacenews.com/it-is-time-to-take-astronomy-off-earth/">It is time to take astronomy off Earth</a><div class="sub">SpaceNews · 2026-02-12 23:00 KST</div></li><li><a href="https://spacenews.com/software-startup-integrate-makes-push-into-defense-market-following-space-force-award/">Software startup Integrate makes push into defense market following Space Force award</a><div class="sub">SpaceNews · 2026-02-12 22:47 KST</div></li><li><a href="https://spacenews.com/launch-companies-debate-how-to-compete-against-spacex/">Launch companies debate how to compete against SpaceX</a><div class="sub">SpaceNews · 2026-02-12 21:20 KST</div></li></ol>
+        </details>
+      </article>
+    </section>
+  </main>
+</body>
+</html>

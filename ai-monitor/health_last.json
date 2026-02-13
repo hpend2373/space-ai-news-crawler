@@ -1,0 +1,156 @@
+{
+  "generated_at_local": "2026-02-13T09:22:46.252667+09:00",
+  "timeout_seconds": 8,
+  "dns": {
+    "blog.google": {
+      "ok": true,
+      "addrs": [
+        "216.239.32.21",
+        "216.239.34.21",
+        "216.239.36.21",
+        "216.239.38.21"
+      ]
+    },
+    "deepmind.google": {
+      "ok": true,
+      "addrs": [
+        "216.239.32.21",
+        "216.239.34.21",
+        "216.239.36.21",
+        "216.239.38.21"
+      ]
+    },
+    "news.google.com": {
+      "ok": true,
+      "addrs": [
+        "172.217.211.100",
+        "172.217.211.101",
+        "172.217.211.102",
+        "172.217.211.113",
+        "172.217.211.138",
+        "172.217.211.139"
+      ]
+    },
+    "nitter.poast.org": {
+      "ok": true,
+      "addrs": [
+        "173.208.145.50"
+      ]
+    },
+    "nitter.tiekoetter.com": {
+      "ok": true,
+      "addrs": [
+        "152.53.125.158"
+      ]
+    },
+    "openai.com": {
+      "ok": true,
+      "addrs": [
+        "104.18.33.45",
+        "172.64.154.211"
+      ]
+    },
+    "translate.googleapis.com": {
+      "ok": true,
+      "addrs": [
+        "172.217.211.95"
+      ]
+    },
+    "www.anthropic.com": {
+      "ok": true,
+      "addrs": [
+        "160.79.104.10"
+      ]
+    }
+  },
+  "http": [
+    {
+      "label": "OpenAI RSS",
+      "url": "https://openai.com/news/rss.xml",
+      "ok": true,
+      "status": 200,
+      "error": null
+    },
+    {
+      "label": "Anthropic 웹",
+      "url": "https://www.anthropic.com/news",
+      "ok": true,
+      "status": 200,
+      "error": null
+    },
+    {
+      "label": "Google AI RSS",
+      "url": "https://blog.google/innovation-and-ai/technology/ai/rss/",
+      "ok": true,
+      "status": 200,
+      "error": null
+    },
+    {
+      "label": "Google DeepMind RSS",
+      "url": "https://deepmind.google/blog/rss.xml",
+      "ok": true,
+      "status": 200,
+      "error": null
+    },
+    {
+      "label": "Google News RSS 쿼리 1",
+      "url": "https://news.google.com/rss/search?q=%28OpenAI%20OR%20Anthropic%20OR%20Google%20DeepMind%20OR%20Gemini%20OR%20Claude%20OR%20GPT%29%20%28announced%20OR%20launches%20OR%20released%20OR%20preview%20OR%20API%29%20when%3A1d&hl=en-US&gl=US&ceid=US:en",
+      "ok": true,
+      "status": 200,
+      "error": null
+    },
+    {
+      "label": "Google News RSS 쿼리 2",
+      "url": "https://news.google.com/rss/search?q=%28new%20AI%20model%20OR%20foundation%20model%20OR%20multimodal%29%20%28announced%20OR%20released%29%20when%3A1d&hl=en-US&gl=US&ceid=US:en",
+      "ok": true,
+      "status": 200,
+      "error": null
+    },
+    {
+      "label": "Google News RSS 쿼리 3",
+      "url": "https://news.google.com/rss/search?q=%28AI%20agent%20OR%20coding%20agent%20OR%20tool%20use%29%20%28announced%20OR%20released%20OR%20update%29%20when%3A1d&hl=en-US&gl=US&ceid=US:en",
+      "ok": true,
+      "status": 200,
+      "error": null
+    },
+    {
+      "label": "번역 API(GTX)",
+      "url": "https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=ko&dt=t&q=AI%20news%20translation%20healthcheck",
+      "ok": true,
+      "status": 200,
+      "error": null
+    }
+  ],
+  "nitter": [
+    {
+      "handle": "OpenAI",
+      "ok": true,
+      "posts_parsed": 1,
+      "errors": []
+    },
+    {
+      "handle": "AnthropicAI",
+      "ok": true,
+      "posts_parsed": 1,
+      "errors": []
+    },
+    {
+      "handle": "GoogleAI",
+      "ok": true,
+      "posts_parsed": 1,
+      "errors": []
+    },
+    {
+      "handle": "GoogleDeepMind",
+      "ok": true,
+      "posts_parsed": 1,
+      "errors": []
+    },
+    {
+      "handle": "NotebookLM",
+      "ok": true,
+      "posts_parsed": 1,
+      "errors": []
+    }
+  ]
+}
