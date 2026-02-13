@@ -45,6 +45,11 @@
 			path = "ai appUITests";
 			sourceTree = "<group>";
 		};
+		AB0000012F3EDF5D00B02226 /* ai-monitor */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "ai-monitor";
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -78,6 +83,7 @@
 				AA2578A42F3EDF5B00B02226 /* ai app */,
 				AA2578B22F3EDF5D00B02226 /* ai appTests */,
 				AA2578BC2F3EDF5D00B02226 /* ai appUITests */,
+				AB0000012F3EDF5D00B02226 /* ai-monitor */,
 				AA2578A32F3EDF5B00B02226 /* Products */,
 			);
 			sourceTree = "<group>";
