@@ -2,8 +2,6 @@
 
 우주 산업과 AI 업계의 최신 소식을 자동으로 수집·번역·브리핑하는 개인 프로젝트.
 
-## 무엇을 하나
-
 OpenAI, Anthropic, Google DeepMind, xAI 등의 공식 블로그·X(트위터) 피드, SpaceX·Rocket Lab 등 우주 기업 관련 뉴스를 주기적으로 크롤링한다. 한국어로 자동 번역해 카드 형태로 정리하고, macOS 데스크톱 앱(Daily Brief)과 HTML 대시보드로 보여 준다.
 
 ## 구성
