@@ -11,8 +11,8 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 # 경로 정의
-STOCK_DIR="/Users/minyeop/ai app/stock-space-brief"
-AI_DIR="/Users/minyeop/ai app/ai-news-brief"
+STOCK_DIR="${HOME}/ai app/stock-space-brief"
+AI_DIR="${HOME}/ai app/ai-news-brief"
 
 echo ""
 echo "📁 프로젝트 디렉토리 확인 중..."

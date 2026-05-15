@@ -1,0 +1,26 @@
+# Runtime artifacts
+ai-monitor/last_run.json
+ai-monitor/health_last.json
+ai-monitor/dashboard.html
+ai-monitor/dashboard.md
+ai-monitor/reports/
+ai-monitor/.cache/
+ai-monitor/logs/
+ai-monitor/*.log
+
+# stock-space-brief 산출물
+stock-space-brief/.cache/
+stock-space-brief/.space_stock_*
+stock-space-brief/stock_feed.html
+stock-space-brief/stock_feed_error.html
+stock-space-brief/stock_feed_inbox.md
+stock-space-brief/*.tmp
+stock-space-brief/.stock_feed_inbox.*.tmp
+
+# Python
+**/__pycache__/
+*.pyc
+
+# macOS
+.DS_Store
+**/.DS_Store

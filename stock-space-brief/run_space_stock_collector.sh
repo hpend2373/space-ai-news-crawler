@@ -2,7 +2,7 @@
 set -u
 set -o pipefail
 
-ROOT="/Users/minyeop/ai app/stock-space-brief"
+ROOT="$(cd "$(dirname "$0")" && pwd)"
 PYTHON_BIN="${PYTHON_BIN:-/opt/homebrew/bin/python3}"
 if [[ ! -x "${PYTHON_BIN}" ]]; then
   PYTHON_BIN="/usr/bin/python3"

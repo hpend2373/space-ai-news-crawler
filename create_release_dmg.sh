@@ -1,10 +1,10 @@
 #!/bin/bash
 set -e
 
-APP_PATH="/Users/minyeop/Library/Developer/Xcode/DerivedData/ai_app-chdpijxqakbldscwvdeulahhaabb/Build/Products/Release/Daily.app"
+APP_PATH="${HOME}/Library/Developer/Xcode/DerivedData/ai_app-chdpijxqakbldscwvdeulahhaabb/Build/Products/Release/Daily.app"
 DMG_NAME="Daily"
 DMG_TEMP="/tmp/Daily_temp.dmg"
-DMG_OUTPUT="/Users/minyeop/ai app/Daily.dmg"
+DMG_OUTPUT="${HOME}/ai app/Daily.dmg"
 STAGING="/tmp/dmg_release_staging"
 VOL_PATH="/Volumes/$DMG_NAME"
 

@@ -4,7 +4,7 @@ import Combine
 // Ollama (qwen3:8b) 번역 지원
 
 private enum BriefPaths {
-    static let root = "/Users/minyeop/ai app/stock-space-brief"
+    static let root = NSHomeDirectory() + "/ai app/stock-space-brief"
     static let reportHTML = root + "/stock_feed.html"
     static let inboxMarkdown = root + "/stock_feed_inbox.md"
     static let collectorScript = root + "/run_space_stock_collector.sh"

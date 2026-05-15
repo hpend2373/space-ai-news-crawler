@@ -14,12 +14,12 @@ set -u
 # need bg-nice here.
 unsetopt BG_NICE 2>/dev/null || true
 
-DASHBOARD_PATH="/Users/minyeop/SPACE/stock_feed.html"
-DASHBOARD_URL="file:///Users/minyeop/SPACE/stock_feed.html"
+DASHBOARD_PATH="${HOME}/SPACE/stock_feed.html"
+DASHBOARD_URL="file://${HOME}/SPACE/stock_feed.html"
 ATLAS_BIN="/Applications/ChatGPT Atlas.app/Contents/MacOS/ChatGPT Atlas"
 SAFARI_BIN="/Applications/Safari.app/Contents/MacOS/Safari"
-LOG_PATH="/Users/minyeop/SPACE/.space_stock_agent_open.log"
-LOCK_DIR="/Users/minyeop/SPACE/.space_stock_agent_open.lock"
+LOG_PATH="${HOME}/SPACE/.space_stock_agent_open.log"
+LOCK_DIR="${HOME}/SPACE/.space_stock_agent_open.lock"
 LOCK_WAIT_SECS="${LOCK_WAIT_SECS:-30}"
 TOTAL_TIMEOUT_SECS="${TOTAL_TIMEOUT_SECS:-180}"
 SLEEP_ON_CONN_INVALID_SECS="${SLEEP_ON_CONN_INVALID_SECS:-8}"
@@ -290,11 +290,11 @@ _atlas_cli_open_and_focus() {
   local py="$1"
 
   # First try to focus an existing tab to avoid creating duplicates on every run.
-  if _run_gui_timeout "atlas_cli_tabs_json" "$CMD_TIMEOUT_SECS" "$py" /Users/minyeop/.codex/skills/atlas/scripts/atlas_cli.py tabs --json; then
+  if _run_gui_timeout "atlas_cli_tabs_json" "$CMD_TIMEOUT_SECS" "$py" ${HOME}/.codex/skills/atlas/scripts/atlas_cli.py tabs --json; then
     local focus_ids_existing
     focus_ids_existing="$(printf "%s" "$LAST_OUT" | "$py" -c '
 import json, sys
-url = "file:///Users/minyeop/SPACE/stock_feed.html"
+url = "file://${HOME}/SPACE/stock_feed.html"
 rows = json.load(sys.stdin)
 match = [r for r in rows if r.get("url") == url]
 if not match:
@@ -308,7 +308,7 @@ print(m.get("window_id", 0), m.get("tab_index", 0))
     tab_index_existing="$(printf "%s" "$focus_ids_existing" | /usr/bin/awk '{print $2}' 2>/dev/null || true)"
 
     if [[ -n "$window_id_existing" && -n "$tab_index_existing" && "$window_id_existing" == <-> && "$tab_index_existing" == <-> ]]; then
-      if _run_gui_timeout "atlas_cli_focus_existing" "$CMD_TIMEOUT_SECS" "$py" /Users/minyeop/.codex/skills/atlas/scripts/atlas_cli.py focus-tab "$window_id_existing" "$tab_index_existing"; then
+      if _run_gui_timeout "atlas_cli_focus_existing" "$CMD_TIMEOUT_SECS" "$py" ${HOME}/.codex/skills/atlas/scripts/atlas_cli.py focus-tab "$window_id_existing" "$tab_index_existing"; then
         return 0
       fi
       _record_error 98 "atlas_cli_focus_existing"
@@ -317,12 +317,12 @@ print(m.get("window_id", 0), m.get("tab_index", 0))
     _record_error 99 "atlas_cli_tabs_json"
   fi
 
-  if ! _run_gui_timeout "atlas_cli_open" "$CMD_TIMEOUT_SECS" "$py" /Users/minyeop/.codex/skills/atlas/scripts/atlas_cli.py open-tab "$DASHBOARD_URL"; then
+  if ! _run_gui_timeout "atlas_cli_open" "$CMD_TIMEOUT_SECS" "$py" ${HOME}/.codex/skills/atlas/scripts/atlas_cli.py open-tab "$DASHBOARD_URL"; then
     _record_error 100 "atlas_cli_open"
     return 1
   fi
 
-  if ! _run_gui_timeout "atlas_cli_tabs_json_after_open" "$CMD_TIMEOUT_SECS" "$py" /Users/minyeop/.codex/skills/atlas/scripts/atlas_cli.py tabs --json; then
+  if ! _run_gui_timeout "atlas_cli_tabs_json_after_open" "$CMD_TIMEOUT_SECS" "$py" ${HOME}/.codex/skills/atlas/scripts/atlas_cli.py tabs --json; then
     _record_error 99 "atlas_cli_tabs_json_after_open"
     return 1
   fi
@@ -330,7 +330,7 @@ print(m.get("window_id", 0), m.get("tab_index", 0))
   local focus_ids
   focus_ids="$(printf "%s" "$LAST_OUT" | "$py" -c '
 	import json, sys
-	url = "file:///Users/minyeop/SPACE/stock_feed.html"
+	url = "file://${HOME}/SPACE/stock_feed.html"
 	rows = json.load(sys.stdin)
 	match = [r for r in rows if r.get("url") == url]
 	if not match:
@@ -349,7 +349,7 @@ print(m.get("window_id", 0), m.get("tab_index", 0))
     return 1
   fi
 
-  if ! _run_gui_timeout "atlas_cli_focus" "$CMD_TIMEOUT_SECS" "$py" /Users/minyeop/.codex/skills/atlas/scripts/atlas_cli.py focus-tab "$window_id" "$tab_index"; then
+  if ! _run_gui_timeout "atlas_cli_focus" "$CMD_TIMEOUT_SECS" "$py" ${HOME}/.codex/skills/atlas/scripts/atlas_cli.py focus-tab "$window_id" "$tab_index"; then
     _record_error 98 "atlas_cli_focus"
     return 1
   fi
@@ -381,7 +381,7 @@ _open_via_local_http() {
   port="$("$py" -c 'import socket; s=socket.socket(); s.bind(("127.0.0.1",0)); print(s.getsockname()[1]); s.close()' 2>/dev/null)" || port=""
   [[ -n "$port" && "$port" == <-> ]] || return 1
 
-  "$py" -m http.server "$port" --bind 127.0.0.1 --directory "/Users/minyeop/SPACE" >/dev/null 2>&1 &
+  "$py" -m http.server "$port" --bind 127.0.0.1 --directory "${HOME}/SPACE" >/dev/null 2>&1 &
   local server_pid=$!
   _log "http_server: started pid=${server_pid} port=${port}"
   # Ensure we don't leave servers around.
@@ -584,7 +584,7 @@ main() {
     # 5) Direct AppleScript.
     if _run_gui "osascript" /usr/bin/osascript \
         -e 'tell application id "com.openai.atlas" to activate' \
-        -e 'tell application id "com.openai.atlas" to open location "file:///Users/minyeop/SPACE/stock_feed.html"'; then
+        -e 'tell application id "com.openai.atlas" to open location "file://${HOME}/SPACE/stock_feed.html"'; then
       echo "OK: opened in Atlas via osascript" >&3
       return 0
     fi

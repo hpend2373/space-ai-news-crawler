@@ -39,7 +39,7 @@ Python 스크립트:
 
 #### Stock + Space Brief
 ```bash
-cd "/Users/minyeop/ai app/stock-space-brief"
+cd "~/ai app/stock-space-brief"
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
@@ -47,7 +47,7 @@ pip install -r requirements.txt
 
 #### AI News Brief
 ```bash
-cd "/Users/minyeop/ai app/ai-news-brief"
+cd "~/ai app/ai-news-brief"
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
@@ -56,8 +56,8 @@ pip install -r requirements.txt
 ### 2. 스크립트 실행 권한 부여
 
 ```bash
-chmod +x "/Users/minyeop/ai app/stock-space-brief/run_space_stock_collector.sh"
-chmod +x "/Users/minyeop/ai app/ai-news-brief/run_ai_agent.sh"
+chmod +x "~/ai app/stock-space-brief/run_space_stock_collector.sh"
+chmod +x "~/ai app/ai-news-brief/run_ai_agent.sh"
 ```
 
 ### 3. Xcode에서 빌드
@@ -87,7 +87,7 @@ chmod +x "/Users/minyeop/ai app/ai-news-brief/run_ai_agent.sh"
 ### Stock + Space Brief 경로
 ```swift
 private enum BriefPaths {
-    static let root = "/Users/minyeop/ai app/stock-space-brief"
+    static let root = "~/ai app/stock-space-brief"
     static let reportHTML = root + "/stock_feed.html"
     static let inboxMarkdown = root + "/stock_feed_inbox.md"
     static let collectorScript = root + "/run_space_stock_collector.sh"
@@ -97,7 +97,7 @@ private enum BriefPaths {
 ### AI News Brief 경로
 ```swift
 private enum AINewsPaths {
-    static let root = "/Users/minyeop/ai app/ai-news-brief"
+    static let root = "~/ai app/ai-news-brief"
     static let dashboardMarkdown = root + "/dashboard.md"
     static let dashboardHTML = root + "/dashboard.html"
     static let collectorScript = root + "/run_ai_agent.sh"
@@ -137,7 +137,7 @@ private enum AINewsPaths {
 2. 로그에서 오류 확인
 3. 스크립트 직접 실행 테스트:
    ```bash
-   cd "/Users/minyeop/ai app/stock-space-brief"
+   cd "~/ai app/stock-space-brief"
    bash run_space_stock_collector.sh
    ```
 

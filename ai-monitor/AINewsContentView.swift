@@ -5,7 +5,7 @@ import Combine
 // AI News Brief - ai_agent.py 실행 및 dashboard.md 파싱
 
 private enum AINewsPaths {
-    static let root = "/Users/minyeop/ai app/ai-news-brief"
+    static let root = NSHomeDirectory() + "/ai app/ai-news-brief"
     static let dashboardMarkdown = root + "/dashboard.md"
     static let dashboardHTML = root + "/dashboard.html"
     static let collectorScript = root + "/run_ai_agent.sh"

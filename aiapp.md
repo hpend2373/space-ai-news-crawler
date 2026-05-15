@@ -47,7 +47,7 @@
 ## 2. Space News 화면
 
 ### 데이터 소스
-- **로컬 파일:** `/Users/minyeop/ai app/stock-space-brief/stock_feed_inbox.md`
+- **로컬 파일:** `~/ai app/stock-space-brief/stock_feed_inbox.md`
 - **수집 스크립트:** `run_space_stock_collector.sh` → `space_stock_brief.py` 실행
 - **워치리스트:** `watchlist.txt` (SpaceX, Rocket Lab, Planet Labs, NASA, 우주경제 등)
 
@@ -94,7 +94,7 @@
 ## 3. AI News 화면
 
 ### 데이터 소스
-- **로컬 파일:** `/Users/minyeop/ai app/ai-monitor/dashboard.md`
+- **로컬 파일:** `~/ai app/ai-monitor/dashboard.md`
 - **수집 스크립트:** `run_ai_agent.sh` → `ai_agent.py` 실행
 - **설정 파일:** `config.json` (프로바이더, 키워드, 번역 설정 등)
 

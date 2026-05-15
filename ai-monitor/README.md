@@ -17,7 +17,7 @@
 ## 실행
 
 ```bash
-cd /Users/minyeop/SPACE/ai-monitor
+cd ~/ai app/ai-monitor
 python3 ai_agent.py run
 ```
 

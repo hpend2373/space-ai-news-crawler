@@ -190,7 +190,7 @@ Ollama qwen3:8b 모델로 **자동 번역**:
 ### 🚀 빠른 수집
 ```bash
 # 터미널에서 직접 실행 (더 빠름)
-cd "/Users/minyeop/ai app/stock-space-brief"
+cd "~/ai app/stock-space-brief"
 bash run_space_stock_collector.sh
 ```
 
