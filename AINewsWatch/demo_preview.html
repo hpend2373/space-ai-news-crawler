@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>AINewsWatch - App Preview</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+    background: #0a0e1a;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    padding: 20px;
+  }
+
+  .phone-frame {
+    width: 393px;
+    height: 852px;
+    background: #070A10;
+    border-radius: 50px;
+    border: 3px solid #333;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+
+  .notch {
+    width: 126px; height: 34px;
+    background: #000;
+    border-radius: 0 0 20px 20px;
+    position: absolute;
+    top: 0; left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+  }
+
+  .status-bar {
+    height: 54px;
+    padding: 14px 28px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .app-content {
+    height: calc(100% - 54px);
+    overflow-y: auto;
+    scrollbar-width: none;
+  }
+  .app-content::-webkit-scrollbar { display: none; }
+
+  /* 배경 그라디언트 - Swift 코드와 동일 */
+  .bg-gradient {
+    position: fixed;
+    width: 393px;
+    height: 852px;
+    pointer-events: none;
+  }
+  .bg-gradient::before {
+    content: '';
+    position: absolute;
+    top: -50px; left: -50px;
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(91,182,255,0.18) 0%, transparent 70%);
+  }
+  .bg-gradient::after {
+    content: '';
+    position: absolute;
+    top: -50px; right: -50px;
+    width: 350px; height: 350px;
+    background: radial-gradient(circle, rgba(91,242,198,0.14) 0%, transparent 70%);
+  }
+
+  .nav-title {
+    padding: 8px 20px 4px;
+    font-size: 34px;
+    font-weight: 700;
+    color: white;
+    letter-spacing: -0.5px;
+  }
+
+  .toolbar {
+    display: flex;
+    justify-content: flex-end;
+    padding: 0 20px 8px;
+    gap: 16px;
+  }
+  .toolbar button {
+    background: none;
+    border: none;
+    color: #5BB6FF;
+    font-size: 20px;
+    cursor: pointer;
+  }
+
+  /* 상태 헤더 */
+  .status-header {
+    padding: 12px 20px;
+    background: rgba(255,255,255,0.06);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  .status-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .wifi-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #4ade80;
+    font-size: 13px;
+  }
+  .wifi-status svg { width: 16px; height: 16px; }
+  .last-update {
+    font-size: 12px;
+    color: rgba(255,255,255,0.5);
+  }
+
+  .progress-bar {
+    margin-top: 8px;
+    height: 3px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: #5BB6FF;
+    border-radius: 2px;
+    transition: width 0.3s;
+  }
+  .progress-msg {
+    font-size: 11px;
+    color: rgba(255,255,255,0.4);
+    margin-top: 4px;
+  }
+
+  /* 섹션 피커 */
+  .section-picker {
+    display: flex;
+    padding: 12px 16px;
+    gap: 4px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .section-picker::-webkit-scrollbar { display: none; }
+
+  .section-btn {
+    padding: 6px 12px;
+    border-radius: 8px;
+    border: none;
+    font-size: 13px;
+    font-weight: 500;
+    color: rgba(255,255,255,0.5);
+    background: rgba(255,255,255,0.06);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
+  }
+  .section-btn.active {
+    background: rgba(91,182,255,0.2);
+    color: #5BB6FF;
+  }
+
+  /* 뉴스 카드 - Swift NewsCard와 동일한 디자인 */
+  .news-list {
+    padding: 0 16px 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .news-card {
+    padding: 16px;
+    background: rgba(255,255,255,0.06);
+    backdrop-filter: blur(20px);
+    border-radius: 14px;
+    border: 1px solid rgba(255,255,255,0.1);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+  }
+  .news-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+  }
+
+  .card-top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .provider-badge {
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .provider-openai { background: rgba(91,182,255,0.2); color: #5BB6FF; }
+  .provider-anthropic { background: rgba(255,211,110,0.2); color: #FFD36E; }
+  .provider-google { background: rgba(91,242,198,0.2); color: #5BF2C6; }
+  .provider-digest { background: rgba(255,91,122,0.2); color: #FF5B7A; }
+
+  .source-badge {
+    padding: 3px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+  .source-x { background: rgba(91,182,255,0.15); color: #5BB6FF; }
+  .source-rss { background: rgba(91,242,198,0.15); color: #5BF2C6; }
+  .source-web { background: rgba(255,211,110,0.15); color: #FFD36E; }
+  .source-digest { background: rgba(255,91,122,0.15); color: #FF5B7A; }
+
+  .card-time {
+    margin-left: auto;
+    font-size: 12px;
+    color: rgba(255,255,255,0.4);
+  }
+
+  .card-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: white;
+    line-height: 1.35;
+    margin-bottom: 6px;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .card-meta {
+    font-size: 12px;
+    color: rgba(255,255,255,0.4);
+    margin-bottom: 4px;
+  }
+
+  .card-summary {
+    font-size: 14px;
+    color: rgba(255,255,255,0.55);
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* 빌드 안내 */
+  .build-info {
+    margin-left: 40px;
+    max-width: 420px;
+    color: #ccc;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  .build-info h2 {
+    color: #5BB6FF;
+    font-size: 22px;
+    margin-bottom: 16px;
+  }
+  .build-info h3 {
+    color: #5BF2C6;
+    font-size: 16px;
+    margin: 20px 0 8px;
+  }
+  .build-info code {
+    background: rgba(255,255,255,0.1);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 13px;
+    color: #FFD36E;
+  }
+  .build-info ol {
+    padding-left: 20px;
+  }
+  .build-info li {
+    margin-bottom: 8px;
+  }
+  .check { color: #4ade80; }
+  .warn { color: #FFD36E; }
+
+  .layout {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+  }
+
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  .spinning { animation: spin 1s linear infinite; }
+</style>
+</head>
+<body>
+<div class="layout">
+
+<!-- iPhone Frame -->
+<div class="phone-frame">
+  <div class="notch"></div>
+  <div class="bg-gradient"></div>
+
+  <div class="status-bar">
+    <span>9:41</span>
+    <span style="font-size:12px">&#x1F4F6; &#x1F50B;</span>
+  </div>
+
+  <div class="app-content">
+    <div class="nav-title">AI 릴리스 워치</div>
+
+    <div class="toolbar">
+      <button id="refreshBtn" onclick="simulateRefresh()">&#x21BB;</button>
+      <button>&#x2699;</button>
+    </div>
+
+    <div class="status-header">
+      <div class="status-row">
+        <div class="wifi-status">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg>
+          WiFi 연결됨
+        </div>
+        <div class="last-update" id="lastUpdate">업데이트: 방금 전</div>
+      </div>
+      <div class="progress-bar" id="progressBar" style="display:none">
+        <div class="progress-fill" id="progressFill" style="width:0%"></div>
+      </div>
+      <div class="progress-msg" id="progressMsg"></div>
+    </div>
+
+    <div class="section-picker" id="sectionPicker">
+      <button class="section-btn active" data-section="highlights">하이라이트</button>
+      <button class="section-btn" data-section="openai">OpenAI</button>
+      <button class="section-btn" data-section="anthropic">Anthropic</button>
+      <button class="section-btn" data-section="google">Google</button>
+      <button class="section-btn" data-section="trending">트렌딩</button>
+      <button class="section-btn" data-section="digest">소식</button>
+      <button class="section-btn" data-section="all">전체</button>
+    </div>
+
+    <div class="news-list" id="newsList"></div>
+  </div>
+</div>
+
+<!-- 빌드 안내 -->
+<div class="build-info">
+  <h2>Xcode 빌드 방법</h2>
+
+  <h3>1. 프로젝트 열기</h3>
+  <ol>
+    <li>Finder에서 <code>AINewsWatch</code> 폴더 열기</li>
+    <li><code>AINewsWatch.xcodeproj</code> 더블클릭</li>
+  </ol>
+
+  <h3>2. 서명 설정</h3>
+  <ol>
+    <li>프로젝트 설정 &rarr; Signing & Capabilities</li>
+    <li>Team에서 본인 Apple ID 선택</li>
+    <li>Bundle Identifier: <code>com.ainews.watch</code></li>
+  </ol>
+
+  <h3>3. 빌드 &amp; 실행</h3>
+  <ol>
+    <li>시뮬레이터: <code>iPhone 15 Pro</code> 선택</li>
+    <li><code>Cmd + R</code> 눌러서 빌드 &amp; 실행</li>
+  </ol>
+
+  <h3 class="warn">주의사항</h3>
+  <ol>
+    <li>iOS 17.0+ 필요</li>
+    <li>Nitter 인스턴스가 불안정할 수 있음</li>
+    <li>Network 프레임워크 사용 (WiFi 감지)</li>
+    <li>BackgroundTasks 프레임워크 (백그라운드 새로고침)</li>
+  </ol>
+
+  <h3 class="check">포함된 파일 (6개)</h3>
+  <ol>
+    <li><code>AINewsWatchApp.swift</code> - 앱 진입점</li>
+    <li><code>ContentView.swift</code> - 메인 화면</li>
+    <li><code>NewsMonitor.swift</code> - 상태 관리</li>
+    <li><code>NewsCard.swift</code> - 뉴스 카드 UI</li>
+    <li><code>NewsCollector.swift</code> - 뉴스 수집</li>
+    <li><code>SettingsView.swift</code> - 설정 화면</li>
+  </ol>
+</div>
+
+</div>
+
+<script>
+// 샘플 뉴스 데이터 (실제 앱에서 수집될 데이터 예시)
+const sampleNews = [
+  {
+    provider_id: "openai", provider_name: "OpenAI", source: "X",
+    title: "Introducing GPT-5: Our most capable model yet with advanced reasoning and multimodal understanding",
+    url: "#", time: "2시간 전",
+    summary: "GPT-5 delivers breakthrough performance across reasoning, coding, and creative tasks. Available today via API and ChatGPT Plus.",
+    meta: "@OpenAI", score: 10
+  },
+  {
+    provider_id: "anthropic", provider_name: "Anthropic", source: "WEB",
+    title: "Claude 4 Opus - Extended thinking with unprecedented accuracy",
+    url: "#", time: "4시간 전",
+    summary: "Anthropic announces Claude 4 Opus with extended thinking capabilities, achieving new state-of-the-art results on complex reasoning benchmarks.",
+    meta: "", score: 10
+  },
+  {
+    provider_id: "google", provider_name: "Google AI", source: "X",
+    title: "Gemini 2.5 Pro now available with 2M token context window",
+    url: "#", time: "5시간 전",
+    summary: "Google DeepMind releases Gemini 2.5 Pro featuring native multimodal reasoning and a 2 million token context window.",
+    meta: "@GoogleDeepMind", score: 8
+  },
+  {
+    provider_id: "openai", provider_name: "OpenAI", source: "X",
+    title: "o4-mini: Our fastest reasoning model is now 3x more efficient",
+    url: "#", time: "8시간 전",
+    summary: "The latest addition to our o-series, o4-mini combines advanced reasoning with unprecedented speed and cost efficiency.",
+    meta: "@OpenAIDevs", score: 6
+  },
+  {
+    provider_id: "anthropic", provider_name: "Anthropic", source: "WEB",
+    title: "Introducing Claude Code - AI-powered software engineering",
+    url: "#", time: "12시간 전",
+    summary: "Claude Code is a command-line tool that lets developers delegate coding tasks to Claude directly from their terminal.",
+    meta: "", score: 6
+  },
+  {
+    provider_id: "digest", provider_name: "AI 소식", source: "DIGEST",
+    title: "AI 업계 동향: 오픈소스 모델의 급격한 성장",
+    url: "#", time: "6시간 전",
+    summary: "Meta의 Llama 4와 Mistral의 새 모델 출시로 오픈소스 AI 생태계가 빠르게 확장 중",
+    meta: "AI Industry", score: 4
+  },
+  {
+    provider_id: "google", provider_name: "Google AI", source: "X",
+    title: "AlphaFold 4: Predicting protein-drug interactions with atomic accuracy",
+    url: "#", time: "18시간 전",
+    summary: "DeepMind's latest AlphaFold model can now predict how proteins interact with drug molecules, accelerating pharmaceutical research.",
+    meta: "@GoogleDeepMind", score: 5
+  },
+  {
+    provider_id: "digest", provider_name: "AI 소식", source: "DIGEST",
+    title: "EU AI Act 시행 본격화: 기업들의 대응 전략",
+    url: "#", time: "1일 전",
+    summary: "유럽연합의 AI 규제법이 전면 시행되면서 글로벌 기업들이 컴플라이언스 체계를 재정비하고 있다.",
+    meta: "Regulation", score: 3
+  }
+];
+
+let currentSection = "highlights";
+
+function getProviderClass(id) {
+  const map = { openai: "provider-openai", anthropic: "provider-anthropic",
+                google: "provider-google", digest: "provider-digest" };
+  return map[id] || "provider-digest";
+}
+
+function getSourceClass(src) {
+  const map = { X: "source-x", RSS: "source-rss", WEB: "source-web", DIGEST: "source-digest" };
+  return map[src.toUpperCase()] || "source-digest";
+}
+
+function getSourceLabel(src) {
+  const map = { X: "X", RSS: "RSS", WEB: "웹", DIGEST: "뉴스" };
+  return map[src.toUpperCase()] || src;
+}
+
+function filterNews(section) {
+  if (section === "highlights") return sampleNews.filter(n => n.score >= 4).slice(0, 10);
+  if (section === "openai") return sampleNews.filter(n => n.provider_id === "openai");
+  if (section === "anthropic") return sampleNews.filter(n => n.provider_id === "anthropic");
+  if (section === "google") return sampleNews.filter(n => n.provider_id === "google");
+  if (section === "trending") return sampleNews.filter(n => n.source === "X").slice(0, 5);
+  if (section === "digest") return sampleNews.filter(n => n.provider_id === "digest");
+  return sampleNews;
+}
+
+function renderNews(section) {
+  const list = document.getElementById("newsList");
+  const items = filterNews(section);
+  list.innerHTML = items.map(item => `
+    <a class="news-card" href="${item.url}">
+      <div class="card-top">
+        <span class="provider-badge ${getProviderClass(item.provider_id)}">${item.provider_name}</span>
+        <span class="source-badge ${getSourceClass(item.source)}">${getSourceLabel(item.source)}</span>
+        <span class="card-time">${item.time}</span>
+      </div>
+      <div class="card-title">${item.title}</div>
+      ${item.meta ? `<div class="card-meta">${item.meta}</div>` : ''}
+      <div class="card-summary">${item.summary}</div>
+    </a>
+  `).join('');
+}
+
+// 섹션 전환
+document.getElementById("sectionPicker").addEventListener("click", (e) => {
+  if (e.target.classList.contains("section-btn")) {
+    document.querySelectorAll(".section-btn").forEach(b => b.classList.remove("active"));
+    e.target.classList.add("active");
+    currentSection = e.target.dataset.section;
+    renderNews(currentSection);
+  }
+});
+
+// 새로고침 시뮬레이션
+async function simulateRefresh() {
+  const btn = document.getElementById("refreshBtn");
+  const bar = document.getElementById("progressBar");
+  const fill = document.getElementById("progressFill");
+  const msg = document.getElementById("progressMsg");
+
+  btn.classList.add("spinning");
+  bar.style.display = "block";
+
+  const steps = [
+    [10, "설정 로드 중..."],
+    [30, "OpenAI 수집 중..."],
+    [50, "Anthropic 수집 중..."],
+    [65, "Google AI 수집 중..."],
+    [80, "AI 소식 수집 중..."],
+    [90, "하이라이트 생성 중..."],
+    [100, "완료!"]
+  ];
+
+  for (const [pct, text] of steps) {
+    fill.style.width = pct + "%";
+    msg.textContent = text;
+    await new Promise(r => setTimeout(r, 400));
+  }
+
+  btn.classList.remove("spinning");
+  document.getElementById("lastUpdate").textContent = "업데이트: 방금 전";
+  setTimeout(() => {
+    bar.style.display = "none";
+    msg.textContent = "";
+  }, 1000);
+}
+
+// 초기 렌더
+renderNews("highlights");
+</script>
+</body>
+</html>

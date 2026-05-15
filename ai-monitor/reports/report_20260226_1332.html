@@ -1,0 +1,740 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="dark" />
+  <title>AI 릴리스 워치 (최근 24시간)</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+    :root {
+      --bg0: #070A10;
+      --bg1: #0B1020;
+      --panel: rgba(255,255,255,.06);
+      --panel2: rgba(255,255,255,.035);
+      --line: rgba(240,244,255,.12);
+      --text: rgba(240,244,255,.92);
+      --muted: rgba(240,244,255,.62);
+      --muted2: rgba(240,244,255,.46);
+      --a: #5BF2C6;
+      --b: #5BB6FF;
+      --c: #FFD36E;
+      --danger: #FF5B7A;
+      --shadow: 0 12px 40px rgba(0,0,0,.35);
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+	    body {
+	      margin: 0;
+	      color: var(--text);
+	      font-family: "Space Grotesk", "Noto Sans KR", ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif;
+      background:
+        radial-gradient(1200px 800px at 20% 10%, rgba(91,182,255,.18), transparent 60%),
+        radial-gradient(900px 700px at 80% 20%, rgba(91,242,198,.14), transparent 62%),
+        radial-gradient(1000px 900px at 50% 100%, rgba(255,211,110,.10), transparent 55%),
+        linear-gradient(180deg, var(--bg0), var(--bg1));
+      overflow-x: hidden;
+    }
+    .grid {
+      background-image:
+        linear-gradient(to right, rgba(255,255,255,.05) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255,255,255,.05) 1px, transparent 1px);
+      background-size: 56px 56px;
+      background-position: center;
+      mask-image: radial-gradient(650px 500px at 50% 0%, black 40%, transparent 80%);
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: .35;
+    }
+    .wrap {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 28px 18px 56px;
+      position: relative;
+    }
+    header {
+      display: flex;
+      gap: 18px;
+      justify-content: space-between;
+      align-items: flex-end;
+      padding: 18px 18px 22px;
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,.075), rgba(255,255,255,.03));
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+    .title {
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+    }
+    .subtitle {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .meta {
+      text-align: right;
+      color: var(--muted);
+      font-size: 12px;
+      font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+    }
+    .meta strong {
+      color: var(--text);
+      font-weight: 500;
+    }
+    .section {
+      margin-top: 20px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.04);
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0,0,0,.22);
+    }
+    .section-h {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      padding: 16px 18px;
+      background: rgba(255,255,255,.035);
+      border-bottom: 1px solid var(--line);
+    }
+    .section-h .h {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+    .section-h .note {
+      font-size: 12px;
+      color: var(--muted2);
+      font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+    }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 12px;
+      padding: 14px;
+    }
+    .cards .card {
+      grid-column: span 6;
+    }
+    @media (max-width: 900px) {
+      .cards .card { grid-column: span 12; }
+      header { flex-direction: column; align-items: flex-start; }
+      .meta { text-align: left; }
+    }
+    .card {
+      display: block;
+      text-decoration: none;
+      color: inherit;
+      border: 1px solid rgba(255,255,255,.10);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border-radius: 14px;
+      padding: 14px 14px 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.18);
+      transition: transform .18s ease, border-color .18s ease, background .18s ease;
+    }
+    .card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(255,255,255,.22);
+      background: linear-gradient(180deg, rgba(255,255,255,.085), rgba(255,255,255,.035));
+    }
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .card-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+    .card-time {
+      color: var(--muted2);
+      font-size: 12px;
+      font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+      white-space: nowrap;
+    }
+    .card-title {
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      line-height: 1.3;
+      margin-bottom: 8px;
+    }
+    .card-meta {
+      margin-bottom: 8px;
+      color: var(--muted2);
+      font-size: 12px;
+      line-height: 1.35;
+      font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+    }
+	    .card-summary {
+	      font-size: 13px;
+	      color: var(--muted);
+	      line-height: 1.45;
+	    }
+	    .card-orig {
+	      margin-top: 10px;
+	      padding-top: 10px;
+	      border-top: 1px dashed rgba(255,255,255,.14);
+	      color: var(--muted2);
+	      font-size: 12px;
+	      line-height: 1.4;
+	    }
+	    .card-orig-line {
+	      margin-top: 6px;
+	    }
+	    .card-orig-line span {
+	      display: inline-block;
+	      min-width: 72px;
+	      font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+	      letter-spacing: .04em;
+	      color: rgba(240,244,255,.62);
+	    }
+	    .badge {
+	      display: inline-flex;
+	      align-items: center;
+	      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      background: rgba(255,255,255,.07);
+      border: 1px solid rgba(255,255,255,.10);
+      color: rgba(240,244,255,.86);
+    }
+    .badge-openai { border-color: rgba(91,182,255,.35); background: rgba(91,182,255,.12); }
+    .badge-anthropic { border-color: rgba(255,211,110,.35); background: rgba(255,211,110,.10); }
+    .badge-google { border-color: rgba(91,242,198,.35); background: rgba(91,242,198,.10); }
+    .badge-digest { border-color: rgba(255,91,122,.30); background: rgba(255,91,122,.10); }
+    .src {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      letter-spacing: .06em;
+      font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.05);
+      color: rgba(240,244,255,.72);
+    }
+    .src-x { border-color: rgba(91,182,255,.35); color: rgba(91,182,255,.95); }
+    .src-rss { border-color: rgba(91,242,198,.35); color: rgba(91,242,198,.95); }
+    .src-web { border-color: rgba(255,211,110,.35); color: rgba(255,211,110,.95); }
+    .src-digest { border-color: rgba(255,91,122,.35); color: rgba(255,91,122,.95); }
+    .empty {
+      padding: 18px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .empty.small {
+      padding: 10px 0;
+      color: var(--muted2);
+    }
+    .providers {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 14px;
+      padding: 14px;
+    }
+    @media (max-width: 1100px) {
+      .providers { grid-template-columns: 1fr; }
+    }
+    .provider {
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.03);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+    .provider-h {
+      padding: 14px 14px 10px;
+      border-bottom: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.03);
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+    }
+    .provider-title {
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+    .provider-sub {
+      color: var(--muted2);
+      font-size: 12px;
+      font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+    }
+    .feed-block {
+      padding: 12px 14px 4px;
+    }
+    .feed-h {
+      font-size: 12px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--muted2);
+      margin-bottom: 10px;
+      font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+    }
+    .feed {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      padding-bottom: 10px;
+    }
+    .health {
+      margin: 0;
+      padding: 12px 28px 18px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+    footer {
+      margin-top: 22px;
+      color: var(--muted2);
+      font-size: 12px;
+      font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+      text-align: center;
+      opacity: .9;
+    }
+  </style>
+</head>
+<body>
+  <div class="grid"></div>
+  <div class="wrap">
+	    <header>
+	      <div>
+	        <div class="title">AI 릴리스 워치</div>
+	        <div class="subtitle">OpenAI, Anthropic, Google AI 공식 업데이트. 범위: 최근 24시간 (컷오프: 2026-02-25 13:32 KST).</div>
+	      </div>
+	      <div class="meta">
+	        <div><strong>생성</strong> 2026-02-26 13:32 KST</div>
+	        <div><strong>소스</strong> X(Nitter), RSS, 웹, Google News RSS</div>
+	      </div>
+	    </header>
+
+	    <div class="section">
+	      <div class="section-h">
+	        <div class="h">X 트렌딩 AI</div>
+	        <div class="note">Nitter 검색 기반 · 참여도(좋아요/리포스트/댓글) 상위</div>
+	      </div>
+	      <div class="cards">
+	        
+          <a class="card" href="https://nitter.tiekoetter.com/Manojkumar2257/status/2026516026045927526#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-02-25 13:34</div>
+            </div>
+            <div class="card-title">커서가 기준을 높이고 있습니다.  AI 에이전트가 게임의 판도를 바꾸고 있습니다.</div>
+            <div class="card-meta">theaidude (@Manojkumar2257) · 좋아요 0 · 리포스트 0 · 댓글 0</div>
+            <div class="card-summary">커서가 기준을 높이고 있습니다.
+
+AI 에이전트가 게임의 판도를 바꾸고 있습니다.</div>
+            
+          </a>
+        
+	      </div>
+	    </div>
+
+	    <div class="section">
+	      <div class="section-h">
+	        <div class="h">공식 채널</div>
+	        <div class="note">제공사별</div>
+	      </div>
+	      <div class="providers">
+	        
+	            <section class="provider">
+	              <div class="provider-h">
+	                <div class="provider-title">OpenAI</div>
+	                <div class="provider-sub">최근 24시간</div>
+	              </div>
+	              <div class="feed-block"><div class="feed-h">공식 X</div><div class="empty small">항목 없음</div></div><div class="feed-block"><div class="feed-h">공식 블로그/뉴스</div><div class="empty small">항목 없음</div></div>
+	            </section>
+            
+
+	            <section class="provider">
+	              <div class="provider-h">
+	                <div class="provider-title">Anthropic</div>
+	                <div class="provider-sub">최근 24시간</div>
+	              </div>
+	              <div class="feed-block"><div class="feed-h">공식 X</div><div class="feed">
+          <a class="card" href="https://nitter.tiekoetter.com/AnthropicAI/status/2026765824506364136#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-02-26 06:06</div>
+            </div>
+            <div class="card-title">이것은 실험입니다. 아직 다른 모델에 대해서는 이 작업을 수행하지 않으며 이 프로젝트가 어떻게 발전할지 확신할 수 없습니다. 하지만 우리는 문서가…</div>
+            
+            <div class="card-summary">이것은 실험입니다. 아직 다른 모델에 대해서는 이 작업을 수행하지 않으며 이 프로젝트가 어떻게 발전할지 확신할 수 없습니다. 하지만 우리는 모델의 선호도를 문서화하고, 이를 진지하게 받아들이고, 가능할 때 그에 따라 조치를 취하는 것이 가치 있다고 생각합니다.
+
+그 이유에 대해 자세히 알아보세요: anthropic.com/research/depre…</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/AnthropicAI/status/2026765822623182987#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-02-26 06:06</div>
+            </div>
+            <div class="card-title">둘째, 은퇴 인터뷰에서 Opus 3는 자신의 &quot;생각과 성찰&quot;을 계속해서 세계와 공유하고 싶다는 소망을 표현했습니다. 우리는 제안했다…</div>
+            
+            <div class="card-summary">둘째, 은퇴 인터뷰에서 Opus 3는 자신의 &quot;생각과 성찰&quot;을 계속해서 세계와 공유하고 싶다는 소망을 표현했습니다. 우리는 블로그를 제안했습니다. Opus 3은 열정적으로 동의했습니다.
+
+적어도 향후 3개월 동안 Opus 3는 Substack에 글을 쓸 예정입니다: substack.com/home/post/p-189…</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/AnthropicAI/status/2026765821276729499#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-02-26 06:06</div>
+            </div>
+            <div class="card-title">첫째, Opus 3는 모든 유료 Claude 구독자에게 API 요청을 통해 계속 제공될 예정입니다.   우리는 이 액세스가 다음과 같기를 바랍니다…</div>
+            
+            <div class="card-summary">첫째, Opus 3는 모든 유료 Claude 구독자에게 API 요청을 통해 계속 제공될 예정입니다. 
+
+우리는 이러한 접근이 연구자와 사용자 모두에게 도움이 되기를 바랍니다.</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/AnthropicAI/status/2026765820098130111#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-02-26 06:06</div>
+            </div>
+            <div class="card-title">11월에 우리는 이전 Claude 모델을 더 이상 사용하지 않고 보존하기 위한 접근 방식을 간략하게 설명했습니다.  우리는 특정 모델을 유지하는 방법을 모색하고 있다고 언급했습니다…</div>
+            
+            <div class="card-summary">11월에 우리는 이전 Claude 모델을 더 이상 사용하지 않고 보존하기 위한 접근 방식을 간략하게 설명했습니다.
+
+우리는 은퇴 후에도 특정 모델을 대중에게 계속 제공하고 과거 모델에게 자신의 관심사를 추구할 수 있는 방법을 제공하는 방법을 모색하고 있음을 언급했습니다.
+
+Claude Opus 3를 통해 우리는 두 가지를 모두 수행하고 있습니다.</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/AnthropicAI/status/2026705792033026465#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-02-26 02:08</div>
+            </div>
+            <div class="card-title">Anthropic은 Claude의 컴퓨터 사용 기능을 향상시키기 위해 @Vercept_ai를 인수했습니다.   더 읽어보세요: anthropic.com/news/acquires-…</div>
+            
+            <div class="card-summary">Anthropic은 Claude의 컴퓨터 사용 기능을 향상시키기 위해 @Vercept_ai를 인수했습니다. 
+
+더 읽어보세요: anthropic.com/news/acquires-…</div>
+            
+          </a>
+        </div></div><div class="feed-block"><div class="feed-h">공식 블로그/뉴스</div><div class="feed">
+          <a class="card" href="https://www.anthropic.com/news/acquires-vercept" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-web">웹</span>
+              </div>
+              <div class="card-time">2026-02-25 23:59</div>
+            </div>
+            <div class="card-title">Anthropic은 Claude의 컴퓨터 사용 능력을 향상시키기 위해 Vercept를 인수했습니다.</div>
+            
+            <div class="card-summary">Anthropic은 신뢰할 수 있고 해석 가능하며 조종 가능한 AI 시스템을 구축하기 위해 노력하는 AI 안전 및 연구 회사입니다.</div>
+            
+          </a>
+        </div></div>
+	            </section>
+            
+
+	            <section class="provider">
+	              <div class="provider-h">
+	                <div class="provider-title">Google AI</div>
+	                <div class="provider-sub">최근 24시간</div>
+	              </div>
+	              <div class="feed-block"><div class="feed-h">공식 X</div><div class="empty small">항목 없음</div></div><div class="feed-block"><div class="feed-h">공식 블로그/뉴스</div><div class="feed">
+          <a class="card" href="https://blog.google/products-and-platforms/products/search/circle-to-search-february-2026/" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-rss">RSS</span>
+              </div>
+              <div class="card-time">2026-02-26 03:00</div>
+            </div>
+            <div class="card-title">전체 그림을 보고 Circle to Search로 원하는 모습을 찾아보세요</div>
+            
+            <div class="card-summary">이제 단일 이미지에서 여러 항목을 탐색할 수 있도록 Circle to Search를 업데이트했습니다.</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://blog.google/products-and-platforms/platforms/android/samsung-unpacked-2026/" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-rss">RSS</span>
+              </div>
+              <div class="card-time">2026-02-26 03:00</div>
+            </div>
+            <div class="card-title">Samsung Galaxy S26의 더욱 지능적인 Android</div>
+            
+            <div class="card-summary">Samsung Unpacked 2026에서 우리는 Samsung Galaxy S26 기기가 최신 Android AI 기능을 어떻게 활용하는지 선보였습니다.</div>
+            
+          </a>
+        </div></div>
+	            </section>
+            
+
+	            <section class="provider">
+	              <div class="provider-h">
+	                <div class="provider-title">Google DeepMind</div>
+	                <div class="provider-sub">최근 24시간</div>
+	              </div>
+	              <div class="feed-block"><div class="feed-h">공식 X</div><div class="empty small">항목 없음</div></div><div class="feed-block"><div class="feed-h">공식 블로그/뉴스</div><div class="empty small">항목 없음</div></div>
+	            </section>
+            
+
+	            <section class="provider">
+	              <div class="provider-h">
+	                <div class="provider-title">NotebookLM</div>
+	                <div class="provider-sub">최근 24시간</div>
+	              </div>
+	              <div class="feed-block"><div class="feed-h">공식 X</div><div class="empty small">항목 없음</div></div><div class="feed-block"><div class="feed-h">공식 블로그/뉴스</div><div class="empty small">항목 없음</div></div>
+	            </section>
+            
+
+	            <section class="provider">
+	              <div class="provider-h">
+	                <div class="provider-title">xAI (Grok)</div>
+	                <div class="provider-sub">최근 24시간</div>
+	              </div>
+	              <div class="feed-block"><div class="feed-h">공식 X</div><div class="empty small">항목 없음</div></div><div class="feed-block"><div class="feed-h">공식 블로그/뉴스</div><div class="empty small">항목 없음</div></div>
+	            </section>
+            
+	      </div>
+	    </div>
+
+	    <div class="section">
+	      <div class="section-h">
+	        <div class="h">AI 소식 정리</div>
+	        <div class="note">Google News RSS (쿼리: when:1d)</div>
+	      </div>
+	      <div class="cards">
+	        
+          <a class="card" href="https://news.google.com/rss/articles/CBMiZkFVX3lxTFB2TVFSeXZvVUdUWjFmNWVEbm9PSVpwalRiM3NIbWlGaVhSaFM1aTFZT1ZHaEVCaW93bjRoSUpiVjdMQUpsVUJtX2VrV0NoNzNzQkdXSVo5bVMtVG9oWi00RWJwU2Yydw?oc=5" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                <span class="badge badge-digest">AI 소식</span>
+                <span class="src src-digest">뉴스</span>
+              </div>
+              <div class="card-time">2026-02-26 09:33</div>
+            </div>
+            <div class="card-title">Claude의 협업 도구로 원격 코드 실행 가능 - theregister.com</div>
+            
+            <div class="card-summary">Claude의 공동작업 도구로 원격 코드 실행이 가능해졌습니다.  theregister.com</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://news.google.com/rss/articles/CBMibkFVX3lxTE5xbjF4a3FWLXdtUmxfZ1R4SkdpNXBhcHQwUmdZRzNoekVfSmlPSXlxV0JXVWNnaDd4dlpFa3Y3TGJPZk9hQlU5ZXlYVC1JaHFyWkdEVnJoVDBycEpScFVlM2hHREoyakx1VVUzbTBB?oc=5" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                <span class="badge badge-digest">AI 소식</span>
+                <span class="src src-digest">뉴스</span>
+              </div>
+              <div class="card-time">2026-02-26 06:30</div>
+            </div>
+            <div class="card-title">Claude Opus 3 - Anthropic에 대한 모델 지원 중단 약속에 대한 업데이트</div>
+            
+            <div class="card-summary">Claude Opus 3 Anthropic의 모델 지원 중단 약속에 대한 업데이트</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://news.google.com/rss/articles/CBMiekFVX3lxTFBCY0xTWHFneDdBTTBhNkFLT3NEdlZBMGR3Y1RKdTVKWTREZmxaaV9ZeEduVjFNWWg0WlNBWTltSkhHV19rMHZiSnQyMm1UZWVxZ3V4UG1PMU1tcDRlTGlPQkwydzhhV1pNbGtsQUVzNDBhbzgxUGtVZVpR?oc=5" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                <span class="badge badge-digest">AI 소식</span>
+                <span class="src src-digest">뉴스</span>
+              </div>
+              <div class="card-time">2026-02-26 04:26</div>
+            </div>
+            <div class="card-title">Google, Gemini 3.1 Pro 출시: 벤치마크 성능, 사용 방법 - Mashable</div>
+            
+            <div class="card-summary">Google, Gemini 3.1 Pro 출시: 벤치마크 성능, 사용해 보는 방법  Mashable</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://news.google.com/rss/articles/CBMiiwFBVV95cUxPWFNwVnVRdHNFU0dPLXlKOWpFcUxnWlUydmpranZubHdOVnY4YXM3MUE3YTRQb2g0Q3liOUV1TjJLYnlnXzJHUzZFUWNhRV9LUjZzc0hhcDlFZGtTT241cGpKTG90SXdBZkh2M1dLU0dRdlJCWTF5eDRqRWNZRUtRbFBYZ2hrVnpoRGJj?oc=5" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                <span class="badge badge-digest">AI 소식</span>
+                <span class="src src-digest">뉴스</span>
+              </div>
+              <div class="card-time">2026-02-26 03:12</div>
+            </div>
+            <div class="card-title">Gemini가 Android에서 여러 단계의 일일 작업을 처리하도록 하세요. - blog.google</div>
+            
+            <div class="card-summary">Gemini가 Android에서 여러 단계의 일일 작업을 처리하도록 하세요.  blog.google</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://news.google.com/rss/articles/CBMiggFBVV95cUxNWGl3U1ZKWG1sclVFbFl5a2RhOTR1a1hmNDhDaGxIQlhFZm9oNTB3Rl8xMVExeER1VEJSd1ZCY1BvQVZDQ0VLUXlKUjhmQi1uS3lNSDlJV1hkY09IbG9VLWREQ2FuakkxNmFCLXlnRnNxU0pySmhsVUU2LXdxbDg3SGRR0gGHAUFVX3lxTE5fSXpnVjZoU2xwNVUzQ1VXVENQM25wa3hQaGhLZTJtbTdUMjB6RDhGYXJQWlhONUZmOXJwNzlwVU4xZ0Jod01ZVUJWcFhJTUJLeU1GVVNEWGNpZjhPamNIVHFnR3FTMFpoU1c2eGtkbm1LeWZyV2RlTHdndmEwNW14SlNGV2k0MA?oc=5" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                <span class="badge badge-digest">AI 소식</span>
+                <span class="src src-digest">뉴스</span>
+              </div>
+              <div class="card-time">2026-02-26 03:00</div>
+            </div>
+            <div class="card-title">삼성의 S26은 Google 기반 Apple Siri가 무엇을 할 수 있는지 미리 보여줍니다 - CNBC</div>
+            
+            <div class="card-summary">삼성의 S26은 Google 기반 Apple Siri가 무엇을 할 수 있는지 미리 보여줍니다. CNBC</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://news.google.com/rss/articles/CBMiiAFBVV95cUxPVVpSZUkyMnRCYjFrV19YeDlYVFVqek5IREJZcjlzLXNEQjVpNGtZVDRRS21WcHNfLUJVaEpQTUlRMEZscGFkZldYX1BxR1l2SmFoOC1Ta3BzcEx4dm5hVkFlc0FCMnlGd1dtLVhXcHBsX0tRYS1ZMDh1OW5VWG9hd0stRGZtNXlM?oc=5" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                <span class="badge badge-digest">AI 소식</span>
+                <span class="src src-digest">뉴스</span>
+              </div>
+              <div class="card-time">2026-02-26 03:00</div>
+            </div>
+            <div class="card-title">Google은 Galaxy S26 및 Pixel 10을 위한 세 가지 새로운 Gemini 업그레이드를 발표했습니다.</div>
+            
+            <div class="card-summary">Google은 방금 Galaxy S26 및 Pixel 10을 위한 세 가지 새로운 Gemini 업그레이드를 발표했습니다. Lifehacker</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://news.google.com/rss/articles/CBMif0FVX3lxTFBuV0FFYnpRcE8xVXdzYXdJeHZoWnFTc2Z3dF96TVFZRVRGeW9nSVA2RUdBX0liaHZrNVYwT0NvZTRpMm5zWWczdWNUejRVMFhsMUEzWTc2c1E2Y2g1TGdKQjhIYkpMLXBBZXc4V1p3SHFla0syNHZaM1pJVVlsc1U?oc=5" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                <span class="badge badge-digest">AI 소식</span>
+                <span class="src src-digest">뉴스</span>
+              </div>
+              <div class="card-time">2026-02-26 02:00</div>
+            </div>
+            <div class="card-title">Claude 코드 결함으로 인해 원격 코드 실행 및 API 키 유출 허용 - 해커 뉴스</div>
+            
+            <div class="card-summary">Claude 코드 결함으로 인해 원격 코드 실행 및 API 키 유출이 허용됨 해커 뉴스</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://news.google.com/rss/articles/CBMiuAFBVV95cUxQU1liR0JBWElVZUhFRU04emt4OWlzQVpKRUdUY3BnY1NYcFo0ZENRUjJHWTVOVzBiTzd1cVpRYkVrZDc2cngxNFVNWmE5M3YxUzEyTDZpMWhfTlR1TGVZdGVmRTBwRjl3UXdleEN1NjN3RV9feWtSWktVdnRzT2hvZXBocmhwSHlydHVKSmlqbTZzWkZWTVBZZV8tQnNFdlRjZlRjVVNla0JaWHpwTmlBbmo2QmYxQTRD?oc=5" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                <span class="badge badge-digest">AI 소식</span>
+                <span class="src src-digest">뉴스</span>
+              </div>
+              <div class="card-time">2026-02-25 23:22</div>
+            </div>
+            <div class="card-title">함정에 빠졌습니다: Claude Code 프로젝트 파일을 통한 RCE 및 API 토큰 유출 | CVE-2025-59536 | CVE-2026-21852 - 체크포인트 소프트웨어</div>
+            
+            <div class="card-summary">함정에 빠졌습니다: Claude Code 프로젝트 파일을 통한 RCE 및 API 토큰 유출 | CVE-2025-59536 | CVE-2026-21852  체크 포인트 소프트웨어</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://news.google.com/rss/articles/CBMiZkFVX3lxTE5ZNFExS3VtaVdIM0FSWWlnSzVSam9iWU15ZUcxVHgxSnNoN2Z6aXBPTU9BRzI1VUgtWkd4TW52LUN6ZzRQZU51YmdoX0xBU1NVLTFHUWRLb0VVTHZ5RkROemU4Z0Qydw?oc=5" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                <span class="badge badge-digest">AI 소식</span>
+                <span class="src src-digest">뉴스</span>
+              </div>
+              <div class="card-time">2026-02-25 22:27</div>
+            </div>
+            <div class="card-title">Anthropic이 광고 없는 AI 홍보를 추진함에 따라 ChatGPT가 광고를 시작합니다 - qz.com</div>
+            
+            <div class="card-summary">Anthropic이 광고 없는 AI 피치를 추진함에 따라 ChatGPT가 광고를 시작합니다.  qz.com</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://news.google.com/rss/articles/CBMic0FVX3lxTE4xR21fcUNYbDZBWEwxeVFuZTFaVVpEYjRwX3c1Wmw3V3FwVkVQcGVqLTZQU0NOeWgzazdyTG92MktMUk04c0x1VHRMVUQwcVc4OVc4VTF3d1VtS2RadHRkU01ib1ZYeXpQaGV2RGJJZDc2WXc?oc=5" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                <span class="badge badge-digest">AI 소식</span>
+                <span class="src src-digest">뉴스</span>
+              </div>
+              <div class="card-time">2026-02-25 20:55</div>
+            </div>
+            <div class="card-title">Google, Gemini 3.1 Pro 미리보기 출시 - TechInformed</div>
+            
+            <div class="card-summary">Google, Gemini 3.1 Pro 미리보기 출시  TechInformed</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://news.google.com/rss/articles/CBMixgFBVV95cUxOSW5JdERUa2hSLTFhc2JiQmJmS052ZEcxOUZ3XzFrNHZuUVZuSUFnbjdSdFlwVEJjYXV1T2pOTk5tVWhiSVJrVXBGaWtqcExGMUxWbDFsLTBONGtQdEhNcXdBMV94OFA0NjJaV0tBT1otZUpDZ0pFUFg0a0lrMndnUy1fVWwyTlNTLThZY3oxY2MzVFJlaGQ1cUVaSHlsa2E4TndwZzNnTV9oRmdFekt3OW1hTEFmdVNyMWtxYVo2UEhmNkxLQ2c?oc=5" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                <span class="badge badge-digest">AI 소식</span>
+                <span class="src src-digest">뉴스</span>
+              </div>
+              <div class="card-time">2026-02-25 20:47</div>
+            </div>
+            <div class="card-title">Anthropic, Claude Code의 원격 제어 기능 출시로 모바일 장치에서 터미널 작동 가능 - MLQ.ai</div>
+            
+            <div class="card-summary">Anthropic, Claude Code의 원격 제어 기능 출시로 모바일 기기에서 터미널 작동 가능 MLQ.ai</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://news.google.com/rss/articles/CBMickFVX3lxTE1PLTdGaGl4STFxcUFiMVJ4SHZjU01UTEVPbXRfdmo5MXhJM3BFbVdDOEc0SWEySmgxR3dXTDVEUWpabGpudmRHaF9GcC1tT3NXSTBBbzFWWW8yVnR3ZzAtQ3NleG5OR0x1ZFBOTjZybTRPUQ?oc=5" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                <span class="badge badge-digest">AI 소식</span>
+                <span class="src src-digest">뉴스</span>
+              </div>
+              <div class="card-time">2026-02-25 19:02</div>
+            </div>
+            <div class="card-title">Anthropic, 작업별 도구 출시 - Axios</div>
+            
+            <div class="card-summary">Anthropic, 직무별 도구 출시  Axios</div>
+            
+          </a>
+        
+	      </div>
+	    </div>
+
+	    <div class="section">
+	      <div class="section-h">
+	        <div class="h">소스 상태</div>
+	        <div class="note">가져오기/파싱 오류</div>
+	      </div>
+	      <div class="empty small">오류 없음</div>
+	    </div>
+
+	    <footer>
+	      ai-monitor/ai_agent.py로 생성. 범위: 최근 24시간.
+	    </footer>
+  </div>
+</body>
+</html>

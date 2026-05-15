@@ -28,6 +28,7 @@ from typing import Dict, Iterable, List, Optional, Tuple
 from urllib.error import HTTPError, URLError
 import urllib.request
 import urllib.parse
+import ssl
 import xml.etree.ElementTree as ET
 
 
@@ -43,6 +44,8 @@ HEALTH_FILE = BASE_DIR / "health_last.json"
 TRANSLATION_CACHE_FILE = CACHE_DIR / "translation_cache.json"
 
 NITTER_COOKIE_CACHE = CACHE_DIR / "nitter_cookies.json"
+X_TRENDING_CACHE = CACHE_DIR / "x_trending_cache.json"
+PROVIDER_PROFILE_CACHE = CACHE_DIR / "provider_profile_cache.json"
 
 DEFAULT_UA = (
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
@@ -93,6 +96,59 @@ def _ensure_dirs() -> None:
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     LOG_DIR.mkdir(parents=True, exist_ok=True)
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def _save_provider_cache(pid: str, items: List, cutoff_utc) -> None:
+    """프로바이더별 X 프로필 수집 결과를 캐시에 저장 (아이템이 있을 때만)."""
+    if not items:
+        return
+    try:
+        cache = {}
+        if PROVIDER_PROFILE_CACHE.exists():
+            cache = json.loads(PROVIDER_PROFILE_CACHE.read_text(encoding="utf-8"))
+        cache[pid] = [
+            {
+                "provider_id": it.provider_id,
+                "provider_name": it.provider_name,
+                "source": it.source,
+                "title": it.title,
+                "url": it.url,
+                "published_at_utc": it.published_at_utc.isoformat(),
+                "summary": it.summary,
+                "raw_text": it.raw_text,
+            }
+            for it in items
+        ]
+        PROVIDER_PROFILE_CACHE.write_text(json.dumps(cache, ensure_ascii=False, indent=2), encoding="utf-8")
+    except Exception:
+        pass
+
+
+def _load_provider_cache(pid: str, cutoff_utc) -> List:
+    """캐시에서 프로바이더 아이템을 복원 (cutoff 이후 아이템만)."""
+    try:
+        if not PROVIDER_PROFILE_CACHE.exists():
+            return []
+        cache = json.loads(PROVIDER_PROFILE_CACHE.read_text(encoding="utf-8"))
+        raw = cache.get(pid, [])
+        result = []
+        for d in raw:
+            dt = datetime.fromisoformat(d["published_at_utc"])
+            if dt < cutoff_utc:
+                continue
+            result.append(NewsItem(
+                provider_id=d["provider_id"],
+                provider_name=d["provider_name"],
+                source=d["source"],
+                title=d["title"],
+                url=d["url"],
+                published_at_utc=dt,
+                summary=d.get("summary", ""),
+                raw_text=d.get("raw_text", ""),
+            ))
+        return result
+    except Exception:
+        return []
 
 
 def _log(msg: str) -> None:
@@ -297,13 +353,82 @@ def _is_ai_related_text(text: str) -> bool:
 
     low = s.lower()
     must_sub = [
+        # 주요 AI 기업/제품
         "openai",
         "anthropic",
         "deepmind",
         "google deepmind",
         "notebooklm",
         "chatgpt",
+        "gpt-4",
+        "gpt-5",
         "gpt",
+        "perplexity",
+        "groq",
+        "cohere",
+        "replicate",
+        "together ai",
+        "databricks",
+        "meta ai",
+        "microsoft ai",
+        "apple intelligence",
+        "amazon bedrock",
+        # AI 코딩 도구
+        "cursor ai",
+        "windsurf",
+        "devin ai",
+        "codex",
+        # 이미지/비디오 생성
+        "sora",
+        "dall-e",
+        "dalle",
+        "runway",
+        "stable diffusion",
+        "midjourney",
+        "flux model",
+        # 오픈소스 모델
+        "llama",
+        "mistral",
+        "phi-4",
+        "qwen",
+        "deepseek",
+        "yi model",
+        "gemma",
+        # ML 프레임워크/플랫폼
+        "hugging face",
+        "huggingface",
+        "langchain",
+        "llamaindex",
+        "pytorch",
+        "tensorflow",
+        "jax",
+        "transformers",
+        "copilot",
+        # AI 핵심 개념
+        "transformer",
+        "diffusion model",
+        "neural network",
+        "deep learning",
+        "machine learning",
+        "reinforcement learning",
+        "fine-tuning",
+        "fine tuning",
+        "rag",
+        "retrieval augmented",
+        "multimodal",
+        "foundation model",
+        "generative ai",
+        "large language model",
+        # 하드웨어/인프라
+        "nvidia",
+        "cuda",
+        "tensor core",
+        "ai chip",
+        # AI 안전/정책
+        "ai safety",
+        "ai alignment",
+        "ai regulation",
+        "ai governance",
     ]
     for kw in must_sub:
         if kw in low:
@@ -324,19 +449,40 @@ def _is_ai_related_text(text: str) -> bool:
         generic_ai = True
     if re.search(r"\bllm\b", low):
         generic_ai = True
+    if re.search(r"\bml\b", low):
+        generic_ai = True
     if "artificial intelligence" in low:
         generic_ai = True
     if "large language model" in low:
         generic_ai = True
     if "language model" in low:
         generic_ai = True
+    if "text-to" in low or "text to image" in low or "text to video" in low:
+        generic_ai = True
+    if "embedding" in low or "vector database" in low:
+        generic_ai = True
+    if "inference" in low and ("model" in low or "gpu" in low):
+        generic_ai = True
 
     if not generic_ai:
         return False
 
-    # "AI"만 있는 일반 잡담/정치 이슈는 제외하고, 릴리스/제품/연구 맥락만 통과.
+    # "AI"만 있는 일반 잡담/정치 이슈는 제외하고, AI 테크 맥락만 통과.
+    # 기준을 넓게 잡아 더 많은 트윗이 통과하도록 함.
     ctx_terms = [
+        # 모델/제품
         "model",
+        "chatbot",
+        "codex",
+        "gemini",
+        "claude",
+        "chatgpt",
+        "gpt",
+        "copilot",
+        "siri",
+        "alexa",
+        "assistant",
+        # 릴리스/뉴스
         "release",
         "released",
         "launch",
@@ -345,20 +491,113 @@ def _is_ai_related_text(text: str) -> bool:
         "announced",
         "update",
         "updated",
-        "api",
+        "new",
         "preview",
         "beta",
+        "alpha",
+        "demo",
+        "available",
+        "introducing",
+        "reveal",
+        "unveil",
+        # 기술 용어
+        "api",
         "agent",
+        "agentic",
         "reasoning",
         "research",
         "benchmark",
+        "eval",
         "prompt",
-        "chatbot",
-        "codex",
-        "gemini",
-        "claude",
-        "chatgpt",
-        "gpt",
+        "train",
+        "training",
+        "dataset",
+        "token",
+        "inference",
+        "fine-tun",
+        "finetun",
+        "deploy",
+        "framework",
+        "open source",
+        "open-source",
+        "parameter",
+        "weight",
+        "checkpoint",
+        "paper",
+        "arxiv",
+        "scaling",
+        "compute",
+        "latency",
+        "throughput",
+        "context window",
+        "context length",
+        "synthetic",
+        "distill",
+        "quantiz",
+        "pruning",
+        "lora",
+        "adapter",
+        "instruction",
+        "alignment",
+        "safety",
+        "guardrail",
+        "hallucin",
+        # 하드웨어
+        "gpu",
+        "tpu",
+        "nvidia",
+        "cuda",
+        "chip",
+        "h100",
+        "a100",
+        "b200",
+        # 응용
+        "robot",
+        "autonom",
+        "pipeline",
+        "workflow",
+        "embed",
+        "vector",
+        "rag",
+        "tool use",
+        "function call",
+        "multimodal",
+        "vision",
+        "speech",
+        "audio",
+        "image generat",
+        "video generat",
+        "code generat",
+        "text generat",
+        "translation",
+        "summariz",
+        "classif",
+        "detection",
+        "recognition",
+        "segmentation",
+        # 산업/비즈니스
+        "startup",
+        "funding",
+        "acquisition",
+        "valuation",
+        "billion",
+        "million",
+        "invest",
+        "partner",
+        "collaborat",
+        "enterprise",
+        "developer",
+        "platform",
+        "ecosystem",
+        # 코딩 도구
+        "coding",
+        "code review",
+        "autocomplet",
+        "suggestion",
+        "ide",
+        "terminal",
+        "productiv",
+        "automat",
     ]
     return any(t in low for t in ctx_terms)
 
@@ -370,7 +609,7 @@ def _is_low_quality_trending(text: str) -> bool:
     s = (text or "").strip()
     if not s:
         return True
-    if len(s) < 24:
+    if len(s) < 15:
         return True
     low = s.lower()
 
@@ -381,7 +620,7 @@ def _is_low_quality_trending(text: str) -> bool:
         "pump",
         "moon",
         "memecoin",
-        "token",
+        "presale",
         "ca:",
         "contract address",
         "buy now",
@@ -458,6 +697,105 @@ def _translate_google_gtx(text: str, target_lang: str, timeout_s: int) -> Tuple[
         return None, f"parse_error: {e}"
 
 
+def _clean_ollama_response(raw: str) -> Optional[str]:
+    """Ollama 응답에서 thinking/메타텍스트 제거, 순수 번역만 추출."""
+    text = raw or ""
+
+    # 1) </think> 이후만 사용
+    while "</think>" in text:
+        text = text.split("</think>", 1)[1]
+
+    # 2) 태그·지시어 제거
+    for tok in ("<think>", "</think>", "/no_think", "[KO]", "[EN]"):
+        text = text.replace(tok, "")
+
+    # 3) "Korean:" / "English:" 접두사 제거
+    stripped = text.lstrip()
+    if stripped.lower().startswith("korean:"):
+        text = stripped[len("korean:"):]
+
+    # 4) "[EN]" / "English:" 이후 잘라냄
+    for marker in ("\nEnglish:", "\n[EN]"):
+        if marker in text:
+            text = text[:text.index(marker)]
+
+    # 5) "//" 메타 코멘트 줄 제거
+    lines = [l for l in text.split("\n") if not l.strip().startswith("//")]
+    text = "\n".join(lines).strip()
+
+    # 6) thinking 패턴 거부
+    if not text:
+        return None
+    low = text.lower()
+    if "the user wants" in low or "let me start" in low:
+        return None
+    if low.startswith("okay,") or low.startswith("ok,"):
+        return None
+    if "i need to" in low and "translat" in low:
+        return None
+    if text.startswith("안녕하세요") and len(text) < 30:
+        return None
+
+    return text
+
+
+def _translate_ollama(
+    text: str, target_lang: str, *, base_url: str, model: str, timeout_s: int
+) -> Tuple[Optional[str], Optional[str]]:
+    """
+    Ollama API (/api/generate) 포맷 기반 패턴 완성 번역.
+    Returns: (translated_text|None, error|None)
+    """
+    text = (text or "").strip()
+    if not text:
+        return "", None
+
+    lang_map = {"ko": "Korean", "en": "English", "ja": "Japanese", "zh": "Chinese"}
+    lang_name = lang_map.get(target_lang.lower()[:2], target_lang)
+
+    # 포맷 기반 few-shot 프롬프트
+    prompt = (
+        f"[EN] OpenAI released a new model today.\n"
+        f"[{lang_name[:2].upper()}] OpenAI가 오늘 새로운 모델을 출시했습니다.\n\n"
+        f"[EN] NVIDIA is making AI chips more accessible.\n"
+        f"[{lang_name[:2].upper()}] NVIDIA가 AI 칩을 더 쉽게 접근할 수 있도록 하고 있습니다.\n\n"
+        f"[EN] {text}\n"
+        f"[{lang_name[:2].upper()}]"
+    )
+
+    payload = json.dumps({
+        "model": model,
+        "prompt": prompt,
+        "stream": False,
+        "options": {
+            "temperature": 0.1,
+            "num_predict": 400,
+            "stop": ["[EN]", "\n\n"],
+        },
+    }).encode("utf-8")
+
+    url = f"{base_url.rstrip('/')}/api/generate"
+    req = urllib.request.Request(
+        url,
+        data=payload,
+        headers={"Content-Type": "application/json", "Accept": "application/json"},
+        method="POST",
+    )
+    try:
+        resp = urllib.request.urlopen(req, timeout=timeout_s)
+        body = resp.read().decode("utf-8", "ignore")
+        data = json.loads(body)
+        raw_content = (data.get("response") or "").strip()
+        if not raw_content:
+            return None, "empty response from Ollama"
+        cleaned = _clean_ollama_response(raw_content)
+        if cleaned:
+            return cleaned, None
+        return None, "ollama: response was thinking/meta text, rejected"
+    except Exception as e:
+        return None, f"ollama_error: {e}"
+
+
 def _translate_text(
     text: str,
     *,
@@ -465,6 +803,7 @@ def _translate_text(
     target_lang: str,
     timeout_s: int,
     cache: Dict[str, Dict[str, str]],
+    ollama_cfg: Optional[Dict] = None,
 ) -> Tuple[str, bool, Optional[str]]:
     """
     Returns: (text_out, translated?, error?)
@@ -484,6 +823,15 @@ def _translate_text(
 
     if provider == "google_gtx":
         trans, err = _translate_google_gtx(text, target_lang, timeout_s=timeout_s)
+    elif provider == "ollama":
+        oc = ollama_cfg or {}
+        trans, err = _translate_ollama(
+            text,
+            target_lang,
+            base_url=oc.get("base_url", "http://localhost:11434"),
+            model=oc.get("model", "gpt-oss:120b-cloud"),
+            timeout_s=timeout_s,
+        )
     else:
         return text, False, f"unknown_provider: {provider}"
 
@@ -838,7 +1186,9 @@ class NitterClient:
         if not q:
             return [], []
 
-        for instance in self._instances:
+        shuffled = list(self._instances)
+        random.shuffle(shuffled)
+        for instance in shuffled:
             url = f"{instance}/search?f=tweets&q={urllib.parse.quote(q)}"
             status, body, err = self._fetch_html(instance, url)
             if status != 200 or not body:
@@ -893,7 +1243,10 @@ class NitterClient:
 
     def fetch_posts(self, handle: str, max_posts: int) -> Tuple[List[NewsItem], List[str]]:
         errs: List[str] = []
-        for instance in self._instances:
+        # 1) Nitter 인스턴스 시도
+        shuffled = list(self._instances)
+        random.shuffle(shuffled)
+        for instance in shuffled:
             status, body, err = self._fetch_profile_html(instance, handle)
             if status != 200 or not body:
                 errs.append(f"{instance}: {err or f'HTTP {status}'}")
@@ -910,7 +1263,120 @@ class NitterClient:
             if dumped:
                 extra += f" [dump: {dumped}]"
             errs.append(f"{instance}: 게시물 0개(파싱 실패){extra}")
+
+        # 2) Nitter 전부 실패 시 → syndication.twitter.com 폴백
+        syndication_posts = _fetch_syndication_timeline(handle, max_posts=max_posts, timeout_s=self._timeout_s)
+        if syndication_posts:
+            return syndication_posts, []
+        errs.append("syndication.twitter.com: 폴백도 실패")
+
         return [], errs
+
+
+def _fetch_syndication_timeline(handle: str, *, max_posts: int = 12, timeout_s: int = 30) -> List[NewsItem]:
+    """
+    X(Twitter) syndication API를 통해 프로필 타임라인을 가져오는 폴백.
+    인증 불필요. 임베드용 엔드포인트를 활용.
+    """
+    url = f"https://syndication.twitter.com/srv/timeline-profile/screen-name/{handle}"
+    try:
+        req = urllib.request.Request(url, headers={
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
+            "Accept": "text/html,application/xhtml+xml",
+            "Referer": f"https://x.com/{handle}",
+        })
+        ctx = ssl.create_default_context()
+        resp = urllib.request.urlopen(req, timeout=timeout_s, context=ctx)
+        body = resp.read().decode("utf-8", errors="replace")
+    except Exception:
+        return []
+
+    if not body or len(body) < 100:
+        return []
+
+    items: List[NewsItem] = []
+
+    # data-tweet-id 기반 파싱 또는 일반 HTML 파싱
+    # syndication은 <div class="timeline-Tweet"> 패턴 사용
+    tweet_blocks = re.split(r'(?=class="[^"]*(?:timeline-Tweet|Tweet-text|tweet-text))', body)
+
+    # JSON 기반 파싱 시도 (syndication이 __NEXT_DATA__ 등으로 JSON을 제공할 때)
+    json_m = re.search(r'<script[^>]*id="__NEXT_DATA__"[^>]*>(.*?)</script>', body, re.S)
+    if json_m:
+        try:
+            data = json.loads(json_m.group(1))
+            entries = []
+            # props → pageProps → timeline → entries 탐색
+            def _find_entries(obj, depth=0):
+                if depth > 8:
+                    return
+                if isinstance(obj, list):
+                    for item in obj:
+                        if isinstance(item, dict) and ("text" in item or "full_text" in item):
+                            entries.append(item)
+                        else:
+                            _find_entries(item, depth + 1)
+                elif isinstance(obj, dict):
+                    for v in obj.values():
+                        _find_entries(v, depth + 1)
+            _find_entries(data)
+            for entry in entries[:max_posts]:
+                text = entry.get("text") or entry.get("full_text") or ""
+                if not text.strip():
+                    continue
+                created = entry.get("created_at") or ""
+                dt = None
+                if created:
+                    try:
+                        dt = parsedate_to_datetime(created)
+                    except Exception:
+                        pass
+                if not dt:
+                    dt = datetime.now(timezone.utc)
+                tweet_id = str(entry.get("id_str") or entry.get("id") or "")
+                tweet_url = f"https://x.com/{handle}/status/{tweet_id}" if tweet_id else f"https://x.com/{handle}"
+                items.append(NewsItem(
+                    provider_id=handle.lower(),
+                    provider_name=handle,
+                    source="X",
+                    title=_safe_text(text.replace("\n", " "), 140),
+                    url=tweet_url,
+                    published_at_utc=dt,
+                    summary=_safe_text(text, 420),
+                    raw_text=text,
+                ))
+            if items:
+                return items[:max_posts]
+        except Exception:
+            pass
+
+    # HTML 파싱 폴백: href="/handle/status/ID" + 텍스트 추출
+    for m in re.finditer(
+        r'href="[^"]*?/(\w+)/status/(\d+)"[^>]*>.*?'
+        r'(?:class="[^"]*(?:text|content)[^"]*"[^>]*>|<p[^>]*>)(.*?)</(?:div|p)>',
+        body, re.S
+    ):
+        tweet_user = m.group(1)
+        tweet_id = m.group(2)
+        raw_html = m.group(3)
+        text = _strip_html(raw_html).strip()
+        if not text or len(text) < 5:
+            continue
+        tweet_url = f"https://x.com/{tweet_user}/status/{tweet_id}"
+        items.append(NewsItem(
+            provider_id=handle.lower(),
+            provider_name=handle,
+            source="X",
+            title=_safe_text(text.replace("\n", " "), 140),
+            url=tweet_url,
+            published_at_utc=datetime.now(timezone.utc),
+            summary=_safe_text(text, 420),
+            raw_text=text,
+        ))
+        if len(items) >= max_posts:
+            break
+
+    return items[:max_posts]
 
 
 def _parse_rss(url: str, timeout_s: int) -> Tuple[List[Tuple[str, str, datetime, str]], Optional[str]]:
@@ -1116,7 +1582,6 @@ def _render_html(
     window_hours: int,
     generated_local: datetime,
     cutoff_utc: datetime,
-    highlights: List[NewsItem],
     provider_order: List[Tuple[str, str]],
     by_provider: Dict[str, List[NewsItem]],
     x_trending: List[NewsItem],
@@ -1206,12 +1671,6 @@ def _render_html(
             {orig_block}
           </a>
         """
-
-    highlights_html = (
-        "\n".join(card(it) for it in highlights)
-        if highlights
-        else f'<div class="empty">최근 {window_hours}시간 내 중요한 업데이트가 없습니다.</div>'
-    )
 
     providers_html_parts: List[str] = []
     for pid, prov_name in provider_order:
@@ -1587,11 +2046,11 @@ def _render_html(
 
 	    <div class="section">
 	      <div class="section-h">
-	        <div class="h">하이라이트 (중요 업데이트)</div>
-	        <div class="note">키워드 시그널 점수 기준</div>
+	        <div class="h">X 트렌딩 AI</div>
+	        <div class="note">Nitter 검색 기반 · 참여도(좋아요/리포스트/댓글) 상위</div>
 	      </div>
 	      <div class="cards">
-	        {highlights_html}
+	        {x_trending_html}
 	      </div>
 	    </div>
 
@@ -1602,16 +2061,6 @@ def _render_html(
 	      </div>
 	      <div class="providers">
 	        {providers_html}
-	      </div>
-	    </div>
-
-	    <div class="section">
-	      <div class="section-h">
-	        <div class="h">X 트렌딩 AI</div>
-	        <div class="note">Nitter 검색 기반 · 참여도(좋아요/리포스트/댓글) 상위</div>
-	      </div>
-	      <div class="cards">
-	        {x_trending_html}
 	      </div>
 	    </div>
 
@@ -1647,7 +2096,6 @@ def _render_markdown(
     window_hours: int,
     generated_local: datetime,
     cutoff_utc: datetime,
-    highlights: List[NewsItem],
     provider_order: List[Tuple[str, str]],
     by_provider: Dict[str, List[NewsItem]],
     x_trending: List[NewsItem],
@@ -1674,7 +2122,10 @@ def _render_markdown(
         if (it.meta or "").strip():
             lines.append(f"  - {it.meta}")
         if summary_ko:
-            lines.append(f"  - {summary_ko}")
+            # 줄바꿈을 공백으로 치환해 마크다운 파싱이 깨지지 않도록 처리
+            summary_clean = re.sub(r'\n{2,}', ' // ', summary_ko)
+            summary_clean = summary_clean.replace('\n', ' ').strip()
+            lines.append(f"  - {summary_clean}")
         if show_original:
             o_title = (it.title or "").strip()
             o_summary = (it.summary or "").strip()
@@ -1690,10 +2141,10 @@ def _render_markdown(
     md.append(f"- 생성: {gen_str}")
     md.append(f"- 기준(컷오프): {cutoff_local}")
     md.append("")
-    md.append("## 하이라이트")
+    md.append("## X 트렌딩 AI")
     md.append("")
-    if highlights:
-        md.extend(fmt_item(i) for i in highlights)
+    if x_trending:
+        md.extend(fmt_item(i) for i in x_trending[:20])
     else:
         md.append("- (없음)")
     md.append("")
@@ -1715,13 +2166,6 @@ def _render_markdown(
             md.append(f"- {src_label}")
             md.extend(fmt_item(i) for i in subset[:10])
             md.append("")
-    md.append("## X 트렌딩 AI")
-    md.append("")
-    if x_trending:
-        md.extend(fmt_item(i) for i in x_trending[:20])
-    else:
-        md.append("- (없음)")
-    md.append("")
     md.append("## AI 소식 정리")
     md.append("")
     if digest:
@@ -1889,6 +2333,15 @@ def run(window_hours: int) -> int:
                     source_health.append(f"WEB {pid}: 지원하지 않는 웹 소스: {web_url}")
 
             prov_items = _dedupe(sorted(prov_items, key=lambda x: x.published_at_utc, reverse=True))
+
+            # 프로바이더 프로필 캐시: 성공 시 저장, 실패 시 복원
+            _save_provider_cache(pid, prov_items, cutoff_utc)
+            if not prov_items:
+                cached = _load_provider_cache(pid, cutoff_utc)
+                if cached:
+                    prov_items = cached
+                    source_health.append(f"{pname}: Nitter 실패 → 캐시에서 {len(cached)}건 복원")
+
             by_provider[pid] = prov_items
             all_items.extend(prov_items)
 
@@ -1916,6 +2369,7 @@ def run(window_hours: int) -> int:
                     if errs:
                         preview = _safe_text(q, 42)
                         source_health.extend([f"X 트렌딩 q{idx} ({preview}): {e}" for e in errs])
+                    if not hits:
                         continue
                     for h in hits:
                         if h.published_at_utc < cutoff_utc:
@@ -1966,6 +2420,38 @@ def run(window_hours: int) -> int:
                     if len(x_trending_items) >= xtr_max_items_total:
                         break
 
+                # 캐시 저장 (성공 시)
+                if x_trending_items:
+                    try:
+                        cache_data = []
+                        for it in x_trending_items:
+                            cache_data.append({
+                                "provider_id": it.provider_id, "provider_name": it.provider_name,
+                                "source": it.source, "title": it.title, "url": it.url,
+                                "published_at_utc": it.published_at_utc.isoformat(),
+                                "summary": it.summary, "raw_text": it.raw_text, "meta": it.meta,
+                            })
+                        X_TRENDING_CACHE.write_text(json.dumps(cache_data, ensure_ascii=False, indent=2), encoding="utf-8")
+                        print(f"  X 트렌딩 캐시 저장: {len(cache_data)}건", flush=True)
+                    except Exception:
+                        pass
+                # 캐시 복원 (결과 0건 + 캐시 존재 시)
+                elif X_TRENDING_CACHE.exists():
+                    try:
+                        cache_data = json.loads(X_TRENDING_CACHE.read_text(encoding="utf-8"))
+                        for d in cache_data:
+                            x_trending_items.append(NewsItem(
+                                provider_id=d["provider_id"], provider_name=d["provider_name"],
+                                source=d["source"], title=d["title"], url=d["url"],
+                                published_at_utc=datetime.fromisoformat(d["published_at_utc"]),
+                                summary=d.get("summary", ""), raw_text=d.get("raw_text", ""),
+                                meta=d.get("meta", ""),
+                            ))
+                        source_health.append(f"X 트렌딩: 검색 실패로 이전 캐시 사용 ({len(x_trending_items)}건)")
+                        print(f"  X 트렌딩 캐시 복원: {len(x_trending_items)}건", flush=True)
+                    except Exception:
+                        pass
+
         return by_provider, all_items, digest_items, x_trending_items, source_health, expected_sources, provider_order
 
     # Collect with a small retry loop on total failure (common for transient DNS hiccups).
@@ -2003,13 +2489,7 @@ def run(window_hours: int) -> int:
 
     # (generated_local is set from now_utc above)
 
-    # Highlights: top high-signal across official sources + news digest (official gets a score boost).
-    highlight_candidates = _dedupe(all_items + digest_items)
-    scored = []
-    for it in highlight_candidates:
-        scored.append((it, _signal_score(it, hi_kw, lo_kw)))
-    scored.sort(key=lambda x: (x[1], x[0].published_at_utc), reverse=True)
-    highlights = [it for it, s in scored if s >= 4][:10]
+    # Highlights section removed — X trending is now the primary top section.
 
     # Translate titles/summaries for display (best-effort; falls back to original on errors).
     translate_cfg = cfg.get("translate", {}) or {}
@@ -2018,13 +2498,14 @@ def run(window_hours: int) -> int:
     translate_target = str(translate_cfg.get("target_lang", "ko"))
     translate_timeout_s = int(translate_cfg.get("timeout_seconds", 10))
     translate_show_original = bool(translate_cfg.get("show_original", False))
+    translate_ollama_cfg = translate_cfg.get("ollama") or {}
 
     translations: Dict[str, Dict[str, str]] = {}
     trans_cache_hits = 0
     trans_cache_misses = 0
     trans_errors = 0
 
-    if translate_enabled and (all_items or digest_items or x_trending_items or highlights):
+    if translate_enabled and (all_items or digest_items or x_trending_items):
         tcache = _load_translation_cache()
         unique_for_translation = _dedupe(all_items + digest_items + x_trending_items)
 
@@ -2046,6 +2527,7 @@ def run(window_hours: int) -> int:
                 target_lang=translate_target,
                 timeout_s=translate_timeout_s,
                 cache=tcache,
+                ollama_cfg=translate_ollama_cfg,
             )
             if err:
                 trans_errors += 1
@@ -2063,7 +2545,6 @@ def run(window_hours: int) -> int:
         window_hours=window_hours,
         generated_local=generated_local,
         cutoff_utc=cutoff_utc,
-        highlights=highlights,
         provider_order=provider_order,
         by_provider=by_provider,
         x_trending=x_trending_items,
@@ -2077,7 +2558,6 @@ def run(window_hours: int) -> int:
         window_hours=window_hours,
         generated_local=generated_local,
         cutoff_utc=cutoff_utc,
-        highlights=highlights,
         provider_order=provider_order,
         by_provider=by_provider,
         x_trending=x_trending_items,
@@ -2123,7 +2603,6 @@ def run(window_hours: int) -> int:
             "official_items": len(all_items),
             "digest_items": len(digest_items),
             "x_trending_items": len(x_trending_items),
-            "highlights": len(highlights),
             "source_health_warnings": len(source_health),
             "expected_sources": expected_sources,
         },

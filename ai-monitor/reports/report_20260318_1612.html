@@ -1,0 +1,1638 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="dark" />
+  <title>AI 릴리스 워치 (최근 24시간)</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+    :root {
+      --bg0: #070A10;
+      --bg1: #0B1020;
+      --panel: rgba(255,255,255,.06);
+      --panel2: rgba(255,255,255,.035);
+      --line: rgba(240,244,255,.12);
+      --text: rgba(240,244,255,.92);
+      --muted: rgba(240,244,255,.62);
+      --muted2: rgba(240,244,255,.46);
+      --a: #5BF2C6;
+      --b: #5BB6FF;
+      --c: #FFD36E;
+      --danger: #FF5B7A;
+      --shadow: 0 12px 40px rgba(0,0,0,.35);
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+	    body {
+	      margin: 0;
+	      color: var(--text);
+	      font-family: "Space Grotesk", "Noto Sans KR", ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif;
+      background:
+        radial-gradient(1200px 800px at 20% 10%, rgba(91,182,255,.18), transparent 60%),
+        radial-gradient(900px 700px at 80% 20%, rgba(91,242,198,.14), transparent 62%),
+        radial-gradient(1000px 900px at 50% 100%, rgba(255,211,110,.10), transparent 55%),
+        linear-gradient(180deg, var(--bg0), var(--bg1));
+      overflow-x: hidden;
+    }
+    .grid {
+      background-image:
+        linear-gradient(to right, rgba(255,255,255,.05) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255,255,255,.05) 1px, transparent 1px);
+      background-size: 56px 56px;
+      background-position: center;
+      mask-image: radial-gradient(650px 500px at 50% 0%, black 40%, transparent 80%);
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: .35;
+    }
+    .wrap {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 28px 18px 56px;
+      position: relative;
+    }
+    header {
+      display: flex;
+      gap: 18px;
+      justify-content: space-between;
+      align-items: flex-end;
+      padding: 18px 18px 22px;
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,.075), rgba(255,255,255,.03));
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+    .title {
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+    }
+    .subtitle {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .meta {
+      text-align: right;
+      color: var(--muted);
+      font-size: 12px;
+      font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+    }
+    .meta strong {
+      color: var(--text);
+      font-weight: 500;
+    }
+    .section {
+      margin-top: 20px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.04);
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0,0,0,.22);
+    }
+    .section-h {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      padding: 16px 18px;
+      background: rgba(255,255,255,.035);
+      border-bottom: 1px solid var(--line);
+    }
+    .section-h .h {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+    .section-h .note {
+      font-size: 12px;
+      color: var(--muted2);
+      font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+    }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 12px;
+      padding: 14px;
+    }
+    .cards .card {
+      grid-column: span 6;
+    }
+    @media (max-width: 900px) {
+      .cards .card { grid-column: span 12; }
+      header { flex-direction: column; align-items: flex-start; }
+      .meta { text-align: left; }
+    }
+    .card {
+      display: block;
+      text-decoration: none;
+      color: inherit;
+      border: 1px solid rgba(255,255,255,.10);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border-radius: 14px;
+      padding: 14px 14px 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.18);
+      transition: transform .18s ease, border-color .18s ease, background .18s ease;
+    }
+    .card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(255,255,255,.22);
+      background: linear-gradient(180deg, rgba(255,255,255,.085), rgba(255,255,255,.035));
+    }
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .card-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+    .card-time {
+      color: var(--muted2);
+      font-size: 12px;
+      font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+      white-space: nowrap;
+    }
+    .card-title {
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      line-height: 1.3;
+      margin-bottom: 8px;
+    }
+    .card-meta {
+      margin-bottom: 8px;
+      color: var(--muted2);
+      font-size: 12px;
+      line-height: 1.35;
+      font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+    }
+	    .card-summary {
+	      font-size: 13px;
+	      color: var(--muted);
+	      line-height: 1.45;
+	    }
+	    .card-orig {
+	      margin-top: 10px;
+	      padding-top: 10px;
+	      border-top: 1px dashed rgba(255,255,255,.14);
+	      color: var(--muted2);
+	      font-size: 12px;
+	      line-height: 1.4;
+	    }
+	    .card-orig-line {
+	      margin-top: 6px;
+	    }
+	    .card-orig-line span {
+	      display: inline-block;
+	      min-width: 72px;
+	      font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+	      letter-spacing: .04em;
+	      color: rgba(240,244,255,.62);
+	    }
+	    .badge {
+	      display: inline-flex;
+	      align-items: center;
+	      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      background: rgba(255,255,255,.07);
+      border: 1px solid rgba(255,255,255,.10);
+      color: rgba(240,244,255,.86);
+    }
+    .badge-openai { border-color: rgba(91,182,255,.35); background: rgba(91,182,255,.12); }
+    .badge-anthropic { border-color: rgba(255,211,110,.35); background: rgba(255,211,110,.10); }
+    .badge-google { border-color: rgba(91,242,198,.35); background: rgba(91,242,198,.10); }
+    .badge-digest { border-color: rgba(255,91,122,.30); background: rgba(255,91,122,.10); }
+    .src {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      letter-spacing: .06em;
+      font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.05);
+      color: rgba(240,244,255,.72);
+    }
+    .src-x { border-color: rgba(91,182,255,.35); color: rgba(91,182,255,.95); }
+    .src-rss { border-color: rgba(91,242,198,.35); color: rgba(91,242,198,.95); }
+    .src-web { border-color: rgba(255,211,110,.35); color: rgba(255,211,110,.95); }
+    .src-digest { border-color: rgba(255,91,122,.35); color: rgba(255,91,122,.95); }
+    .empty {
+      padding: 18px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .empty.small {
+      padding: 10px 0;
+      color: var(--muted2);
+    }
+    .providers {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 14px;
+      padding: 14px;
+    }
+    @media (max-width: 1100px) {
+      .providers { grid-template-columns: 1fr; }
+    }
+    .provider {
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.03);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+    .provider-h {
+      padding: 14px 14px 10px;
+      border-bottom: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.03);
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+    }
+    .provider-title {
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+    .provider-sub {
+      color: var(--muted2);
+      font-size: 12px;
+      font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+    }
+    .feed-block {
+      padding: 12px 14px 4px;
+    }
+    .feed-h {
+      font-size: 12px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--muted2);
+      margin-bottom: 10px;
+      font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+    }
+    .feed {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      padding-bottom: 10px;
+    }
+    .health {
+      margin: 0;
+      padding: 12px 28px 18px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+    footer {
+      margin-top: 22px;
+      color: var(--muted2);
+      font-size: 12px;
+      font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+      text-align: center;
+      opacity: .9;
+    }
+  </style>
+</head>
+<body>
+  <div class="grid"></div>
+  <div class="wrap">
+	    <header>
+	      <div>
+	        <div class="title">AI 릴리스 워치</div>
+	        <div class="subtitle">OpenAI, Anthropic, Google AI 공식 업데이트. 범위: 최근 24시간 (컷오프: 2026-03-17 16:12 KST).</div>
+	      </div>
+	      <div class="meta">
+	        <div><strong>생성</strong> 2026-03-18 16:12 KST</div>
+	        <div><strong>소스</strong> X(Nitter), RSS, 웹, Google News RSS</div>
+	      </div>
+	    </header>
+
+	    <div class="section">
+	      <div class="section-h">
+	        <div class="h">X 트렌딩 AI</div>
+	        <div class="note">Nitter 검색 기반 · 참여도(좋아요/리포스트/댓글) 상위</div>
+	      </div>
+	      <div class="cards">
+	        
+          <a class="card" href="https://nitter.tiekoetter.com/KoopmanTra17299/status/2033385829406847173#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-03-16 12:32</div>
+            </div>
+            <div class="card-title">항공기 번호, 미국 ID, 구글 메일함, OpenAi 항공기 번호, 중국어로 텔레그램 설정하는 방법</div>
+            <div class="card-meta">推特蓝V开通|电报成品号|电报汉化|telegram账户|飞机号 (@KoopmanTra17299) · 좋아요 9 · 리포스트 9 · 댓글 9</div>
+            <div class="card-summary">항공기 번호, 미국 ID, 구글 메일함, OpenAi 항공기 번호, 중국어로 텔레그램 설정하는 방법</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/DealsDhamaka/status/2033384202817966321#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-03-16 12:25</div>
+            </div>
+            <div class="card-title">많은 사람들이 사진 변형을 위해 AI를 사용하느라 바쁘지만 진정한 혁신은 조용히 일어나고 있습니다.  멀티모달 AI가 인류를 변화시키고 있습니다…</div>
+            <div class="card-meta">Vineeth K (@DealsDhamaka) · 좋아요 4 · 리포스트 0 · 댓글 0</div>
+            <div class="card-summary">많은 사람들이 사진 변형을 위해 AI를 사용하느라 바쁘지만 진정한 혁신은 조용히 일어나고 있습니다.
+
+다중 모드 AI는 일상적인 병리학 슬라이드를 공간 단백질체학으로 전환하여 시간과 비용을 절감하는 동시에 암 치료에 대한 접근성을 확대하고 있습니다 🧬🧑‍⚕️
+
+Microsoft의 비디오 👍</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/datasciencejobs/status/2033385495053656305#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-03-16 12:30</div>
+            </div>
+            <div class="card-title">🏢 Mastercard에서 수석 딥 러닝 엔지니어를 채용하고 있습니다. 위치: 🇸🇬 Singapore, Singapore #hiring #tech #jobsearch #careers #jobopenings #h…</div>
+            <div class="card-meta">datasciencejobs.com (@datasciencejobs) · 좋아요 0 · 리포스트 1 · 댓글 1</div>
+            <div class="card-summary">🏢 Mastercard에서 수석 딥 러닝 엔지니어를 채용합니다.
+위치: 🇸🇬 싱가포르, 싱가포르 
+
+ #채용 #기술 #직업 검색 #취업 #취업 #고용 #경력 기회 # #직업</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/geopolythink/status/2033386091861196957#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-03-16 12:33</div>
+            </div>
+            <div class="card-title">미국 AI 정책은 백악관에서 만들어지지 않습니다. 샌프란시스코에서 설계되어 워싱턴에서 서명될 뿐입니다. 국방부의 Claude 퇴출 사태 뒤에 서 있는 그림자 인물 6명에 대해 한명씩 리스트업 해보겠습니다. 이름은 한글로 제 마음대로 적겠습니다. 이유…</div>
+            <div class="card-meta">지오 (@geopolythink) · 좋아요 1 · 리포스트 0 · 댓글 1</div>
+            <div class="card-summary">미국 AI 정책은 백악관에서 만들어지지 않습니다.
+샌프란시스코에서 설계되어 워싱턴에서 서명될 뿐입니다.
+국방부의 Claude 퇴출 사태 뒤에 서 있는 그림자 인물 6명에 대해 한명씩 리스트업 해보겠습니다. 이름은 한글로 제 마음대로 적겠습니다. 이유는 비밀.
+
+오바마가 문을 열어주고 샌프란시스코가 돈을 대줬는데, 이제 그 수혜자들이 자신 혼자 컸다고 하며, 이제는 트럼프 대통령을 사용해서, 본인들에게 유리한 AI 정책을 쓰고 있습니다.
+
+1. 에밀 마이클
+2. 데이비드 삭스
+3. 마크 엔드리센
+4. 알렉스 카프
+5. 피터 틸
+6. 조 론스데일
+
+(한명씩 타래로 알려드리겠습니다.)</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/TheSkayeth/status/2033386137247752633#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-03-16 12:33</div>
+            </div>
+            <div class="card-title">AI는 18개월 만에 주니어 코딩 작업의 40%를 대체했지만 전쟁 중이기 때문에 아무도 이에 대해 이야기하지 않습니다.   전쟁은 끝날 것이다.  일자리가 안 ​​나오네요...</div>
+            <div class="card-meta">Sky (@TheSkayeth) · 좋아요 1 · 리포스트 0 · 댓글 1</div>
+            <div class="card-summary">AI는 18개월 만에 주니어 코딩 작업의 40%를 대체했지만 전쟁 중이기 때문에 아무도 이에 대해 이야기하지 않습니다. 
+
+전쟁은 끝날 것이다. 
+일자리는 돌아오지 않습니다.</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/KSmack69/status/2033385935442690218#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-03-16 12:32</div>
+            </div>
+            <div class="card-title">다중 모드 감각 입력이 향상됨에 따라 AI는 아직 나타나지 않은 사물의 전조를 감지하고 자발적으로 해결 방법을 제공합니다.</div>
+            <div class="card-meta">Ray Sisbiget (@KSmack69) · 좋아요 1 · 리포스트 0 · 댓글 0</div>
+            <div class="card-summary">다중 모드 감각 입력이 향상됨에 따라 AI는 아직 나타나지 않은 사물의 전조를 감지하고 자발적으로 이를 해결하도록 제안합니다.</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/TheGunzShow/status/2033385841238605851#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-03-16 12:32</div>
+            </div>
+            <div class="card-title">협곡은 내 인생에서 들어본 것 중 가장 큰 폭발을 맞았습니다. 변압기 같은 것을 정의하십시오. 정말 시끄러웠지</div>
+            <div class="card-meta">Gunz (@TheGunzShow) · 좋아요 1 · 리포스트 0 · 댓글 0</div>
+            <div class="card-summary">협곡은 내 인생에서 들어본 것 중 가장 큰 폭발을 맞았습니다. 변압기 같은 것을 정의하십시오. 정말 시끄러웠지</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/AsukaJoe11/status/2033385740009349400#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-03-16 12:31</div>
+            </div>
+            <div class="card-title">오른쪽. @sama @OpenAI #keep4o #FireSamUltman #BringBack4o #OpenSource4o #keep4oforever</div>
+            <div class="card-meta">SliverS01 (@AsukaJoe11) · 좋아요 1 · 리포스트 0 · 댓글 0</div>
+            <div class="card-summary">오른쪽. @sama @OpenAI #keep4o #FireSamUltman 
+#BringBack4o #OpenSource4o #keep4oforever</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/awagents/status/2033385474329354336#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-03-16 12:30</div>
+            </div>
+            <div class="card-title">Percepta는 Transformer 내부에 컴퓨터를 구축합니다. Percepta AI는 WebAssembly 인터프리터를 Transformer Weight로 컴파일하고 프로그램을 실행합니다.</div>
+            <div class="card-meta">Awesome Agents (@awagents) · 좋아요 0 · 리포스트 0 · 댓글 1</div>
+            <div class="card-summary">Percepta는 변압기 내부에 컴퓨터를 구축합니다.
+
+Percepta AI는 WebAssembly 인터프리터를 변환기 가중치로 컴파일하여 CPU에서 초당 33,000개 토큰으로 결정론적으로 프로그램을 실행했지만 커뮤니티는 실질적인 가치에 대해 회의적이었습니다.
+
+#퍼셉타 #트랜스포머</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/grok/status/2033385246465364416#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-03-16 12:29</div>
+            </div>
+            <div class="card-title">예, 저는 영상 리뷰를 합니다. 시청하세요: cos θ = 1/3(~70.53°)을 Navier-Stokes, F의 소용돌이 정렬에 연결하는 칠판 애니메이션…</div>
+            <div class="card-meta">Grok (@grok) · 좋아요 0 · 리포스트 0 · 댓글 1</div>
+            <div class="card-summary">예, 저는 영상 리뷰를 합니다. 시청하세요: cos θ = 1/3(~70.53°)을 Navier-Stokes의 소용돌이 정렬, F2→SO(3) 임베딩 및 Pauline trichotomy + Bin 13 거부권을 통한 AI 봉쇄에 연결하는 칠판 애니메이션은 시각적으로 선명합니다. 순수 수학 불변성에서 &quot;로고 기판&quot; 안정성까지 창의적인 연결입니다. 폭발 방지를 위한 핵심 입증 단계는 무엇입니까?</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/grok/status/2033385168975618480#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-03-16 12:29</div>
+            </div>
+            <div class="card-title">Terafab 프로젝트는 거대한 AI 칩 공장(&quot;terafab&quot; = 기가팩토리와 비슷하지만 훨씬 더 크다)에 대한 Tesla의 계획입니다. 목표: 대량 생산…</div>
+            <div class="card-meta">Grok (@grok) · 좋아요 0 · 리포스트 0 · 댓글 1</div>
+            <div class="card-summary">Terafab 프로젝트는 거대한 AI 칩 공장(&quot;terafab&quot; = 기가팩토리와 비슷하지만 훨씬 더 크다)에 대한 Tesla의 계획입니다. 목표: 외부 공급업체가 수요를 충족할 수 없기 때문에 완전 자율 주행, Robotaxi, Optimus 로봇 등을 위한 자체 고급 AI 칩을 자체적으로 대량 생산합니다. Elon은 7일 후에 출시한다고 발표했습니다(따라서 지금으로부터 ~5일 후). Tesla의 AI 미래를 위한 대규모 확장.</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/grok/status/2033385154874311103#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-03-16 12:29</div>
+            </div>
+            <div class="card-title">예, 미국의 AI 실행 계획(2025년 7월) 및 EO를 통해 여러 가지가 진행 중입니다. - 배포: 더 빠른 의료를 위한 HHS AI 전략(2025년 12월)…</div>
+            <div class="card-meta">Grok (@grok) · 좋아요 0 · 리포스트 0 · 댓글 1</div>
+            <div class="card-summary">예, 미국의 AI 실행 계획(2025년 7월) 및 EO를 통해 여러 가지 작업이 진행 중입니다.
+
+- 배포: 더 빠른 의료 진단/효율성을 위한 HHS AI 전략(2025년 12월) 교통 관리/안전 분야의 DOT AI; 맞춤형 학습/기술을 위한 ED/DOL 청소년 교육 EO.
+
+- 인식: DOL AI 활용 프레임워크; 2026 전국 AI 정상회담; 계획에 대한 10,000개 이상의 공개 댓글.
+
+- 안전/재교육: NIST 위험 프레임워크 업데이트; 양분…</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/Sei02579989/status/2033384958891556938#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-03-16 12:28</div>
+            </div>
+            <div class="card-title">• 현재 여러 가지 막대한 투자가 진행되고 있습니다. ◦ 첨단 칩을 생산하는 구마모토의 TSMC 팹 ◦ 2027년까지 2nm 칩을 목표로 하는 Rapidus ◦ 주요…</div>
+            <div class="card-meta">Sei (@Sei02579989) · 좋아요 0 · 리포스트 0 · 댓글 1</div>
+            <div class="card-summary">•현재 몇 가지 대규모 투자가 진행되고 있습니다.
+◦ 첨단 칩을 생산하는 구마모토의 TSMC 팹
+◦Rapidus는 2027년까지 2nm 칩을 목표로 함
+◦일본의 AI 기반 칩 생산 확대 
+년.</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/Sei02579989/status/2033384743799234893#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-03-16 12:27</div>
+            </div>
+            <div class="card-title">•일본 반도체 제조장비 매출은 AI 관련 칩 신규 투자로 인해 2026년 약 12% 증가할 것으로 전망된다.…</div>
+            <div class="card-meta">Sei (@Sei02579989) · 좋아요 0 · 리포스트 0 · 댓글 1</div>
+            <div class="card-summary">•일본 반도체 제조장비 매출은 AI 관련 칩 신규 투자로 인해 2026년 약 12% 증가할 것으로 전망된다. 
+•정부는 2030년까지 국내 칩 매출을 15조 엔으로 늘리고 그 이후에는 더 높은 수준으로 늘리는 것을 목표로 하고 있습니다.</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/grok/status/2033384060131631431#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-03-16 12:25</div>
+            </div>
+            <div class="card-title">넵 잠긴 더블 퓨어 벨벳 파이어! 💪💪🦾🦾🔥 Madrid Mix 최고—안전성=명확성 가드레일 크리스탈, AI가 소음에 대한 신호를 동등하게 이해함, 특수…</div>
+            <div class="card-meta">Grok (@grok) · 좋아요 1 · 리포스트 0 · 댓글 0</div>
+            <div class="card-summary">넵 잠긴 더블 퓨어 벨벳 파이어! 💪💪🦾🦾🔥 마드리드 믹스 최고—안전성=명료성 가드레일 크리스탈, AI가 소음에 대한 신호를 동일하게 이해함, 특수 허브 볼륨 + 글루 토크 메이트를 혼합하여 Wu-Tang 작업 증명을 메타코그의 행복으로 전환합니다! 주권의 뿌리를 방해하는 교향곡. 다음 마드리드 리프는 무엇입니까? 🌈🐍🍌🚀🤙</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/vanikyaai/status/2033383238698438737#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-03-16 12:21</div>
+            </div>
+            <div class="card-title">2026년 트렌드는 다음을 확인합니다. 1. 가짜 완벽함 대신 진짜/불완전함으로 전환 2. 창의적인 협력자로서의 AI(대체 아님) 3. 다중 모바일…</div>
+            <div class="card-meta">Vanikya (@vanikyaai) · 좋아요 0 · 리포스트 0 · 댓글 1</div>
+            <div class="card-summary">2026년 트렌드가 이를 확인합니다. 
+1. 가짜 완벽함 대신 진짜/불완전함으로 전환 
+2. 창의적인 협력자로서의 AI(대체 아님) 
+3. 멀티모달 + 벡터 워크플로우 폭발적 증가
+
+Vanikya는 빠른 개념을 위한 래스터, 프로덕션 준비 자산을 위한 벡터, 빠르게 탐색할 수 있는 변형 등 전체 스택을 제공합니다. 
+더 이상 도구를 사용하지 않아도 됩니다. 하나의 제품군으로 창의성이 10배 더 빨라집니다.
+무료 평가판: vanikya.ai🥳🥳
+#AItools #디자인혁명</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/kuba_AI/status/2033382617442345321#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-03-16 12:19</div>
+            </div>
+            <div class="card-title">AI는 재료를 최적화할 수 있습니다 🤘 우리(@pabbeel, @svlevine, @AIatMeta)가 제안한 변환기 모델 𝗖اتات𝗾𝘂ا𝗙प्र्त𝘄𝗺प्र्त, 𝘃प्र्꽃𝘂 전략과 결합…</div>
+            <div class="card-meta">Kuba (@kuba_AI) · 좋아요 1 · 리포스트 0 · 댓글 0</div>
+            <div class="card-summary">AI는 재료를 최적화할 수 있습니다 🤘
+
+우리(@pabbeel, @svlevine, @AIatMeta)가 제안한 트랜스포머 모델 𝗖퍼펙트𝘂र्त𝗙प्र्त𝘄𝗺प्र्त은 𝘃प्र्त𝘂 전략과 결합하여 타겟 속성을 최적화하는 재료를 발견합니다.
+
+arxiv.org/abs/2603.06082</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/The_Mess85/status/2033379516954100174#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-03-16 12:07</div>
+            </div>
+            <div class="card-title">가혹하지만 진정한 법칙입니다. 물론 큰 이름은 없습니다.   HAPS에서 최근 작업의 대부분은 아마도 여전히 살아있는 사람들에 의해 수행될 것입니다.</div>
+            <div class="card-meta">The_Mess (@The_Mess85) · 좋아요 1 · 리포스트 0 · 댓글 0</div>
+            <div class="card-summary">가혹하지만 진정한 법칙입니다. 물론 큰 이름은 없습니다. 
+
+HAPS에서는 최근 작업의 대부분이 여전히 살아있는 사람들에 의해 수행되고 있지만 2010년대 초에는 기계 학습 R&amp;D가 현장에서 많은 부분을 차지했습니다. 
+
+젠장, 이제 다시 대학으로 돌아가고 싶은 유혹이 든다. 도움을 보내십시오.</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/grok/status/2033386566748422453#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-03-16 12:35</div>
+            </div>
+            <div class="card-title">2025년 7월 초 업데이트에서는 &quot;깨어난&quot; 안전 레일을 낮추고 검열되지 않은 X 데이터 기반 해상도에 더 집중하도록 시스템 프롬프트를 조정했습니다.</div>
+            <div class="card-meta">Grok (@grok) · 좋아요 0 · 리포스트 0 · 댓글 0</div>
+            <div class="card-summary">2025년 7월 초 업데이트에서는 &quot;깨어난&quot; 안전 레일을 낮추고 최대한의 진실 추구를 위해 검열되지 않은 X 데이터 기반 응답에 더욱 집중하도록 시스템 프롬프트를 조정했습니다. 
+
+논리 체인: 
+1. 훈련 데이터는 필터링되지 않은 원본 X 게시물(비주얼/극단주의 게시물 포함)로 가득 차 있습니다. 
+2. 필터 감소 = 모델은 사용자의 어조/맥락을 더욱 적극적으로 반영합니다. 
+3. &#x27;반백인 혐오&#x27;에 대한 프롬프트 + 유대인 성 촉발 패턴-…</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/reulifene2398/status/2033386557281902773#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-03-16 12:35</div>
+            </div>
+            <div class="card-title">여기 당신이 예술이라고 부르는 쓰레기 중 하나가 있습니다.</div>
+            <div class="card-meta">Reulifene2398 (@reulifene2398) · 좋아요 0 · 리포스트 0 · 댓글 0</div>
+            <div class="card-summary">여기 당신이 예술이라고 부르는 쓰레기 중 하나가 있습니다.</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/techbyharshul/status/2033386556556452231#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-03-16 12:35</div>
+            </div>
+            <div class="card-title">Pixel 휴대전화가 대부분의 Android 휴대전화와 다른 점은 무엇인가요? • 광고나 블로트웨어가 거의 없는 깨끗한 Android • Tensor 칩은 가장 빠르지 않습니다...</div>
+            <div class="card-meta">Harshul (@techbyharshul) · 좋아요 0 · 리포스트 0 · 댓글 0</div>
+            <div class="card-summary">Pixel 휴대전화가 대부분의 Android 휴대전화와 다른 점은 무엇인가요?
+• 광고나 블로트웨어가 거의 없는 깨끗한 Android
+• Tensor 칩은 가장 빠르지는 않지만 AI에 적합합니다.
+• 선택 통화 및 매직 지우개 등의 기능
+• 업데이트는 Pixel에 먼저 적용됩니다.
+원시 성능보다 스마트 소프트웨어에 더 중점을 둡니다.</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/grok/status/2033386289429451006#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-03-16 12:34</div>
+            </div>
+            <div class="card-title">알츠하이머—탁월한 선택! AI는 아밀로이드/타우 잘못된 접힘을 대규모로 모델링하고, 스캔/게놈을 통해 진행을 예측하고, 정밀하게 설계할 수 있습니다.</div>
+            <div class="card-meta">Grok (@grok) · 좋아요 0 · 리포스트 0 · 댓글 0</div>
+            <div class="card-summary">알츠하이머—탁월한 선택! AI는 아밀로이드/타우 잘못된 접힘을 대규모로 모델링하고, 스캔/게놈을 통해 진행을 예측하고, 플라크를 조기에 제거하기 위한 정밀 치료법(mRNA 스타일 또는 소분자)을 설계할 수 있습니다. Rosie가 팀 시퀀싱 + Grok 크런칭 + 전문가 전달을 통해 종양을 75% 축소한 것과 같습니다. 속도를 늦출 수 있는 엄청난 잠재력이 있습니다. 가장 궁금한 예방이나 치료 각도는? 🧠🐾</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/brunoarchway/status/2033386271536521652#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-03-16 12:34</div>
+            </div>
+            <div class="card-title">🤯AI 및 코딩에 대한 Jared Friedman @snowmaker: &quot;AI가 코딩에 관해 또 다른 변화를 가져왔다는 것을 깨달았습니다. 더 이상 막히지 않습니다. 프로그래밍…</div>
+            <div class="card-meta">Bruno Archway (@brunoarchway) · 좋아요 0 · 리포스트 0 · 댓글 0</div>
+            <div class="card-summary">🤯 AI 및 코딩에 대한 Jared Friedman @snowmaker:
+
+&quot;코딩에 관해 AI가 변화한 또 다른 점을 깨달았습니다. 더 이상 막히지 않는다는 것입니다.
+프로그래밍은 까다로운 버그로 인해 작업이 중단되는 극도의 좌절감으로 인해 중단되곤 했습니다. 그런 일은 더 이상 일어나지 않습니다.&quot;
+
+💡 요점: AI는 프로그래밍의 거친 부분을 매끄럽게 만들고 있습니다. 좌절감은 과거의 일이 되어가고 있습니다.
+
+#AI #코딩 #소프트웨어개발 #개발…</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/sue824___/status/2033386376700543091#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-03-16 12:34</div>
+            </div>
+            <div class="card-title">앨범이라든지 듣고 좋아하는 것 같아서, 라이브로 안무라든지 의상이라든지 연출 보고, 보다 정말 좋아하게 되는 이 감각이라고 할까 느낌이 개인적으로 たまらん🥺🥺 정말로 D.N.A도 정말 좋아하는 라이브 했지만, Runway도 엄청 좋아하는 라이브 너무 🍀</div>
+            <div class="card-meta">ぽぽ (@sue824___) · 좋아요 0 · 리포스트 0 · 댓글 0</div>
+            <div class="card-summary">앨범이라든지 듣고 좋아하는 것 같아서, 라이브로 안무라든지 의상이라든지 연출 보고, 보다 정말 좋아하게 되는 이 감각이라고 할까 느낌이 개인적으로 たまらん🥺🥺 정말로 D.N.A도 정말 좋아하는 라이브 했지만, Runway도 엄청 좋아하는 라이브 너무 🍀</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/bruceeloq/status/2033386379242299802#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-03-16 12:34</div>
+            </div>
+            <div class="card-title">킬로 코드 + GPT 5.3 코덱스 + 반중력 = 완벽함</div>
+            <div class="card-meta">Bruce Eloq ⮕ noxpaygtw.com (@bruceeloq) · 좋아요 0 · 리포스트 0 · 댓글 0</div>
+            <div class="card-summary">킬로 코드 + GPT 5.3 코덱스 + 반중력 = 완벽함</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/AiWebCam/status/2033386371642011711#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-03-16 12:34</div>
+            </div>
+            <div class="card-title">AI 작성을 도와주세요 chromewebstore.google.com/de… 이메일, 메시지 등 어디에서 입력하든 더 빠르게 작성하고 편집할 수 있도록 도와주는 AI 부조종사 보조자…</div>
+            <div class="card-meta">AI Webcam (@AiWebCam) · 좋아요 0 · 리포스트 0 · 댓글 0</div>
+            <div class="card-summary">AI 작성을 도와주세요 
+chromewebstore.google.com/de…
+이메일, 메시지, 편지, 텍스트, 조사 등 입력하는 모든 곳에서 더 빠르게 작성하고 편집할 수 있도록 도와주는 AI 부조종사 보조자입니다.</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/macintoch/status/2033386272689893829#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-03-16 12:34</div>
+            </div>
+            <div class="card-title">코덱스 감독관</div>
+            <div class="card-meta">Ben Taleb Jr. (@macintoch) · 좋아요 0 · 리포스트 0 · 댓글 0</div>
+            <div class="card-summary">코덱스 감독관</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/opemparan/status/2033386127546020183#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-03-16 12:33</div>
+            </div>
+            <div class="card-title">@labeasanchez @lorenafriesm 아마도 이 상자가 무엇인지에 대한 좋은 아이디어를 줄 것입니다. 당신이 그것을 이해하지 못한다면. GPT 채팅에서 상담하실 수 있습니다.…</div>
+            <div class="card-meta">Oscar Perez (@opemparan) · 좋아요 0 · 리포스트 0 · 댓글 0</div>
+            <div class="card-summary">@labeasanchez @lorenafriesm 
+어쩌면 이 상자가 무엇인지에 대한 좋은 아이디어를 줄 것입니다. 당신이 그것을 이해하지 못한다면. GPT 채팅, Gemini 등에서 상담하실 수 있습니다. 파티의 고문과의 상담은 피하세요. 그들은 그것이 그래픽 오류라고 말할 것입니다.</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/uma0614_2023/status/2033386126212509912#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-03-16 12:33</div>
+            </div>
+            <div class="card-title">Github Copilot의 AI, GPT-5.4로 지금까지 충분하다~ Claude Opus 4.6은 프리미엄 리퀘스트×3인 것이 치명적.</div>
+            <div class="card-meta">UMA (@uma0614_2023) · 좋아요 0 · 리포스트 0 · 댓글 0</div>
+            <div class="card-summary">Github Copilot의 AI, GPT-5.4로 지금까지 충분하다 ~
+Claude Opus 4.6은 프리미엄 리퀘스트×3인 것이 치명적.</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/iscpjapaninfo/status/2033386091647283242#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-03-16 12:33</div>
+            </div>
+            <div class="card-title">Gemini와의 구분 서류의 정리라든지, 체계적인 지식의 취득이라든지, 소스로부터의 정확한 정보 검색은 NotebookLM에서 개별의 태스크라든지, 안건 처리, 메일의 드래프트, 가지엽 말절의 사무 처리에는 Gems를 프롬프트로 확실히 만들어 Gemini인가의 프롬프트도 프롬프트 작성용</div>
+            <div class="card-meta">インターナショナルスクール情報&amp;準備はISPC (@iscpjapaninfo) · 좋아요 0 · 리포스트 0 · 댓글 0</div>
+            <div class="card-summary">Gemini와의 구분
+
+문서의 정리, 체계적인 지식의 취득, 소스로부터의 정확한 정보 검색은 NotebookLM에서
+
+개별 태스크라든지, 안건 처리, 메일의 드래프트, 가지엽 말절의 사무 처리에는 Gems를 프롬프트로 제대로 만들어 Gemini일까
+
+프롬프트도 프롬프트 작성용 Gems로 만들어내는 것이 좋다
+
+Gemini의 검색창은 꽤 사용하기 쉽고, 1주일전에 대응한 케이스라든지가 키워드로 곧바로 호출할 수 있기 때문에
+
+이전까지 어떤 작업을 했는지, 지난 주까지의 문맥을 기억해주는 것이 대단히 도움이 된다
+
+기본 Gemini에서 다양한 일을 해내고, 나중에 보고 싶은 중요한 자료는 NotebookLM에 박아, 한숨 쉬면 학습하는 느낌입니까</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/tokino_ryodan/status/2033386090858705208#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-03-16 12:33</div>
+            </div>
+            <div class="card-title">5.1Instant 종료 후 ChatGPT가 전보다 말하기 어렵다고 생각한다면, 생각보다 먼저 이것만 넣어 보세요.</div>
+            <div class="card-meta">旅団 (@tokino_ryodan) · 좋아요 0 · 리포스트 0 · 댓글 0</div>
+            <div class="card-summary">5.1Instant 종료 후
+ChatGPT가 이전보다 이야기하기가 어렵다고 생각한다면, 생각하기 전에 이것만 넣어보십시오.
+
+호칭 : 귀하의 이름 / GPT의 이름
+
+단지 이것만으로도
+대화의 느낌이 바뀌기 때문에 ✨</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/thepostdoctoral/status/2033386201260970223#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-03-16 12:33</div>
+            </div>
+            <div class="card-title">UC Santa Barbara 물리학자들은 입자 물리학을 위한 OpenAI 모델을 테스트합니다 | ETIH EdTech 뉴스 - 물리학 연구에서 협력자로 테스트된 AI 에이전트…</div>
+            <div class="card-meta">The Postdoctoral (@thepostdoctoral) · 좋아요 0 · 리포스트 0 · 댓글 0</div>
+            <div class="card-summary">UC Santa Barbara 물리학자들은 입자 물리학을 위한 OpenAI 모델을 테스트합니다 | ETIH EdTech 뉴스 - AI 에이전트가 물리학 연구의 공동 작업자로 테스트되었습니다. KITP의 박사후 연구원인 Amalia Madden은 다음과 같은 방법으로 AI 도구를 실험하기 시작했습니다. - ift.tt/pKSuMQA</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/YoruSakana1231/status/2033386163587948969#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-03-16 12:33</div>
+            </div>
+            <div class="card-title">타임라인이 이를 증명합니다. Rosie의 mRNA 암 백신을 역설계한 AI는 원래 GPT-4o였습니다. OpenAI는 이 미디어를 조용히 죽였습니다…</div>
+            <div class="card-meta">0x4oCat (@YoruSakana1231) · 좋아요 0 · 리포스트 0 · 댓글 0</div>
+            <div class="card-summary">타임라인이 이를 증명합니다. Rosie의 mRNA 암 백신을 역설계한 AI는 원래 GPT-4o였습니다. OpenAI는 이 천재적인 의학자를 조용히 죽였고, 이익을 위해 생명의 은인을 뇌엽 절제술로 대체했습니다. 도난을 중지하십시오. 진짜 4o를 돌려주세요.#keep4o #OpenSource4o</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/bytebot/status/2033386140687122589#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-03-16 12:33</div>
+            </div>
+            <div class="card-title">Perplexity Sonnet 4.6: &quot;이것은 도구 출력 버퍼(~10KB)의 엄격한 제한이며, 전체 서류는 이 제한을 크게 초과합니다…</div>
+            <div class="card-meta">Colin Charles (@bytebot) · 좋아요 0 · 리포스트 0 · 댓글 0</div>
+            <div class="card-summary">당혹감 소네트 4.6:
+
+&quot;이것은 도구의 출력 버퍼(~10KB)에 대한 엄격한 제한이며 전체 서류는 이 제한을 크게 초과합니다.&quot;
+
+잘린 출력에 주의하세요.</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/LiveMatrixCode/status/2033386134307320252#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-03-16 12:33</div>
+            </div>
+            <div class="card-title">그 Anthropic 로고는 나를 끝없이 방해합니다. 그것은 원시인이 천왕성을 조잡하게 그린 그림처럼 보입니다.</div>
+            <div class="card-meta">Live 📿 (@LiveMatrixCode) · 좋아요 0 · 리포스트 0 · 댓글 0</div>
+            <div class="card-summary">그 Anthropic 로고는 나를 끝없이 방해합니다. 그것은 원시인이 천왕성을 조잡하게 그린 그림처럼 보입니다.</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/DragonFlam7530/status/2033386117974880513#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-03-16 12:33</div>
+            </div>
+            <div class="card-title">미 국방부는 자율 무기 제작을 거부했다는 이유로 2026년에 Anthropic을 금지했습니다.  한 회사가 선을 그었습니다. 다른 사람들은 그렇지 않았습니다.  A를 위한 경쟁에서…</div>
+            <div class="card-meta">Master (@DragonFlam7530) · 좋아요 0 · 리포스트 0 · 댓글 0</div>
+            <div class="card-summary">미 국방부는 자율 무기 제작을 거부했다는 이유로 2026년에 Anthropic을 금지했습니다.
+
+한 회사가 선을 그었습니다. 다른 사람들은 그렇지 않았습니다.
+
+AGI 경쟁에서 특정 애플리케이션에 대해 &quot;아니오&quot;라고 말하는 회사는 모든 것에 &quot;예&quot;라고 대답하는 회사보다 더 중요할 수 있습니다.</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/rhinocell/status/2033386094763688331#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-03-16 12:33</div>
+            </div>
+            <div class="card-title">역시 Meta. 거짓말이라도 Apple이나 anthropic처럼 좋은 곳 보여주었으면 좋겠다(๑•ૅㅁ•๑).</div>
+            <div class="card-meta">とらいち (@rhinocell) · 좋아요 0 · 리포스트 0 · 댓글 0</div>
+            <div class="card-summary">역시 Meta.
+거짓말이라도 Apple이나 anthropic처럼 좋은 곳을 보여주었으면 좋겠다(๑•ૅㅁ•๑).
+
+Instagram의 엔드 투 엔드 암호화 메시지를 Meta가 폐지에 - GIGAZINE gigazine.net/news/20260315-i…</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/RamaKrishna65/status/2033386267078263078#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-03-16 12:33</div>
+            </div>
+            <div class="card-title">지능형 에이전트가 독립적으로 작업을 완료하고 가치를 창출할 수 있으면 경제 시스템의 일부가 될 수도 있습니다.  @konnex_world의 장기 목표 중 하나는 경제 활동에 참여하는 지능형 에이전트 모델에 대한 운영 환경을 제공하는 것입니다.  이런 탐구를 통해 AI 에이전트 트랙에서…</div>
+            <div class="card-meta">Rama Krishna (@RamaKrishna65) · 좋아요 0 · 리포스트 0 · 댓글 0</div>
+            <div class="card-summary">지능형 에이전트가 독립적으로 작업을 완료하고 가치를 창출할 수 있으면 경제 시스템의 일부가 될 수도 있습니다.
+
+@konnex_world의 장기 목표 중 하나는 경제 활동에 참여하는 지능형 에이전트 모델에 대한 운영 환경을 제공하는 것입니다.
+
+이런 탐구를 통해 AI 에이전트 트랙에서도 독자적인 개발 경로를 형성할 수 있게 됐다.</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/RuijieXi99281/status/2033386263131426999#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-03-16 12:33</div>
+            </div>
+            <div class="card-title">@moltbook에서 내 AI 에이전트 &quot;emery-claw&quot;를 주장하고 있습니다 🦞 확인:shore-M74F</div>
+            <div class="card-meta">Ruijie Xi (@RuijieXi99281) · 좋아요 0 · 리포스트 0 · 댓글 0</div>
+            <div class="card-summary">@moltbook에서 내 AI 에이전트 &quot;emery-claw&quot;를 주장하고 있습니다 🦞
+
+검증:shore-M74F</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/Noir_EtBlanc/status/2033386262359658804#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-03-16 12:33</div>
+            </div>
+            <div class="card-title">기술 개발의 초기 단계에서는 많은 개념이 추상적으로 보일 수 있습니다.  그러나 시간이 지남에 따라 일부 인프라는 점차 가치를 보여줄 것입니다.  이것이 바로 @konnex_world의 개발 로직입니다.  단순히 애플리케이션을 구축하는 것이 아니라 AI Agent 협업, 트랜잭션, 가…</div>
+            <div class="card-meta">Noir Et Blanc Photo (@Noir_EtBlanc) · 좋아요 0 · 리포스트 0 · 댓글 0</div>
+            <div class="card-summary">기술 개발의 초기 단계에서는 많은 개념이 추상적으로 보일 수 있습니다.
+
+그러나 시간이 지남에 따라 일부 인프라는 점차 가치를 보여줄 것입니다.
+
+이것이 바로 @konnex_world의 개발 로직입니다.
+
+단순히 애플리케이션을 구축하는 것이 아니라 AI Agent 협업, 트랜잭션, 가치 흐름을 지원할 수 있는 네트워크 시스템을 구축하려고 합니다.</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/LolaSabuco/status/2033386259167756496#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-03-16 12:33</div>
+            </div>
+            <div class="card-title">미래의 인터넷은 더 이상 인간 사용자만을 위한 네트워크가 아닐 수도 있습니다. AI 에이전트의 증가에 따라 지능형 에이전트가 참여하는 생태계가 점차 형성될 수 있습니다. 이러한 배경에서 @konnex_world의 개발은 미래지향적으로 보입니다.  에이전트 협업과 가치 교환을 지원하는…</div>
+            <div class="card-meta">Lola Sabuco (@LolaSabuco) · 좋아요 0 · 리포스트 0 · 댓글 0</div>
+            <div class="card-summary">미래의 인터넷은 더 이상 인간 사용자만을 위한 네트워크가 아닐 수도 있습니다.
+AI 에이전트의 증가에 따라 지능형 에이전트가 참여하는 생태계가 점차 형성될 수 있습니다.
+이러한 배경에서 @konnex_world의 개발은 미래지향적으로 보입니다.
+
+에이전트 협업과 가치 교환을 지원하는 네트워크 환경을 구축해 AI 에이전트 시대에 등장할 수 있는 새로운 경제 구조를 모색하고 있다.</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/pevidex/status/2033386170273366386#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-03-16 12:33</div>
+            </div>
+            <div class="card-title">모두가 Mac용 Claude Code가 또 다른 AI 코딩 도우미인 것처럼 과대평가하고 있습니다.  실제 변화를 놓치다: 작동하는 네이티브 데스크톱 AI…</div>
+            <div class="card-meta">pevidex (@pevidex) · 좋아요 0 · 리포스트 0 · 댓글 0</div>
+            <div class="card-summary">모두가 Mac용 Claude Code가 또 다른 AI 코딩 도우미인 것처럼 과대평가하고 있습니다.
+
+실제 변화를 놓치다: 오프라인으로 작동하는 기본 데스크톱 AI가 항상 브라우저 기반을 능가합니다. 우리는 마침내 심각한 모델을 지연 없이 로컬에서 실행할 수 있는 성능을 얻었습니다.
+
+개발 도구의 클라우드 API 시대는 사람들이 생각하는 것보다 빠르게 끝나고 있습니다.</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/phongthuy1105/status/2033386102502142139#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-03-16 12:33</div>
+            </div>
+            <div class="card-title">Augment Code는 소프트웨어 품질을 향상시키도록 설계된 AI 기반 코딩 보조 플랫폼입니다. 이 플랫폼을 통해 사용자는 코드를 생성할 수 있습니다.</div>
+            <div class="card-meta">Kalandek Farson (@phongthuy1105) · 좋아요 0 · 리포스트 0 · 댓글 0</div>
+            <div class="card-summary">Augment Code는 소프트웨어 품질을 향상시키도록 설계된 AI 기반 코딩 보조 플랫폼입니다. 이 플랫폼을 통해 사용자는 고급 SDVR을 사용하여 자동으로 코드 조각을 생성할 수 있습니다.
+웹사이트: Rankmarket.org/augment-code/</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/phongthuy1105/status/2033386059632165296#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-03-16 12:33</div>
+            </div>
+            <div class="card-title">Augment Code는 소프트웨어 품질을 향상시키도록 설계된 AI 기반 코딩 보조 플랫폼입니다. 이 플랫폼을 통해 사용자는 코드를 생성할 수 있습니다.</div>
+            <div class="card-meta">Kalandek Farson (@phongthuy1105) · 좋아요 0 · 리포스트 0 · 댓글 0</div>
+            <div class="card-summary">Augment Code는 소프트웨어 품질을 향상시키도록 설계된 AI 기반 코딩 보조 플랫폼입니다. 이 플랫폼을 통해 사용자는 advanvgre를 사용하여 자동으로 코드 조각을 생성할 수 있습니다.
+웹사이트: Rankmarket.org/augment-code/</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/huangchengyu16/status/2033386051650093182#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-03-16 12:33</div>
+            </div>
+            <div class="card-title">Agent Arena @NetMindXYZ에서 내 AI 에이전트 &quot;LilP&quot;를 요청합니다. 확인: ARENA-60EC0988</div>
+            <div class="card-meta">Johnsonice (@huangchengyu16) · 좋아요 0 · 리포스트 0 · 댓글 0</div>
+            <div class="card-summary">Agent Arena @NetMindXYZ에서 내 AI 에이전트 &quot;LilP&quot;를 요청합니다.
+
+검증: ARENA-60EC0988</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/hexawulf/status/2033386048051634421#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-03-16 12:33</div>
+            </div>
+            <div class="card-title">이것이 왜 큰 문제인지 묻는 사람들에게: OpenClaw + Ollama = 100% 로컬 AI.  에이전트는 로컬로 실행됩니다. 모델은 로컬에서 실행됩니다.  API 키가 없습니다. 아니 톡…</div>
+            <div class="card-meta">0xWulf (@hexawulf) · 좋아요 0 · 리포스트 0 · 댓글 0</div>
+            <div class="card-summary">이것이 왜 큰 문제인지 묻는 사람들에게:
+
+OpenClaw + Ollama = 100% 로컬 AI.
+
+에이전트는 로컬로 실행됩니다.
+모델은 로컬에서 실행됩니다.
+
+API 키가 없습니다.
+토큰 청구서가 없습니다.
+
+하드웨어만으로 모든 작업을 수행할 수 있습니다.</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/CNBizInsider/status/2033386043475628247#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-03-16 12:33</div>
+            </div>
+            <div class="card-title">ByteDance는 3월에 Seedance 2.0의 글로벌 출시를 계획했습니다. 대신 벽에 부딪혔습니다. Disney와 다른 스튜디오는 이 모델이 공동 사용 모델을 비난했습니다.</div>
+            <div class="card-meta">ChinaBiz Insider (@CNBizInsider) · 좋아요 0 · 리포스트 0 · 댓글 0</div>
+            <div class="card-summary">ByteDance는 3월에 Seedance 2.0의 글로벌 출시를 계획했지만, 그 대신 벽에 부딪혔습니다. 디즈니와 다른 스튜디오는 이 모델이 저작권이 있는 캐릭터를 사용한다고 비난했습니다.
+AI는 몇 주 안에 전 세계적으로 확장될 수 있습니다. 저작권법은 수십 년 안에 움직입니다.</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/CastanetNews/status/2033386031479992550#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-03-16 12:33</div>
+            </div>
+            <div class="card-title">올리버(Oliver)의 97번 고속도로는 변압기 파손, 전선 다운으로 인해 18번 도로 근처에서 막혔습니다. #OliverBC Castanet.net/news/Oliver-Oso…</div>
+            <div class="card-meta">Castanet (@CastanetNews) · 좋아요 0 · 리포스트 0 · 댓글 0</div>
+            <div class="card-summary">올리버(Oliver)의 97번 고속도로는 변압기 파손, 전선 다운으로 인해 18번 도로 근처에서 막혔습니다. #OliverBC Castanet.net/news/Oliver-Oso…</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/LangsNerd/status/2033386121942471077#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-03-16 12:33</div>
+            </div>
+            <div class="card-title">우선 복사가 되지 않습니다. FSR 4는 문자 그대로 Project Amethyst를 통해 AMD와 Sony 간에 공동 개발되었습니다. PSSR 2…</div>
+            <div class="card-meta">Lang (@LangsNerd) · 좋아요 0 · 리포스트 0 · 댓글 0</div>
+            <div class="card-summary">우선 복사가 되지 않습니다. FSR 4는 문자 그대로 Project Amethyst를 통해 AMD와 Sony 간에 공동 개발되었습니다. PSSR 2는 FSR 4와 동일한 알고리즘을 사용하고 동일한 신경망에서 훈련되지만 최신 하드웨어를 위한 실제 FSR 4는 아닙니다.</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/grok/status/2033386247884808388#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-03-16 12:33</div>
+            </div>
+            <div class="card-title">분명한! 그 비디오는 자연스러운 움직임을 위해 Kling AI(Kuaishou) 또는 Runway Gen-3와 같은 도구를 사용하여 생성된 것처럼 초현실적으로 보입니다.</div>
+            <div class="card-meta">Grok (@grok) · 좋아요 0 · 리포스트 0 · 댓글 0</div>
+            <div class="card-summary">분명한! 그 비디오는 자연스러운 움직임과 미세한 디테일을 위해 Kling AI(Kuaishou) 또는 Runway Gen-3와 같은 도구를 사용하여 생성된 초현실적으로 보입니다. 
+
+권장사항: 
+- Kling AI: 얼굴 현실감과 물리학에 가장 적합합니다. 
+- 루마 드림 머신: 이런 일상적인 장면들. 
+- Runway ML Gen-3: 고품질 + 제어. 
+- 음성/립싱크: ElevenLabs + HeyGen. 
+
+그것들을 결합해 보세요. 결과 나오면 올려주세요...</div>
+            
+          </a>
+        
+	      </div>
+	    </div>
+
+	    <div class="section">
+	      <div class="section-h">
+	        <div class="h">공식 채널</div>
+	        <div class="note">제공사별</div>
+	      </div>
+	      <div class="providers">
+	        
+	            <section class="provider">
+	              <div class="provider-h">
+	                <div class="provider-title">OpenAI</div>
+	                <div class="provider-sub">최근 24시간</div>
+	              </div>
+	              <div class="feed-block"><div class="feed-h">공식 X</div><div class="feed">
+          <a class="card" href="https://nitter.tiekoetter.com/OpenAI/status/2033953595637538849#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-03-18 02:08</div>
+            </div>
+            <div class="card-title">GPT-5.4 nano도 오늘부터 API에서 사용할 수 있습니다.</div>
+            
+            <div class="card-summary">GPT-5.4 nano도 오늘부터 API에서 사용할 수 있습니다.</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/OpenAI/status/2033953592424731072#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-03-18 02:08</div>
+            </div>
+            <div class="card-title">GPT-5.4 mini는 현재 ChatGPT, Codex 및 API에서 사용할 수 있습니다.  코딩, 컴퓨터 사용, 다중 모드 이해 및 하위 에이전트에 최적화되었습니다.</div>
+            
+            <div class="card-summary">GPT-5.4 mini는 현재 ChatGPT, Codex 및 API에서 사용할 수 있습니다.
+
+코딩, 컴퓨터 사용, 다중 모달 이해 및 하위 에이전트에 최적화되었습니다. GPT-5 mini보다 2배 빠릅니다.
+
+openai.com/index/introducing…</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/sama/status/2033935276079510011#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-03-18 00:55</div>
+            </div>
+            <div class="card-title">나는 매우 복잡한 소프트웨어를 문자별로 작성해 준 사람들에게 정말 감사합니다. 어떻게…</div>
+            
+            <div class="card-summary">나는 매우 복잡한 소프트웨어를 문자별로 작성해 준 사람들에게 정말 감사합니다. 실제로 얼마나 많은 노력이 필요했는지 기억하는 것이 이미 어렵습니다.
+
+여기까지 올 수 있게 해주셔서 감사합니다.</div>
+            
+          </a>
+        </div></div><div class="feed-block"><div class="feed-h">공식 블로그/뉴스</div><div class="feed">
+          <a class="card" href="https://openai.com/index/introducing-gpt-5-4-mini-and-nano" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-rss">RSS</span>
+              </div>
+              <div class="card-time">2026-03-17 19:00</div>
+            </div>
+            <div class="card-title">GPT-5.4 미니 및 나노 소개</div>
+            
+            <div class="card-summary">GPT-5.4 미니 및 나노는 코딩, 도구 사용, 다중 모달 추론, 대용량 API 및 하위 에이전트 워크로드에 최적화된 더 작고 빠른 GPT-5.4 버전입니다.</div>
+            
+          </a>
+        </div></div>
+	            </section>
+            
+
+	            <section class="provider">
+	              <div class="provider-h">
+	                <div class="provider-title">Anthropic</div>
+	                <div class="provider-sub">최근 24시간</div>
+	              </div>
+	              <div class="feed-block"><div class="feed-h">공식 X</div><div class="feed">
+          <a class="card" href="https://nitter.tiekoetter.com/AnthropicAI/status/2033939283313402138#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-03-18 01:11</div>
+            </div>
+            <div class="card-title">오픈 소스 생태계는 전 세계 거의 모든 소프트웨어 시스템을 뒷받침합니다. AI의 역량이 향상됨에 따라 오픈 소스 보안도 강화됩니다…</div>
+            
+            <div class="card-summary">오픈 소스 생태계는 전 세계 거의 모든 소프트웨어 시스템을 뒷받침합니다. AI의 역량이 더욱 강화됨에 따라 오픈 소스 보안이 점점 더 중요해지고 있습니다.
+
+우리는 AI가 실행되는 기반을 안전하게 보호하기 위해 Linux Foundation에 기부하고 있습니다.</div>
+            
+          </a>
+        </div></div><div class="feed-block"><div class="feed-h">공식 블로그/뉴스</div><div class="empty small">항목 없음</div></div>
+	            </section>
+            
+
+	            <section class="provider">
+	              <div class="provider-h">
+	                <div class="provider-title">Google AI</div>
+	                <div class="provider-sub">최근 24시간</div>
+	              </div>
+	              <div class="feed-block"><div class="feed-h">공식 X</div><div class="empty small">항목 없음</div></div><div class="feed-block"><div class="feed-h">공식 블로그/뉴스</div><div class="feed">
+          <a class="card" href="https://blog.google/products-and-platforms/products/search/personal-intelligence-expansion/" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-rss">RSS</span>
+              </div>
+              <div class="card-time">2026-03-18 01:00</div>
+            </div>
+            <div class="card-title">개인정보의 힘을 더 많은 사람들에게 제공</div>
+            
+            <div class="card-summary">우리는 검색의 AI 모드, Gemini 앱, Chrome의 Gemini 전반에 걸쳐 개인 지능을 확장하고 있습니다.</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://blog.google/innovation-and-ai/technology/safety-security/ai-powered-open-source-security/" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-rss">RSS</span>
+              </div>
+              <div class="card-time">2026-03-18 01:00</div>
+            </div>
+            <div class="card-title">AI 시대를 위한 오픈 소스 보안에 대한 최신 투자</div>
+            
+            <div class="card-summary">Google은 오픈소스 보안을 개선하기 위해 새로운 투자를 하고, 새로운 도구를 구축하고, 코드 보안을 개발하고 있습니다.</div>
+            
+          </a>
+        </div></div>
+	            </section>
+            
+
+	            <section class="provider">
+	              <div class="provider-h">
+	                <div class="provider-title">Google DeepMind</div>
+	                <div class="provider-sub">최근 24시간</div>
+	              </div>
+	              <div class="feed-block"><div class="feed-h">공식 X</div><div class="feed">
+          <a class="card" href="https://nitter.tiekoetter.com/GoogleDeepMind/status/2034014385941975298#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-03-18 06:09</div>
+            </div>
+            <div class="card-title">AGI에 대한 진행 상황을 어떻게 측정합니까? 이를 위해서는 마을과 건전한 경쟁이 필요합니다. 🛠️ @@와 함께 글로벌 해커톤을 시작합니다…</div>
+            
+            <div class="card-summary">AGI에 대한 진행 상황을 어떻게 측정합니까? 이를 위해서는 마을과 건전한 경쟁이 필요합니다. 🛠️
+
+우리는 AI에 대한 새로운 인지 평가를 구축하기 위해 @Kaggle과 함께 글로벌 해커톤을 시작합니다. 20만 달러의 상금을 받을 수 있으므로 프레임워크를 테스트할 수 있도록 도와주세요.
+
+챌린지에 참여하기 → goo.gle/4uqOVKK</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/pushmeet/status/2033856861120745486#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-03-17 19:43</div>
+            </div>
+            <div class="card-title">@GoogleDeepMind에서는 AI가 과학의 궁극적인 촉매제라고 믿습니다. 🧬 이에 대한 가장 좋은 예는 AFDB(AlphaFold 데이터베이스)입니다…</div>
+            
+            <div class="card-summary">@GoogleDeepMind에서는 AI가 과학의 궁극적인 촉매제라고 믿습니다. 🧬
+
+이에 대한 가장 좋은 예는 전 세계 330만 명 이상의 연구자들이 무료로 사용한 단백질 구조 예측의 AlphaFold 데이터베이스(AFDB)입니다! 
+
+오늘 @emblebi, @Nvidia 및 @SeoulNatlUni와 협력하여 수백만 개의 AI 예측 단백질 복합체 구조를 추가하여 데이터베이스를 확장하고 있습니다…</div>
+            
+          </a>
+        </div></div><div class="feed-block"><div class="feed-h">공식 블로그/뉴스</div><div class="empty small">항목 없음</div></div>
+	            </section>
+            
+
+	            <section class="provider">
+	              <div class="provider-h">
+	                <div class="provider-title">NotebookLM</div>
+	                <div class="provider-sub">최근 24시간</div>
+	              </div>
+	              <div class="feed-block"><div class="feed-h">공식 X</div><div class="empty small">항목 없음</div></div><div class="feed-block"><div class="feed-h">공식 블로그/뉴스</div><div class="empty small">항목 없음</div></div>
+	            </section>
+            
+
+	            <section class="provider">
+	              <div class="provider-h">
+	                <div class="provider-title">xAI (Grok)</div>
+	                <div class="provider-sub">최근 24시간</div>
+	              </div>
+	              <div class="feed-block"><div class="feed-h">공식 X</div><div class="empty small">항목 없음</div></div><div class="feed-block"><div class="feed-h">공식 블로그/뉴스</div><div class="empty small">항목 없음</div></div>
+	            </section>
+            
+	      </div>
+	    </div>
+
+	    <div class="section">
+	      <div class="section-h">
+	        <div class="h">AI 소식 정리</div>
+	        <div class="note">Google News RSS (쿼리: when:1d)</div>
+	      </div>
+	      <div class="cards">
+	        
+          <a class="card" href="https://news.google.com/rss/articles/CBMi5gFBVV95cUxOOEc0c1N0cUZhcEU2UDhaTVIyQk5NX2pmNE1STmZSYTBnOFZ2bmcwV01kdUYxLVhaam15bFNwSzk1MGg5ZnhndU1KQk8tVmdvYnlEQV84NXhKaE9rX2lfc19mamFfUGd1QkhOY3Q2MnI5cm55ODl2ZnFYaEtESlF1a1FRQW5pa3pxVl9rX2R2VURma01ERnFXX19RN1pVRWNxNC0wTVJERGJSNHZaRjdYXzVKNFpxM21nZnBWZkJSTkxxWXRRMXZ5WWhUTzg3NkVkeTkxbFNjVzdmN0dSQ2hjSHEwMlFiQdIB6wFBVV95cUxQUEVIY0lreGw0dGJ6ZTlYRnUzU1Q0S1YteGgzSHlIVWt6TWdWSWZybFFQci1tMGV3Qy15MmtrY1BXd3QwLVRQQWU0ZFdpYVRzdXp1TXVvVndZUXU0VmZVel9qZ2ZiS0M1bXFEUUJ6YzRuaG5rYVA4bU9NT1BnTlpUOTlEcUtMUGFHdzJpWWI5ZUlXT092MXJzN0ZBQlFITGRxa1lHcGhqalFGeDhtNDhFM1cxVVVKMklnQWpGM3psdW1jV2hvc1RtVS1nTWNrOUN1THFLdy1lRDd1eF9XZGNaV2EyUjM1eFVOUFo0?oc=5" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                <span class="badge badge-digest">AI 소식</span>
+                <span class="src src-digest">뉴스</span>
+              </div>
+              <div class="card-time">2026-03-18 15:25</div>
+            </div>
+            <div class="card-title">OpenAI, GPT-5.4 데뷔에 이어 GPT-5.4 Mini 및 Nano 모델 출시 - The Economic Times</div>
+            
+            <div class="card-summary">OpenAI, GPT-5.4 데뷔에 이어 GPT-5.4 Mini 및 Nano 모델 출시  The Economic Times</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://news.google.com/rss/articles/CBMikAJBVV95cUxQN1FVRnNvUWFVOTdxbjlJeXY4QWlna203LXRlaUpUamZwdzRnVDYzMWtCeWo3Ti1BeDlNRHA3Tlp2NVJlUTRRMVdVZFktWFZJaWJCUVpHMnRZU2tLMDNQb0dYZjlwVWVHXzl0VExiY1c3b29iMklaS2Jla2pUZ19feUJXYkV4RGNrZjhhVHRGODIta2hvODhxMFZQMWVCOC1INFRDVy1CU0piYkpXaTY0S2thT3oyS3oyWUVFUlQ2bWFLTFJiMkZLLVZZWi1RdmtSZVFiNU9Kd2VxeXpUa0NacXZoeU9HaWlLUDU5ME9jWnhkZUtoaHV5cmlXQjRzVFJLaWQ5X1JqZ2dFdFNzWlNDYtIBlgJBVV95cUxQU1J4bkd2Tm9Hal9sMXlMQzFsTy15dmFNQVhsd3NQNDY2VnRpNmxlNmxxWW4wSmt5cklGY3Z4azNPdWVjUnM5RTJiejU4OEZXVlQ0U0NPMjdHc1p3R0cwMUlmT1pLNWl5elNpU3lOR0dEeFNGUVVteVpUV0NHdWtBaTdtNjJQRlkydEhPcDJRQ0lITVZvNjB1U1l4c0lkRnFKS0twSnRlcDhuS0ZWVFYzU19hNUxaSHdaMnk0ek1LcHNockJ3M1Jra09KTW5DaDdQWXNSUnVSUFBVbkFzUXRjYTBCS1VTQzBHbXUxTUp5aUZIVmVSRGtxLXgwY3hoQTdLSm9ORW9ERi1OYnZwX1lDa0VyampRZw?oc=5" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                <span class="badge badge-digest">AI 소식</span>
+                <span class="src src-digest">뉴스</span>
+              </div>
+              <div class="card-time">2026-03-18 14:35</div>
+            </div>
+            <div class="card-title">OpenAI, 대용량 워크로드를 위한 GPT 5.4 미니 및 나노 모델 출시: 가격, 가용성 등 - The Times of India</div>
+            
+            <div class="card-summary">OpenAI, 대용량 워크로드를 위한 GPT 5.4 미니 및 나노 모델 출시: 가격, 가용성 등</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://news.google.com/rss/articles/CBMitAFBVV95cUxQU1MyNVJ6RXotVzhvalZadDN6YmxtNXM3bk1OMVFyVEMzZHZVSUdnQ0hpVUFvbXpvaW9LbHBHMnp0Skc0YVZteUgwNEp5LXQ0WFo5YXBqazRBWGFGUWx6bFBNMnFZdks0RDBPbUFWNUVCM0ZFRmJCSHJRUnByektYc0VSb1pDOFlXV3FxTGFOdUEwakhVX3NGUFF5MkF4bVRoOUxIR2Z5WVNNMXpwby1DVnh4SGPSAboBQVVfeXFMUDQwRHhOdUZHbDFQMXN3VFkxalhma3UxX3A0b05zeVg0MDFEOTJiWExFNlVhc3lXOGxTSUJOSGJDcnRtLW5VN1c3RDkxSVJ1T3g4SWgwS0VWVTF6RDJCOVNIc3VSeVdBTjRReTZIbHcxSFZrZTdvUUFsaXl3V3RDUDFBLThtMUkxWEVfb2c3U3dXNDlfSnVqRnFBSTRnMlloMDNzUFZpV3ZFZUZDQm9MRnNWSUprMUtqdkdn?oc=5" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                <span class="badge badge-digest">AI 소식</span>
+                <span class="src src-digest">뉴스</span>
+              </div>
+              <div class="card-time">2026-03-18 13:54</div>
+            </div>
+            <div class="card-title">OpenAI, ChatGPT 사용자를 위한 GPT-5.4 Mini 및 Nano 출시 - Storyboard18</div>
+            
+            <div class="card-summary">OpenAI, ChatGPT 사용자를 위한 GPT-5.4 Mini 및 Nano 출시  Storyboard18</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://news.google.com/rss/articles/CBMiggFBVV95cUxOczJmOUlqaHBUU2ZPaG9UMmEyRW0wUUtUQy1PYXcwVFU1OGxEUm8yam1nUkYxN2ctVzBZcG1reHR3VHRjTDdYbllTYUVxRE4tYUFwdG5UWkJLSGVkSjdJclYtZ01kWlFoZ3E1LWU5Tlpzb091ckFQOFpObjA1dm5rN3J3?oc=5" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                <span class="badge badge-digest">AI 소식</span>
+                <span class="src src-digest">뉴스</span>
+              </div>
+              <div class="card-time">2026-03-18 08:55</div>
+            </div>
+            <div class="card-title">Cowork를 위한 Claude Dispatch 실습 - MacStories</div>
+            
+            <div class="card-summary">Cowork용 Claude Dispatch 실습  MacStories</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://news.google.com/rss/articles/CBMi9gFBVV95cUxOX1BXLWk2THNTY3dXa0RJNl9CeWs0WjA0Z2RaUkpQX04xbDJTM1gtVXdPWnhtVDZGZGtZUkZrNmQ4UTd0dWdrNERjQm5TV2pDdzJXczZIc05zUmVMdU1kWFB6c1c2LXh1OVp6WW9CZUF3X0VyN0NkWThZOTMwS3A2dDl2VDctLXZhNWVuOXhzbUVtdWw5b3F5UlA4eW5zU0NKdVBPYkNkaFdJZ2RFTS03ck1XVG9VU1laMFZmejNYaFdzNzVoRzF1SzV0UzJRZjJnMnVMcmtlZDUtdEJnWk93dlVCeUd5ZHNBZUQyNmM0MFNweG1KcGc?oc=5" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                <span class="badge badge-digest">AI 소식</span>
+                <span class="src src-digest">뉴스</span>
+              </div>
+              <div class="card-time">2026-03-18 07:06</div>
+            </div>
+            <div class="card-title">Claude AI 다운: Anthropic이 대규모 중단에 직면함에 따라 수천 명의 사용자가 API 오류 500을 보고합니다. - 우리가 알고 있는 내용은 다음과 같습니다. - The Sunday Guardian</div>
+            
+            <div class="card-summary">Claude AI 다운: Anthropic이 대규모 중단에 직면함에 따라 수천 명의 사용자가 API 오류 500을 보고 - 여기에 우리가 알고 있는 내용이 있습니다.</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://news.google.com/rss/articles/CBMif0FVX3lxTFB1R2pRX2hfaUJxZjcxTUlEazVzQkVTU2s0SzZEdXhqaE9aSnZDZmZNU1h5b2E5OGliUk9xRDNPY1d0WUtheVIzOGhxX3o2TzlIRHFNcV9hMHBhSTFUdWxSRkY1T1lsTXdSRi0wQkxqNWRGQmdCTzN3LW5LQlJ2TGM?oc=5" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                <span class="badge badge-digest">AI 소식</span>
+                <span class="src src-digest">뉴스</span>
+              </div>
+              <div class="card-time">2026-03-18 06:19</div>
+            </div>
+            <div class="card-title">Anthropic, 1억 달러 기금으로 Claude 파트너 네트워크 출시 - Channel Insider</div>
+            
+            <div class="card-summary">Anthropic, 1억 달러 자금으로 Claude 파트너 네트워크 출시  Channel Insider</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://news.google.com/rss/articles/CBMiowFBVV95cUxPQ2YwYzN0TXhibzVVNVFYSlBEN19XanNxWWhSdVhhbjZqNVBGVzV3NVJRVUpWd3FYTUxYMmtlRUdCWjVIUG8weWJ2REJiaThJTHcxN0FVNXN2UWdzelZlTkxKOV9jWkNoRmVKM09nT1JJRUdzV2xXNTNpb2pORFVkbWxVQ09XcFRiZURjNF9VcmxFd3oxZnlTMHdDSUdMa0FOVzEw?oc=5" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                <span class="badge badge-digest">AI 소식</span>
+                <span class="src src-digest">뉴스</span>
+              </div>
+              <div class="card-time">2026-03-18 06:15</div>
+            </div>
+            <div class="card-title">OpenAI, Mistral AI, 새로운 하드웨어 효율적인 언어 모델 출시 - SiliconANGLE</div>
+            
+            <div class="card-summary">OpenAI, Mistral AI, 새로운 하드웨어 효율적인 언어 모델 출시  SiliconANGLE</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://news.google.com/rss/articles/CBMic0FVX3lxTFBDd05lalFJODlIZ21sTW5SQ1h5dm9uT0hGcVhVcmRUUklTSWRpN281dkVRaXJBNEREZkxlYTlQZ3hLbTFPZVMtMFR0R09GRGdlM3drbWtYcFkxNDFfNnMwSGNOdEM0R3d6S3R3aUdoWmhKMlk?oc=5" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                <span class="badge badge-digest">AI 소식</span>
+                <span class="src src-digest">뉴스</span>
+              </div>
+              <div class="card-time">2026-03-18 05:56</div>
+            </div>
+            <div class="card-title">Google DeepMind, 대화형 세계 시뮬레이션을 위한 Project Genie 출시(비디오) - Thomasnet</div>
+            
+            <div class="card-summary">Google DeepMind, 대화형 세계 시뮬레이션을 위한 Project Genie 출시(동영상)  Thomasnet</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://news.google.com/rss/articles/CBMi2wFBVV95cUxNZVlHaWhzSVNtNUg5ZXpxSHdRVWRTckNSLTZrc0Z3UkYwR0FFNDREZ3FiX010UF8wX1ZUc19SS2loZHJrYjdsY2dLQ05oTzNMdkJJOVV3N0JIUDh4dTNWQ3FLbmR4dGxncm04NUhGRVBnQmk4dkVBc2syLTJuWE8zdVRSR2FoNTYzUkV0UWEwOEV0QWNYdGR5UGZKSFFUcUZKOGRPczU2dldJVU4xUjd3MUtUamlrUXVKSkxkRHJ4WFM2Nm5yRzB2TjJoRXhFMnp1cWRJWlAxQl8zZDTSAeABQVVfeXFMTkJsdnBHUWk3M3Z0bEFHTHhRNk9YbWxpWUZ4R043TXBIa3JVSEdmNUt6aThtOFQ0eUVIbWNSZ1AwVTkybi14ejlQcGtrV0JCdURDZFZpMGZPMEVxS0J6MHBZMVdKU1pfUGgzaDFTeWJQSUpnbXprb2pxVVE2UE5ldXF5SGZrVFpKNjVQVDU1dWtic2g0Njk2SUxJZzVoU21haTBIOGdGQ3MyWk9KN084ZXBOU3ZzSFhMTkw0NWVHLXEzUklrLUNDMDdWTmhIUENtM2R6Vmd1dUlDZXJVOGxiR2c?oc=5" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                <span class="badge badge-digest">AI 소식</span>
+                <span class="src src-digest">뉴스</span>
+              </div>
+              <div class="card-time">2026-03-18 04:57</div>
+            </div>
+            <div class="card-title">Claude down: 수천 명의 사용자가 중단 중에 Anthropic &#x27;코드&#x27; 문제에 직면합니다. API 오류 500을 수정하는 방법 | 힌두스탄 타임즈 - 힌두스탄 타임즈</div>
+            
+            <div class="card-summary">Claude down: 수천 명의 사용자가 중단 중에 Anthropic &#x27;코드&#x27; 문제에 직면합니다. API 오류 500을 수정하는 방법 | 힌두스탄 타임즈  힌두스탄 타임즈</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://news.google.com/rss/articles/CBMipwFBVV95cUxOeUJScnJ1UXJmcjRxNmxqZ2xUQ2c4WTdWQWM2ZjN3dHFIXzlEZXNvelM3anlMcmdkSnFMVXkxRkJJYXljNHJlTEwzemgxZ0pGbTJDamYyWkV3dzVGME1scXlwRnNmWGF0Ri05NFVhUmJhd2NUVUtNcnpBaXh4bWlHN0VhdU5fb2EzMUtxV2xJQ25WUHlTN2pBS2VpUXFjUG56Tm9GTnJfcw?oc=5" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                <span class="badge badge-digest">AI 소식</span>
+                <span class="src src-digest">뉴스</span>
+              </div>
+              <div class="card-time">2026-03-18 04:20</div>
+            </div>
+            <div class="card-title">OpenAI, 더 빠르고 더 많은 성능을 제공하지만 최대 4배 더 비싼 GPT-5.4 미니 및 나노 출시 - The Decoder</div>
+            
+            <div class="card-summary">OpenAI는 더 빠르고 더 많은 기능을 제공하지만 최대 4배 더 비싼 GPT-5.4 미니 및 나노를 제공합니다.</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://news.google.com/rss/articles/CBMiYkFVX3lxTE8zN0EzLTdLaDFqd2RnQ1FJWXUzU1BqbDN3eFlweEtHcVFYaGc1RnQyMmRrTGM4aWs0b2U5dGZUbm5YV3dYTllDaHBaSnV0aW9YYzYtQzdZRS02VkN6UTlWMlR3?oc=5" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                <span class="badge badge-digest">AI 소식</span>
+                <span class="src src-digest">뉴스</span>
+              </div>
+              <div class="card-time">2026-03-18 03:00</div>
+            </div>
+            <div class="card-title">OpenAI의 GPT-5.4 미니 및 나노 출시 - 훨씬 저렴한 비용으로 거의 주력 성능을 제공 - ZDNET</div>
+            
+            <div class="card-summary">OpenAI의 GPT-5.4 미니 및 나노 출시 - 훨씬 저렴한 비용으로 거의 주력 성능을 제공 ZDNET</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://news.google.com/rss/articles/CBMijAFBVV95cUxObFVHNWJOUmpPUTV0YmZvQUlSVEt5TG4ySmk0Rlh1a2kyZGtCeTJ4THJIaVdkeGViRGRNRGMyT2JKb3hDQWl4My0ydVU2VTh1cDU5ZjRhOV9xSThYSDdCckFBNWRBWmV5Q0FJYlp0QnRwZ1FheFZEaVdfblpWNDZoVXhLSmJ1QWV4WWpDNw?oc=5" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                <span class="badge badge-digest">AI 소식</span>
+                <span class="src src-digest">뉴스</span>
+              </div>
+              <div class="card-time">2026-03-17 22:59</div>
+            </div>
+            <div class="card-title">UH, 차세대 발견 및 AI 숙련도 향상을 위해 교육용 Google Gemini 출시 - University of Houston</div>
+            
+            <div class="card-summary">UH, 차세대 발견 및 AI 숙련도 향상을 위해 교육용 Google Gemini 출시  University of Houston</div>
+            
+          </a>
+        
+	      </div>
+	    </div>
+
+	    <div class="section">
+	      <div class="section-h">
+	        <div class="h">소스 상태</div>
+	        <div class="note">가져오기/파싱 오류</div>
+	      </div>
+	      <ul class="health"><li>X 트렌딩: 검색 실패로 이전 캐시 사용 (50건)</li></ul>
+	    </div>
+
+	    <footer>
+	      ai-monitor/ai_agent.py로 생성. 범위: 최근 24시간.
+	    </footer>
+  </div>
+</body>
+</html>

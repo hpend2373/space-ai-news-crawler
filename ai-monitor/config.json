@@ -13,8 +13,15 @@
   },
   "nitter": {
     "instances": [
+      "https://nitter.poast.org",
+      "https://nitter.privacydev.net",
       "https://nitter.tiekoetter.com",
-      "https://nitter.poast.org"
+      "https://nitter.woodland.cafe",
+      "https://nitter.esmailelbob.xyz",
+      "https://nitter.lucabased.xyz",
+      "https://nitter.1d4.us",
+      "https://nitter.cz",
+      "https://nitter.unixfox.eu"
     ],
     "timeout_seconds": 30,
     "max_posts_per_handle": 12
@@ -24,7 +31,8 @@
       "id": "openai",
       "name": "OpenAI",
       "x_handles": [
-        "OpenAI"
+        "OpenAI",
+        "sama"
       ],
       "rss": [
         "https://openai.com/news/rss.xml"
@@ -72,21 +80,39 @@
       ],
       "rss": [],
       "web": []
+    },
+    {
+      "id": "xai",
+      "name": "xAI (Grok)",
+      "x_handles": [
+        "xai",
+        "grok"
+      ],
+      "rss": [],
+      "web": []
     }
   ],
   "x_trending": {
     "enabled": true,
     "queries": [
-      "OpenAI OR Anthropic OR GoogleAI OR GoogleDeepMind OR NotebookLM OR ChatGPT OR GPT OR Claude OR Gemini OR LLM OR AI",
-      "new AI model OR model release OR launch OR update OR API OR agent"
+      "ChatGPT OR GPT-4 OR GPT-5 OR Claude OR Gemini OR LLM",
+      "OpenAI OR Anthropic OR DeepMind OR NotebookLM OR Perplexity",
+      "AI model OR AI agent OR AI API OR AI coding OR AI startup",
+      "transformer OR diffusion model OR foundation model OR multimodal AI",
+      "machine learning OR deep learning OR neural network OR reinforcement learning",
+      "Sora OR DALL-E OR Midjourney OR Runway OR Stable Diffusion",
+      "Cursor AI OR Windsurf OR Devin AI OR Copilot OR Codex",
+      "NVIDIA AI OR Apple Intelligence OR Meta AI OR Microsoft AI",
+      "Grok OR xAI OR Groq OR Cohere OR Mistral OR Llama OR Hugging Face",
+      "AI chip OR AI safety OR AI alignment OR AI regulation"
     ],
-    "max_posts_per_query": 16,
-    "max_items_total": 10,
-    "min_score": 80
+    "max_posts_per_query": 80,
+    "max_items_total": 50,
+    "min_score": 0
   },
   "digest": {
     "google_news_rss_queries": [
-      "(OpenAI OR Anthropic OR Google DeepMind OR Gemini OR Claude OR GPT) (announced OR launches OR released OR preview OR API) when:1d",
+      "(OpenAI OR Anthropic OR Google DeepMind OR xAI OR Grok OR Gemini OR Claude OR GPT) (announced OR launches OR released OR preview OR API) when:1d",
       "(new AI model OR foundation model OR multimodal) (announced OR released) when:1d",
       "(AI agent OR coding agent OR tool use) (announced OR released OR update) when:1d"
     ],
@@ -97,7 +123,11 @@
     "provider": "google_gtx",
     "target_lang": "ko",
     "timeout_seconds": 10,
-    "show_original": false
+    "show_original": false,
+    "ollama": {
+      "base_url": "http://localhost:11434",
+      "model": "qwen3:8b"
+    }
   },
   "keywords": {
     "high_signal": [
@@ -119,6 +149,8 @@
       "veo",
       "agent",
       "agents",
+      "grok",
+      "xai",
       "reasoning",
       "o1",
       "o3"

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- 백그라운드 모드 -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>fetch</string>
+		<string>processing</string>
+	</array>
+	
+	<!-- 백그라운드 작업 식별자 -->
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>com.ainews.refresh</string>
+	</array>
+	
+	<!-- 네트워크 사용 설명 -->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+		<!-- 프로덕션에서는 특정 도메인만 허용하는 것이 좋습니다 -->
+		<key>NSExceptionDomains</key>
+		<dict>
+			<key>nitter.poast.org</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<true/>
+				<key>NSIncludesSubdomains</key>
+				<true/>
+			</dict>
+			<key>nitter.privacydev.net</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<true/>
+				<key>NSIncludesSubdomains</key>
+				<true/>
+			</dict>
+			<key>nitter.net</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<true/>
+				<key>NSIncludesSubdomains</key>
+				<true/>
+			</dict>
+		</dict>
+	</dict>
+	
+	<!-- 앱 이름 -->
+	<key>CFBundleDisplayName</key>
+	<string>AI 릴리스 워치</string>
+	
+	<!-- 최소 iOS 버전 -->
+	<key>LSMinimumSystemVersion</key>
+	<string>17.0</string>
+</dict>
+</plist>

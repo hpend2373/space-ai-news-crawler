@@ -1,0 +1,2447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="theme-color" content="#000000">
+<title>AGENT VIEWER</title>
+<style>
+/* ─── RESET & BASE ──────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --green: #00ff00;
+  --amber: #ffaa00;
+  --dim: #666;
+  --white: #fff;
+  --bg: #000;
+  --border: #444;
+  --card-bg: #0a0a0a;
+  --input-bg: #111;
+  --red: #ff4444;
+  --font: 'SF Mono', 'JetBrains Mono', 'Menlo', 'Consolas', 'Courier New', monospace;
+}
+
+html, body {
+  background: var(--bg);
+  color: var(--white);
+  font-family: var(--font);
+  font-size: 13px;
+  line-height: 1.5;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ─── SCANLINE EFFECT ───────────────────────────────────────────────── */
+body::after {
+  content: '';
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.03) 2px,
+    rgba(0, 0, 0, 0.03) 4px
+  );
+  z-index: 10000;
+}
+
+/* ─── HEADER ────────────────────────────────────────────────────────── */
+header {
+  border-bottom: 2px solid var(--white);
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+header h1 {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+}
+
+header .status-bar {
+  font-size: 11px;
+  color: var(--dim);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+header .status-bar .dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background: var(--green);
+  margin-right: 6px;
+  animation: blink 2s infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.spawn-btn {
+  background: none;
+  border: 2px solid var(--green);
+  color: var(--green);
+  padding: 8px 20px;
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.1s;
+}
+
+.spawn-btn:hover {
+  background: var(--green);
+  color: var(--bg);
+}
+
+/* ─── KANBAN BOARD ──────────────────────────────────────────────────── */
+.board {
+  display: flex;
+  gap: 0;
+  min-height: calc(100vh - 70px);
+}
+
+.column {
+  flex: 1;
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  min-height: 300px;
+}
+
+.column:last-child {
+  border-right: none;
+}
+
+.column-header {
+  padding: 12px 16px;
+  border-bottom: 2px solid var(--border);
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+  z-index: 10;
+}
+
+.column-header .indicator {
+  width: 10px;
+  height: 10px;
+  display: inline-block;
+}
+
+.column[data-state="running"] .column-header .indicator { background: var(--green); }
+.column[data-state="idle"] .column-header .indicator { background: var(--amber); }
+.column[data-state="completed"] .column-header .indicator { background: var(--dim); }
+
+.column-header .count {
+  color: var(--dim);
+  font-weight: 400;
+}
+
+.clear-all-btn {
+  margin-left: auto;
+  background: none;
+  border: 1px solid var(--dim);
+  color: var(--dim);
+  font-family: var(--font);
+  font-size: 10px;
+  padding: 2px 8px;
+  cursor: pointer;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  transition: all 0.1s;
+}
+
+.clear-all-btn:hover {
+  border-color: var(--red);
+  color: var(--red);
+}
+
+.column-body {
+  flex: 1;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+  transition: background 0.2s;
+}
+
+.column-body.drag-over {
+  background: rgba(255, 255, 255, 0.03);
+  outline: 2px dashed var(--border);
+  outline-offset: -4px;
+}
+
+/* ─── AGENT CARDS ───────────────────────────────────────────────────── */
+.card {
+  border: 1px solid var(--border);
+  background: var(--card-bg);
+  cursor: grab;
+  user-select: none;
+}
+
+.card.dragging {
+  opacity: 0.4;
+}
+
+.card-titlebar {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.card[data-state="running"] .card-titlebar { border-bottom-color: var(--green); }
+.card[data-state="idle"] .card-titlebar { border-bottom-color: var(--amber); }
+.card[data-state="completed"] .card-titlebar { border-bottom-color: var(--dim); }
+
+.card-titlebar .state-badge {
+  font-size: 10px;
+  padding: 2px 6px;
+  letter-spacing: 1px;
+}
+
+.card[data-state="running"] .state-badge { color: var(--green); border: 1px solid var(--green); }
+.card[data-state="idle"] .state-badge { color: var(--amber); border: 1px solid var(--amber); }
+.card[data-state="completed"] .state-badge { color: var(--dim); border: 1px solid var(--dim); }
+
+.card-titlebar .prompt-badge {
+  font-size: 10px;
+  padding: 2px 6px;
+  letter-spacing: 1px;
+  color: #000;
+  background: var(--amber);
+  border: 1px solid var(--amber);
+  cursor: pointer;
+  animation: prompt-pulse 2s ease-in-out infinite;
+}
+
+@keyframes prompt-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.card-body {
+  padding: 10px 12px;
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.card-body .meta {
+  color: var(--dim);
+  margin-bottom: 2px;
+}
+
+.card-body .meta span {
+  color: var(--white);
+}
+
+.card-body .activity {
+  margin-top: 8px;
+  padding: 6px 8px;
+  background: var(--bg);
+  border: 1px solid #222;
+  color: #ccc;
+  font-size: 11px;
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 80px;
+  overflow-y: hidden;
+  line-height: 1.5;
+}
+
+/* ─── FILE DROP ZONE ON CARDS ──────────────────────────────────────── */
+.card.file-drag-over {
+  outline: 2px dashed var(--green);
+  outline-offset: -2px;
+  background: rgba(0, 255, 0, 0.03);
+}
+
+.card .drop-hint {
+  display: none;
+  padding: 8px;
+  text-align: center;
+  color: var(--green);
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  border-top: 1px solid var(--border);
+}
+
+.card.file-drag-over .drop-hint {
+  display: block;
+}
+
+
+/* ─── CARD PROMPT INPUT ─────────────────────────────────────────────── */
+.card-prompt {
+  border-top: 1px solid var(--border);
+  padding: 8px;
+}
+
+.card-prompt .prompt-row {
+  display: flex;
+  gap: 0;
+}
+
+.card-prompt .prompt-prefix {
+  padding: 6px 8px;
+  background: var(--bg);
+  border: 1px solid #333;
+  border-right: none;
+  color: var(--green);
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+}
+
+.card-prompt textarea {
+  flex: 1;
+  background: var(--bg);
+  border: 1px solid #333;
+  border-left: none;
+  color: var(--white);
+  font-family: var(--font);
+  font-size: 11px;
+  padding: 6px 8px;
+  resize: none;
+  height: 32px;
+  outline: none;
+}
+
+.card-prompt textarea:focus {
+  border-color: var(--green);
+}
+
+.card-prompt textarea::placeholder {
+  color: #555;
+}
+
+/* ─── CARD ACTIONS ──────────────────────────────────────────────────── */
+.card-actions {
+  border-top: 1px solid var(--border);
+  padding: 8px 12px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.card-actions button {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--white);
+  font-family: var(--font);
+  font-size: 10px;
+  padding: 4px 10px;
+  cursor: pointer;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  transition: all 0.1s;
+}
+
+.card-actions button:hover {
+  background: var(--white);
+  color: var(--bg);
+}
+
+.card-actions .btn-stop {
+  border-color: var(--red);
+  color: var(--red);
+}
+
+.card-actions .btn-stop:hover {
+  background: var(--red);
+  color: var(--white);
+}
+
+.card-actions .btn-send {
+  border-color: var(--green);
+  color: var(--green);
+}
+
+.card-actions .btn-send:hover {
+  background: var(--green);
+  color: var(--bg);
+}
+
+.card-actions .btn-clear {
+  border-color: var(--dim);
+  color: var(--dim);
+}
+
+.card-actions .btn-clear:hover {
+  background: var(--dim);
+  color: var(--bg);
+}
+
+/* ─── SPAWN MODAL ───────────────────────────────────────────────────── */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-overlay.active {
+  display: flex;
+}
+
+.modal {
+  border: 2px solid var(--white);
+  background: var(--bg);
+  width: 500px;
+  max-width: 95vw;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-header {
+  padding: 12px 16px;
+  border-bottom: 2px solid var(--white);
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
+
+.modal-body {
+  padding: 16px;
+}
+
+.form-field {
+  margin-bottom: 14px;
+}
+
+.form-field label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--dim);
+  margin-bottom: 6px;
+}
+
+.form-field .input-row {
+  display: flex;
+  gap: 0;
+}
+
+.form-field .input-prefix {
+  padding: 8px 10px;
+  background: #111;
+  border: 1px solid var(--border);
+  border-right: none;
+  color: var(--green);
+  font-size: 12px;
+}
+
+.form-field input,
+.form-field select,
+.form-field textarea {
+  flex: 1;
+  background: var(--input-bg);
+  border: 1px solid var(--border);
+  color: var(--white);
+  font-family: var(--font);
+  font-size: 12px;
+  padding: 8px 10px;
+  outline: none;
+  width: 100%;
+}
+
+.form-field input:focus,
+.form-field select:focus,
+.form-field textarea:focus {
+  border-color: var(--green);
+}
+
+.form-field select {
+  appearance: none;
+  cursor: pointer;
+}
+
+.form-field textarea {
+  height: 100px;
+  resize: vertical;
+}
+
+/* ─── Project Path Combo Box ─────────────────────────────── */
+.combo-wrapper {
+  position: relative;
+  flex: 1;
+  display: flex;
+}
+.combo-wrapper input {
+  flex: 1;
+}
+.combo-toggle {
+  background: #111;
+  border: 1px solid var(--border);
+  border-left: none;
+  color: var(--dim);
+  font-size: 10px;
+  padding: 0 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+.combo-toggle:hover {
+  color: var(--green);
+}
+.combo-dropdown {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-top: none;
+  max-height: 180px;
+  overflow-y: auto;
+  z-index: 1000;
+}
+.combo-dropdown.open {
+  display: block;
+}
+.combo-option {
+  padding: 7px 10px;
+  font-size: 12px;
+  color: var(--dim);
+  cursor: pointer;
+  font-family: var(--font);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.combo-option:hover,
+.combo-option.active {
+  background: rgba(0, 255, 65, 0.08);
+  color: var(--green);
+}
+.combo-empty {
+  padding: 7px 10px;
+  font-size: 11px;
+  color: var(--dim);
+  font-style: italic;
+}
+
+.modal-actions {
+  padding: 12px 16px;
+  border-top: 2px solid var(--border);
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.modal-actions button {
+  background: none;
+  border: 2px solid var(--border);
+  color: var(--white);
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 8px 20px;
+  cursor: pointer;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  transition: all 0.1s;
+}
+
+.modal-actions .btn-spawn {
+  border-color: var(--green);
+  color: var(--green);
+}
+
+.modal-actions .btn-spawn:hover {
+  background: var(--green);
+  color: var(--bg);
+}
+
+.modal-actions .btn-cancel:hover {
+  background: var(--white);
+  color: var(--bg);
+}
+
+/* ─── OUTPUT VIEWER OVERLAY ─────────────────────────────────────────── */
+.output-overlay {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: var(--bg);
+  z-index: 2000;
+  flex-direction: column;
+}
+
+.output-overlay.active {
+  display: flex;
+}
+
+.output-header {
+  padding: 12px 16px;
+  border-bottom: 2px solid var(--white);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.output-header .close-btn {
+  background: none;
+  border: 1px solid var(--white);
+  color: var(--white);
+  font-family: var(--font);
+  font-size: 12px;
+  padding: 4px 12px;
+  cursor: pointer;
+  letter-spacing: 1px;
+}
+
+.output-header .close-btn:hover {
+  background: var(--white);
+  color: var(--bg);
+}
+
+.output-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #ccc;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.output-prompt {
+  border-top: 2px solid var(--border);
+  padding: 12px 16px;
+  display: flex;
+  gap: 0;
+  flex-shrink: 0;
+}
+
+.output-prompt .prefix {
+  padding: 10px 12px;
+  background: #111;
+  border: 1px solid var(--border);
+  border-right: none;
+  color: var(--green);
+  font-size: 13px;
+}
+
+.output-prompt input {
+  flex: 1;
+  background: var(--input-bg);
+  border: 1px solid var(--border);
+  color: var(--white);
+  font-family: var(--font);
+  font-size: 13px;
+  padding: 10px 12px;
+  outline: none;
+}
+
+.output-prompt input:focus {
+  border-color: var(--green);
+}
+
+.output-prompt button {
+  padding: 10px 20px;
+  background: none;
+  border: 1px solid var(--green);
+  border-left: none;
+  color: var(--green);
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  cursor: pointer;
+  text-transform: uppercase;
+}
+
+.output-prompt button:hover {
+  background: var(--green);
+  color: var(--bg);
+}
+
+/* ─── CONFIRM DIALOG ────────────────────────────────────────────────── */
+.confirm-overlay {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  z-index: 3000;
+  align-items: center;
+  justify-content: center;
+}
+
+.confirm-overlay.active {
+  display: flex;
+}
+
+.confirm-box {
+  border: 2px solid var(--amber);
+  background: var(--bg);
+  padding: 24px;
+  max-width: 400px;
+  text-align: center;
+}
+
+.confirm-box p {
+  margin-bottom: 20px;
+  font-size: 13px;
+  letter-spacing: 1px;
+}
+
+.confirm-box .confirm-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.confirm-box button {
+  background: none;
+  border: 2px solid var(--border);
+  color: var(--white);
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 8px 24px;
+  cursor: pointer;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.confirm-box .btn-confirm {
+  border-color: var(--red);
+  color: var(--red);
+}
+
+.confirm-box .btn-confirm:hover {
+  background: var(--red);
+  color: var(--white);
+}
+
+.confirm-box .btn-no:hover {
+  background: var(--white);
+  color: var(--bg);
+}
+
+/* ─── EMPTY STATE ───────────────────────────────────────────────────── */
+.empty-state {
+  color: #333;
+  text-align: center;
+  padding: 40px 20px;
+  font-size: 12px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+/* ─── MOBILE TAB BAR ───────────────────────────────────────────────── */
+.mobile-tabs {
+  display: none;
+  border-bottom: 2px solid var(--border);
+  background: var(--bg);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.mobile-tabs .tab-bar {
+  display: flex;
+}
+
+.mobile-tabs .tab {
+  flex: 1;
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  color: var(--dim);
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 14px 8px;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mobile-tabs .tab.active {
+  color: var(--white);
+  border-bottom-color: var(--white);
+}
+
+.mobile-tabs .tab[data-tab="running"].active {
+  color: var(--green);
+  border-bottom-color: var(--green);
+}
+
+.mobile-tabs .tab[data-tab="idle"].active {
+  color: var(--amber);
+  border-bottom-color: var(--amber);
+}
+
+.mobile-tabs .tab[data-tab="completed"].active {
+  color: var(--dim);
+  border-bottom-color: var(--dim);
+}
+
+.mobile-tabs .tab .tab-count {
+  font-weight: 400;
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+/* ─── MOBILE FLOAT BUTTON ───────────────────────────────────────────── */
+.fab {
+  display: none;
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 56px;
+  height: 56px;
+  background: var(--green);
+  color: var(--bg);
+  border: none;
+  font-family: var(--font);
+  font-size: 24px;
+  font-weight: 700;
+  cursor: pointer;
+  z-index: 100;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  box-shadow: 0 4px 12px rgba(0, 255, 0, 0.3);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.fab:active {
+  transform: scale(0.92);
+}
+
+/* ─── MOBILE ────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  html, body {
+    font-size: 14px;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  /* Disable scanline on mobile for perf/battery */
+  body::after {
+    display: none;
+  }
+
+  /* Safe area insets for notched phones */
+  header {
+    padding: 12px 16px;
+    padding-left: max(16px, env(safe-area-inset-left));
+    padding-right: max(16px, env(safe-area-inset-right));
+  }
+
+  header h1 {
+    font-size: 15px;
+    letter-spacing: 2px;
+  }
+
+  header .status-bar {
+    font-size: 10px;
+  }
+
+  header .spawn-btn {
+    display: none;
+  }
+
+  /* Show mobile tab bar */
+  .mobile-tabs {
+    display: block;
+  }
+
+  /* Tab-based column switching */
+  .board {
+    flex-direction: column;
+    min-height: calc(100vh - 120px);
+  }
+
+  .column {
+    border-right: none;
+    border-bottom: none;
+    min-height: auto;
+    display: none;
+    flex: 1;
+  }
+
+  .column.mobile-active {
+    display: flex;
+    flex: 1;
+  }
+
+  .column-header {
+    display: none;
+  }
+
+  .column-body {
+    min-height: calc(100vh - 160px);
+    padding: 12px;
+    padding-left: max(12px, env(safe-area-inset-left));
+    padding-right: max(12px, env(safe-area-inset-right));
+    padding-bottom: 96px; /* room for FAB */
+    gap: 14px;
+  }
+
+  /* FAB with safe area */
+  .fab {
+    display: flex;
+    bottom: max(24px, env(safe-area-inset-bottom, 24px));
+    right: max(24px, env(safe-area-inset-right, 24px));
+    width: 60px;
+    height: 60px;
+    font-size: 28px;
+  }
+
+  /* Card improvements for touch */
+  .card {
+    border-radius: 4px;
+    cursor: default;
+  }
+
+  .card-titlebar {
+    padding: 12px 14px;
+    font-size: 12px;
+  }
+
+  .card-titlebar .state-badge {
+    font-size: 10px;
+    padding: 3px 8px;
+  }
+
+  .card-body {
+    padding: 12px 14px;
+    font-size: 12px;
+  }
+
+  .card-body .activity {
+    font-size: 11px;
+    max-height: 60px;
+    border-radius: 2px;
+  }
+
+  /* Prompt input - bigger for touch */
+  .card-prompt {
+    padding: 10px;
+  }
+
+  .card-prompt .prompt-prefix {
+    padding: 10px;
+    font-size: 13px;
+  }
+
+  .card-prompt textarea {
+    font-size: 14px;
+    padding: 10px;
+    height: 42px;
+    /* iOS zoom prevention */
+    border-radius: 0;
+    -webkit-appearance: none;
+  }
+
+  /* Action buttons - touch friendly */
+  .card-actions {
+    padding: 10px 12px;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .card-actions button {
+    padding: 10px 16px;
+    font-size: 11px;
+    min-height: 40px;
+    border-radius: 2px;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .card-actions button:active {
+    opacity: 0.7;
+  }
+
+  /* Modal - full screen with safe areas */
+  .modal-overlay {
+    align-items: stretch;
+    justify-content: stretch;
+  }
+
+  .modal {
+    width: 100%;
+    max-width: 100%;
+    height: 100%;
+    max-height: 100%;
+    border: none;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .modal-header {
+    padding: 14px 16px;
+    padding-left: max(16px, env(safe-area-inset-left));
+  }
+
+  .modal-body {
+    padding: 16px;
+    padding-left: max(16px, env(safe-area-inset-left));
+    padding-right: max(16px, env(safe-area-inset-right));
+    flex: 1;
+    overflow-y: auto;
+  }
+
+  .form-field input,
+  .form-field textarea {
+    font-size: 16px; /* prevents iOS zoom on focus */
+    padding: 12px;
+  }
+
+  .form-field textarea {
+    height: 120px;
+  }
+
+  .modal-actions {
+    padding: 14px 16px;
+    padding-bottom: max(14px, env(safe-area-inset-bottom));
+    padding-left: max(16px, env(safe-area-inset-left));
+    padding-right: max(16px, env(safe-area-inset-right));
+  }
+
+  .modal-actions button {
+    padding: 12px 24px;
+    min-height: 44px;
+    font-size: 13px;
+    flex: 1;
+  }
+
+  /* Output viewer - mobile optimized */
+  .output-header {
+    padding: 14px 16px;
+    padding-left: max(16px, env(safe-area-inset-left));
+    padding-right: max(16px, env(safe-area-inset-right));
+    font-size: 11px;
+  }
+
+  .output-header .close-btn {
+    padding: 8px 16px;
+    font-size: 12px;
+    min-height: 36px;
+  }
+
+  .output-content {
+    padding: 12px;
+    padding-left: max(12px, env(safe-area-inset-left));
+    padding-right: max(12px, env(safe-area-inset-right));
+    font-size: 11px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .output-prompt {
+    padding: 10px;
+    padding-bottom: max(10px, env(safe-area-inset-bottom));
+    padding-left: max(10px, env(safe-area-inset-left));
+    padding-right: max(10px, env(safe-area-inset-right));
+  }
+
+  .output-prompt .prefix {
+    padding: 12px;
+    font-size: 14px;
+  }
+
+  .output-prompt input {
+    font-size: 16px; /* prevents iOS zoom */
+    padding: 12px;
+    -webkit-appearance: none;
+    border-radius: 0;
+  }
+
+  .output-prompt button {
+    padding: 12px 18px;
+    font-size: 12px;
+    min-height: 44px;
+  }
+
+  /* Confirm dialog */
+  .confirm-box {
+    margin: 16px;
+    padding: 24px 20px;
+    max-width: calc(100vw - 32px);
+  }
+
+  .confirm-box p {
+    font-size: 14px;
+  }
+
+  .confirm-box button {
+    padding: 12px 24px;
+    min-height: 44px;
+    font-size: 12px;
+  }
+
+  /* Empty state */
+  .empty-state {
+    padding: 60px 20px;
+    font-size: 13px;
+  }
+
+  /* Disable drag on mobile */
+  .card[draggable] {
+    -webkit-user-drag: none;
+  }
+}
+
+/* ─── KEY CONTROLS (for interactive prompts) ───────────────────────── */
+.key-controls {
+  border-top: 1px solid var(--border);
+  padding: 8px 12px;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.key-controls .kc-label {
+  font-size: 10px;
+  color: var(--amber);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-right: 4px;
+}
+
+.key-controls button {
+  background: none;
+  border: 1px solid var(--amber);
+  color: var(--amber);
+  font-family: var(--font);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  cursor: pointer;
+  letter-spacing: 1px;
+  transition: all 0.1s;
+  min-width: 32px;
+  text-align: center;
+}
+
+.key-controls button:hover {
+  background: var(--amber);
+  color: var(--bg);
+}
+
+.key-controls button:active {
+  transform: scale(0.95);
+}
+
+/* ─── FOLDER PICKER ────────────────────────────────────────────────── */
+.browse-btn {
+  padding: 8px 12px;
+  background: none;
+  border: 1px solid var(--border);
+  border-left: none;
+  color: var(--green);
+  font-family: var(--font);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  cursor: pointer;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.browse-btn:hover {
+  background: var(--green);
+  color: var(--bg);
+}
+
+.folder-picker {
+  display: none;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  margin-top: 6px;
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+.folder-picker.active {
+  display: block;
+}
+
+.folder-picker .fp-header {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  font-size: 11px;
+  color: var(--green);
+  word-break: break-all;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.folder-picker .fp-header .fp-select {
+  background: none;
+  border: 1px solid var(--green);
+  color: var(--green);
+  font-family: var(--font);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 10px;
+  cursor: pointer;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.folder-picker .fp-header .fp-select:hover {
+  background: var(--green);
+  color: var(--bg);
+}
+
+.folder-picker .fp-item {
+  padding: 6px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  border-bottom: 1px solid #111;
+  color: var(--white);
+}
+
+.folder-picker .fp-item:hover {
+  background: #111;
+  color: var(--green);
+}
+
+.folder-picker .fp-item.fp-parent {
+  color: var(--dim);
+}
+
+.folder-picker .fp-empty {
+  padding: 12px 10px;
+  font-size: 11px;
+  color: #333;
+  text-align: center;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+/* ─── SCROLLBAR ─────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: #333; }
+::-webkit-scrollbar-thumb:hover { background: #555; }
+</style>
+</head>
+<body>
+
+<!-- ─── HEADER ─────────────────────────────────────────────────────── -->
+<header>
+  <h1>AGENT VIEWER</h1>
+  <div class="status-bar">
+    <span class="dot"></span>
+    <span id="connectionStatus">CONNECTING...</span>
+  </div>
+  <button class="spawn-btn" onclick="openSpawnModal()">[+ SPAWN] <span style="color:var(--dim);font-size:10px;font-weight:400">(N)</span></button>
+</header>
+
+<!-- ─── MOBILE TAB BAR ─────────────────────────────────────────────── -->
+<div class="mobile-tabs">
+  <div class="tab-bar">
+    <button class="tab active" data-tab="running" onclick="switchTab('running')">
+      RUN <span class="tab-count" id="tabRunCount">[0]</span>
+    </button>
+    <button class="tab" data-tab="idle" onclick="switchTab('idle')">
+      IDLE <span class="tab-count" id="tabIdleCount">[0]</span>
+    </button>
+    <button class="tab" data-tab="completed" onclick="switchTab('completed')">
+      DONE <span class="tab-count" id="tabDoneCount">[0]</span>
+    </button>
+  </div>
+</div>
+
+<!-- ─── KANBAN BOARD ───────────────────────────────────────────────── -->
+<div class="board">
+  <div class="column" data-state="running">
+    <div class="column-header">
+      <span class="indicator"></span>
+      RUNNING <span class="count" id="runningCount">[0]</span>
+    </div>
+    <div class="column-body" id="runningColumn">
+      <div class="empty-state">NO RUNNING AGENTS</div>
+    </div>
+  </div>
+
+  <div class="column" data-state="idle">
+    <div class="column-header">
+      <span class="indicator"></span>
+      IDLE <span class="count" id="idleCount">[0]</span>
+    </div>
+    <div class="column-body" id="idleColumn">
+      <div class="empty-state">NO IDLE AGENTS</div>
+    </div>
+  </div>
+
+  <div class="column" data-state="completed">
+    <div class="column-header">
+      <span class="indicator"></span>
+      COMPLETED <span class="count" id="completedCount">[0]</span>
+      <button class="clear-all-btn" id="clearAllBtn" onclick="confirmClearAll()" style="display:none">CLEAR ALL</button>
+    </div>
+    <div class="column-body" id="completedColumn"
+         ondragover="onDragOver(event)" ondragleave="onDragLeave(event)"
+         ondrop="onDrop(event, 'completed')">
+      <div class="empty-state">NO COMPLETED AGENTS</div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── MOBILE FAB ─────────────────────────────────────────────────── -->
+<button class="fab" onclick="openSpawnModal()">+</button>
+
+<!-- ─── SPAWN MODAL ────────────────────────────────────────────────── -->
+<div class="modal-overlay" id="spawnModal">
+  <div class="modal">
+    <div class="modal-header">SPAWN NEW AGENT</div>
+    <div class="modal-body">
+      <div class="form-field">
+        <label>PROJECT PATH</label>
+        <div class="input-row">
+          <span class="input-prefix">&gt;_</span>
+          <div class="combo-wrapper">
+            <input type="text" id="spawnProject" placeholder="/Users/gogo/Code/myproject"
+                   autocomplete="off"
+                   oninput="filterRecentProjects()"
+                   onfocus="filterRecentProjects()"
+                   onkeydown="comboKeydown(event)" />
+            <button type="button" class="combo-toggle" onclick="toggleProjectDropdown()" title="Recent projects">&#9660;</button>
+            <div class="combo-dropdown" id="projectDropdown"></div>
+          </div>
+          <button class="browse-btn" onclick="toggleFolderPicker()">BROWSE</button>
+        </div>
+        <div class="folder-picker" id="folderPicker"></div>
+      </div>
+      <div class="form-field">
+        <label>PROMPT</label>
+        <div class="input-row" style="align-items:start">
+          <span class="input-prefix" style="padding-top:10px">&gt;_</span>
+          <textarea id="spawnPrompt" placeholder="Describe the task for the agent..."></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeSpawnModal()">CANCEL</button>
+      <button class="btn-spawn" onclick="spawnAgent()">SPAWN</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── OUTPUT VIEWER ──────────────────────────────────────────────── -->
+<div class="output-overlay" id="outputOverlay">
+  <div class="output-header">
+    <span id="outputTitle">OUTPUT</span>
+    <button class="close-btn" onclick="closeOutputViewer()">[X] CLOSE</button>
+  </div>
+  <div class="output-content" id="outputContent"></div>
+  <div class="key-controls" id="outputKeyControls" style="display:none"></div>
+  <div class="output-prompt">
+    <span class="prefix">&gt;_</span>
+    <input type="text" id="outputPromptInput" placeholder="Send a message..."
+           onkeydown="if(event.key==='Enter'){sendFromOutput();}" />
+    <button onclick="sendFromOutput()">SEND</button>
+  </div>
+</div>
+
+<!-- ─── CONFIRM DIALOG ─────────────────────────────────────────────── -->
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-box">
+    <p id="confirmMessage">STOP THIS AGENT?</p>
+    <div class="confirm-actions">
+      <button class="btn-no" onclick="closeConfirm()">CANCEL</button>
+      <button class="btn-confirm" id="confirmBtn" onclick="confirmAction()">STOP</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── STATE ─────────────────────────────────────────────────────────────
+let agents = [];
+let currentOutputAgent = null;
+let outputPollTimer = null;
+let pendingConfirm = null;
+let draggedAgentName = null;
+
+// ─── SSE CONNECTION ────────────────────────────────────────────────────
+let eventSource = null;
+
+function connectSSE() {
+  if (eventSource) eventSource.close();
+  eventSource = new EventSource('/api/events');
+
+  eventSource.onmessage = (event) => {
+    try {
+      const data = JSON.parse(event.data);
+      if (data.type === 'connected') {
+        document.getElementById('connectionStatus').textContent = 'CONNECTED';
+      } else if (data.type === 'agents') {
+        agents = data.agents;
+        renderBoard();
+      }
+    } catch (e) {
+      console.error('SSE parse error:', e);
+    }
+  };
+
+  eventSource.onerror = () => {
+    document.getElementById('connectionStatus').textContent = 'RECONNECTING...';
+    setTimeout(connectSSE, 3000);
+  };
+}
+
+// Also fetch immediately on load
+async function fetchAgents() {
+  try {
+    const res = await fetch('/api/agents');
+    agents = await res.json();
+    renderBoard();
+  } catch (e) {
+    console.error('Fetch error:', e);
+  }
+}
+
+// ─── RENDERING ─────────────────────────────────────────────────────────
+function renderBoard() {
+  const running = agents.filter(a => a.state === 'running');
+  const idle = agents.filter(a => a.state === 'idle');
+  const completed = agents.filter(a => a.state === 'completed');
+
+  document.getElementById('runningCount').textContent = `[${running.length}]`;
+  document.getElementById('idleCount').textContent = `[${idle.length}]`;
+  document.getElementById('completedCount').textContent = `[${completed.length}]`;
+
+  renderColumn('runningColumn', running, 'NO RUNNING AGENTS');
+  renderColumn('idleColumn', idle, 'NO IDLE AGENTS');
+  renderColumn('completedColumn', completed, 'NO COMPLETED AGENTS');
+
+  // Show/hide clear all button
+  document.getElementById('clearAllBtn').style.display = completed.length > 0 ? '' : 'none';
+
+  // Update mobile tab counts
+  updateMobileTabs();
+
+  // Keep mobile column visibility in sync
+  if (isMobile()) {
+    document.querySelectorAll('.column').forEach(col => {
+      col.classList.toggle('mobile-active', col.dataset.state === activeTab);
+    });
+  }
+
+  // Update output viewer if open
+  if (currentOutputAgent) {
+    updateOutputViewer();
+  }
+}
+
+function renderColumn(columnId, columnAgents, emptyText) {
+  const el = document.getElementById(columnId);
+
+  // Preserve focused textarea state before re-render
+  const focused = el.querySelector('textarea:focus');
+  let focusedId = null;
+  let focusedValue = null;
+  let focusedSelStart = null;
+  let focusedSelEnd = null;
+  if (focused) {
+    focusedId = focused.id;
+    focusedValue = focused.value;
+    focusedSelStart = focused.selectionStart;
+    focusedSelEnd = focused.selectionEnd;
+  }
+
+  if (columnAgents.length === 0) {
+    el.innerHTML = `<div class="empty-state">${emptyText}</div>`;
+    return;
+  }
+
+  el.innerHTML = columnAgents.map(a => renderCard(a)).join('');
+
+  // Restore focused textarea state after re-render
+  if (focusedId) {
+    const restored = document.getElementById(focusedId);
+    if (restored) {
+      restored.value = focusedValue;
+      restored.focus();
+      restored.selectionStart = focusedSelStart;
+      restored.selectionEnd = focusedSelEnd;
+    }
+  }
+}
+
+function renderCard(agent) {
+  const uptime = agent.createdAt ? formatDuration(Date.now() - agent.createdAt) : '--';
+  const idleFor = agent.idleSince ? formatDuration(Date.now() - agent.idleSince) : '';
+  const projectName = agent.projectPath ? agent.projectPath.split('/').filter(Boolean).pop() : '--';
+  const lastActHtml = ansiToHtml(agent.lastActivity || '');
+
+  let metaLines = '';
+  metaLines += `<div class="meta">PROJECT: <span>${escapeHtml(projectName)}</span></div>`;
+  metaLines += `<div class="meta">UPTIME: <span>${uptime}</span></div>`;
+
+  if (agent.state === 'idle') {
+    metaLines += `<div class="meta">IDLE FOR: <span>${idleFor}</span></div>`;
+  } else if (agent.state === 'completed') {
+    const completedAgo = agent.completedAt ? formatDuration(Date.now() - agent.completedAt) + ' AGO' : '--';
+    metaLines += `<div class="meta">COMPLETED: <span>${completedAgo}</span></div>`;
+  }
+
+  const activityBlock = lastActHtml
+    ? `<div class="activity">${lastActHtml}</div>`
+    : '';
+
+  // Interactive key controls for selection/permission prompts
+  // Use server-side detection, with client-side fallback from activity text
+  const promptType = agent.promptType || detectPromptTypeFromText(agent.lastActivity || '');
+  let keyControlsBlock = '';
+  if (promptType) {
+    let buttons = '';
+    const n = agent.name;
+    if (promptType === 'select') {
+      buttons = `
+        <span class="kc-label">SELECT:</span>
+        <button onclick="sendKey('${n}', 'Up')" title="Move up">&#x2191;</button>
+        <button onclick="sendKey('${n}', 'Down')" title="Move down">&#x2193;</button>
+        <button onclick="sendKey('${n}', 'Enter')" title="Confirm selection">ENTER</button>
+        <button onclick="sendKey('${n}', 'Escape')" title="Cancel">ESC</button>`;
+    } else if (promptType === 'multiselect') {
+      buttons = `
+        <span class="kc-label">MULTI-SELECT:</span>
+        <button onclick="sendKey('${n}', 'Up')" title="Move up">&#x2191;</button>
+        <button onclick="sendKey('${n}', 'Down')" title="Move down">&#x2193;</button>
+        <button onclick="sendKey('${n}', 'Space')" title="Toggle selection">SPACE</button>
+        <button onclick="sendKey('${n}', 'Enter')" title="Confirm selections">ENTER</button>
+        <button onclick="sendKey('${n}', 'Escape')" title="Cancel">ESC</button>`;
+    } else if (promptType === 'permission') {
+      buttons = `
+        <span class="kc-label">PERMISSION:</span>
+        <button onclick="sendKey('${n}', 'Up')" title="Move up">&#x2191;</button>
+        <button onclick="sendKey('${n}', 'Down')" title="Move down">&#x2193;</button>
+        <button onclick="sendKey('${n}', 'Enter')" title="Confirm">ENTER</button>
+        <button onclick="sendKey('${n}', 'Escape')" title="Cancel">ESC</button>`;
+    } else if (promptType === 'plan') {
+      buttons = `
+        <span class="kc-label">PLAN:</span>
+        <button onclick="sendKey('${n}', 'Up')" title="Move up">&#x2191;</button>
+        <button onclick="sendKey('${n}', 'Down')" title="Move down">&#x2193;</button>
+        <button onclick="sendKey('${n}', 'Enter')" title="Confirm selection">ENTER</button>
+        <button onclick="sendKey('${n}', 'Escape')" title="Cancel">ESC</button>
+        <span style="color:var(--dim);font-size:10px;margin-left:4px">&middot; or type feedback below</span>`;
+    } else if (promptType === 'yesno') {
+      buttons = `
+        <span class="kc-label">CONFIRM:</span>
+        <button onclick="sendKey('${n}', 'Up')" title="Move up">&#x2191;</button>
+        <button onclick="sendKey('${n}', 'Down')" title="Move down">&#x2193;</button>
+        <button onclick="sendKey('${n}', 'Enter')" title="Confirm">ENTER</button>
+        <button onclick="sendKey('${n}', 'Escape')" title="Cancel">ESC</button>`;
+    }
+    keyControlsBlock = `<div class="key-controls">${buttons}</div>`;
+  }
+
+  // Prompt input for all agents
+  const placeholders = {
+    running: 'Queue a message...',
+    idle: 'Type a follow-up task...',
+    completed: 'Send a new task to re-spawn...',
+  };
+  let placeholder = placeholders[agent.state] || 'Send a message...';
+  if (promptType === 'plan') {
+    placeholder = 'Type feedback for the plan...';
+  }
+  const promptBlock = `
+    <div class="card-prompt">
+      <div class="prompt-row">
+        <span class="prompt-prefix">&gt;_</span>
+        <textarea placeholder="${placeholder}"
+                  onkeydown="handlePromptKey(event, '${agent.name}')"
+                  id="prompt-${agent.name}"></textarea>
+      </div>
+    </div>`;
+
+  // Hidden file input for uploads
+  const fileInput = agent.state !== 'completed'
+    ? `<input type="file" id="file-${agent.name}" style="display:none"
+             onchange="uploadFile('${agent.name}', this)" accept="image/*,.pdf,.txt,.csv,.json,.md,.js,.ts,.py" />`
+    : '';
+
+  // Action buttons
+  let actions = '';
+  if (agent.state !== 'completed') {
+    actions = `
+      <div class="card-actions">
+        <button class="btn-send" onclick="sendPrompt('${agent.name}')">SEND</button>
+        <button onclick="document.getElementById('file-${agent.name}').click()">FILE</button>
+        <button onclick="copyAttach('${agent.name}')">TERMINAL</button>
+        <button class="btn-stop" onclick="confirmStop('${agent.name}')">STOP</button>
+        <button onclick="openOutputViewer('${agent.name}')">VIEW OUTPUT</button>
+      </div>`;
+  } else {
+    actions = `
+      <div class="card-actions">
+        <button class="btn-send" onclick="sendPrompt('${agent.name}')">RE-SPAWN</button>
+        <button onclick="openOutputViewer('${agent.name}')">VIEW OUTPUT</button>
+        <button class="btn-clear" onclick="confirmCleanup('${agent.name}')">CLEAR</button>
+      </div>`;
+  }
+
+  const dropHandlers = agent.state !== 'completed'
+    ? `ondragover="onCardFileDragOver(event, '${agent.name}')"
+       ondragleave="onCardFileDragLeave(event)"
+       ondrop="onCardFileDrop(event, '${agent.name}')"`
+    : '';
+  const dropHint = agent.state !== 'completed'
+    ? '<div class="drop-hint">DROP FILE HERE</div>'
+    : '';
+
+  return `
+    <div class="card" data-state="${agent.state}" data-name="${agent.name}"
+         draggable="true"
+         ondragstart="onDragStart(event, '${agent.name}')"
+         ondragend="onDragEnd(event)"
+         ${dropHandlers}>
+      <div class="card-titlebar">
+        <span>${escapeHtml(agent.label)}</span>
+        <span style="display:flex;gap:6px;align-items:center">
+          ${promptType ? `<span class="prompt-badge" onclick="openOutputViewer('${agent.name}')" title="Click to view & respond">${promptTypeLabel(promptType)}</span>` : ''}
+          <span class="state-badge">${agent.state.toUpperCase()}</span>
+        </span>
+      </div>
+      <div class="card-body">
+        ${metaLines}
+        ${activityBlock}
+      </div>
+      ${keyControlsBlock}
+      ${promptBlock}
+      ${fileInput}
+      ${dropHint}
+      ${actions}
+    </div>`;
+}
+
+// ─── ACTIONS ───────────────────────────────────────────────────────────
+async function spawnAgent() {
+  const projectPath = document.getElementById('spawnProject').value.trim();
+  const prompt = document.getElementById('spawnPrompt').value.trim();
+
+  if (!projectPath || !prompt) {
+    alert('Project path and prompt are required');
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/agents', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ projectPath, prompt }),
+    });
+    const data = await res.json();
+    if (data.error) {
+      alert('Error: ' + data.error);
+      return;
+    }
+    closeSpawnModal();
+    fetchAgents();
+  } catch (e) {
+    alert('Failed to spawn agent: ' + e.message);
+  }
+}
+
+async function sendPrompt(agentName) {
+  const textarea = document.getElementById('prompt-' + agentName);
+  if (!textarea) return;
+  const message = textarea.value.trim();
+  if (!message) return;
+
+  textarea.value = '';
+
+  // Check if this agent has a plan prompt - route to plan-feedback endpoint
+  const agent = agents.find(a => a.name === agentName);
+  const pType = agent ? (agent.promptType || detectPromptTypeFromText(agent.lastActivity || '')) : null;
+
+  try {
+    if (pType === 'plan') {
+      await fetch(`/api/agents/${agentName}/plan-feedback`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message }),
+      });
+    } else {
+      await fetch(`/api/agents/${agentName}/send`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message }),
+      });
+    }
+    fetchAgents();
+  } catch (e) {
+    console.error('Send error:', e);
+  }
+}
+
+async function sendKey(agentName, key) {
+  try {
+    await fetch(`/api/agents/${agentName}/keys`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ keys: key }),
+    });
+  } catch (e) {
+    console.error('Send key error:', e);
+  }
+}
+
+function handlePromptKey(event, agentName) {
+  if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
+    event.preventDefault();
+    sendPrompt(agentName);
+  }
+}
+
+async function uploadFile(agentName, input) {
+  const file = input.files[0];
+  if (!file) return;
+
+  const formData = new FormData();
+  formData.append('file', file);
+
+  try {
+    const res = await fetch(`/api/agents/${agentName}/upload`, {
+      method: 'POST',
+      body: formData,
+    });
+    const data = await res.json();
+    if (data.error) {
+      alert('Upload error: ' + data.error);
+    }
+  } catch (e) {
+    alert('Upload failed: ' + e.message);
+  }
+  // Reset the input so the same file can be re-selected
+  input.value = '';
+}
+
+function copyAttach(agentName) {
+  const cmd = `tmux attach -t ${agentName}`;
+  navigator.clipboard.writeText(cmd).then(() => {
+    // Brief visual feedback on the button
+    const btns = document.querySelectorAll(`[data-name="${agentName}"] .card-actions button`);
+    for (const btn of btns) {
+      if (btn.textContent === 'TERMINAL') {
+        btn.textContent = 'COPIED!';
+        btn.style.borderColor = 'var(--green)';
+        btn.style.color = 'var(--green)';
+        setTimeout(() => {
+          btn.textContent = 'TERMINAL';
+          btn.style.borderColor = '';
+          btn.style.color = '';
+        }, 1500);
+        break;
+      }
+    }
+  });
+}
+
+async function stopAgent(agentName) {
+  try {
+    await fetch(`/api/agents/${agentName}`, { method: 'DELETE' });
+    fetchAgents();
+  } catch (e) {
+    console.error('Stop error:', e);
+  }
+}
+
+function confirmStop(agentName) {
+  pendingConfirm = () => stopAgent(agentName);
+  document.getElementById('confirmMessage').textContent = `STOP AGENT "${agentName}"?`;
+  document.getElementById('confirmOverlay').classList.add('active');
+}
+
+function confirmAction() {
+  if (pendingConfirm) {
+    pendingConfirm();
+    pendingConfirm = null;
+  }
+  closeConfirm();
+}
+
+function closeConfirm() {
+  document.getElementById('confirmOverlay').classList.remove('active');
+  document.getElementById('confirmBtn').textContent = 'STOP';
+  pendingConfirm = null;
+}
+
+// ─── CLEANUP ───────────────────────────────────────────────────────────
+async function cleanupAgent(agentName) {
+  try {
+    await fetch(`/api/agents/${agentName}/cleanup`, { method: 'DELETE' });
+    fetchAgents();
+  } catch (e) {
+    console.error('Cleanup error:', e);
+  }
+}
+
+async function cleanupAllCompleted() {
+  try {
+    await fetch('/api/cleanup/completed', { method: 'DELETE' });
+    fetchAgents();
+  } catch (e) {
+    console.error('Cleanup all error:', e);
+  }
+}
+
+function confirmCleanup(agentName) {
+  pendingConfirm = () => cleanupAgent(agentName);
+  document.getElementById('confirmMessage').textContent = `CLEAR COMPLETED AGENT "${agentName}"?`;
+  document.getElementById('confirmBtn').textContent = 'CLEAR';
+  document.getElementById('confirmOverlay').classList.add('active');
+}
+
+function confirmClearAll() {
+  const count = agents.filter(a => a.state === 'completed').length;
+  pendingConfirm = () => cleanupAllCompleted();
+  document.getElementById('confirmMessage').textContent = `CLEAR ALL ${count} COMPLETED AGENT${count !== 1 ? 'S' : ''}?`;
+  document.getElementById('confirmBtn').textContent = 'CLEAR ALL';
+  document.getElementById('confirmOverlay').classList.add('active');
+}
+
+// ─── OUTPUT VIEWER ─────────────────────────────────────────────────────
+async function openOutputViewer(agentName) {
+  currentOutputAgent = agentName;
+  const agent = agents.find(a => a.name === agentName);
+  document.getElementById('outputTitle').textContent =
+    `OUTPUT: ${agent ? agent.label : agentName}`;
+  document.getElementById('outputOverlay').classList.add('active');
+  document.getElementById('outputPromptInput').value = '';
+  await updateOutputViewer();
+
+  // Poll for output updates
+  if (outputPollTimer) clearInterval(outputPollTimer);
+  outputPollTimer = setInterval(updateOutputViewer, 3000);
+}
+
+async function updateOutputViewer() {
+  if (!currentOutputAgent) return;
+  try {
+    const res = await fetch(`/api/agents/${currentOutputAgent}/output`);
+    const data = await res.json();
+    const el = document.getElementById('outputContent');
+    const wasAtBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 50;
+    el.innerHTML = data.raw ? ansiToHtml(data.raw) : escapeHtml(data.output || '(no output)');
+    if (wasAtBottom) el.scrollTop = el.scrollHeight;
+
+    // Show key controls if agent has an interactive prompt
+    updateOutputKeyControls();
+  } catch (e) {
+    console.error('Output fetch error:', e);
+  }
+}
+
+function detectPromptTypeFromText(text) {
+  if (/space to select/i.test(text) && /enter to confirm/i.test(text)) return 'multiselect';
+  if (/allow\s+(once|always)/i.test(text) && /deny/i.test(text)) return 'permission';
+  // Plan detection before select (plan prompts also show "enter to select")
+  if (/ctrl.g to edit/i.test(text)) return 'plan';
+  if (/manually approve/i.test(text) && /\d\.\s/.test(text)) return 'plan';
+  if (/execute.*plan/i.test(text) && /\d\.\s/.test(text)) return 'plan';
+  if (/enter to select/i.test(text) && /to navigate/i.test(text)) return 'select';
+  if (/\(y\/n\)/i.test(text)) return 'yesno';
+  return null;
+}
+
+function updateOutputKeyControls() {
+  const kcEl = document.getElementById('outputKeyControls');
+  if (!currentOutputAgent || !kcEl) return;
+
+  // Try server-side detection first, then fallback to client-side from rendered output
+  const agent = agents.find(a => a.name === currentOutputAgent);
+  let pType = agent ? agent.promptType : null;
+
+  if (!pType) {
+    // Detect from the output content text directly
+    const outputEl = document.getElementById('outputContent');
+    if (outputEl) {
+      pType = detectPromptTypeFromText(outputEl.textContent || '');
+    }
+  }
+
+  if (!pType) {
+    kcEl.style.display = 'none';
+    return;
+  }
+
+  let buttons = '';
+  if (pType === 'select') {
+    buttons = `
+      <span class="kc-label">SELECT:</span>
+      <button onclick="sendKeyFromOutput('Up')" title="Move up">&#x2191;</button>
+      <button onclick="sendKeyFromOutput('Down')" title="Move down">&#x2193;</button>
+      <button onclick="sendKeyFromOutput('Enter')" title="Confirm selection">ENTER</button>
+      <button onclick="sendKeyFromOutput('Escape')" title="Cancel">ESC</button>`;
+  } else if (pType === 'multiselect') {
+    buttons = `
+      <span class="kc-label">MULTI-SELECT:</span>
+      <button onclick="sendKeyFromOutput('Up')" title="Move up">&#x2191;</button>
+      <button onclick="sendKeyFromOutput('Down')" title="Move down">&#x2193;</button>
+      <button onclick="sendKeyFromOutput('Space')" title="Toggle selection">SPACE</button>
+      <button onclick="sendKeyFromOutput('Enter')" title="Confirm selections">ENTER</button>
+      <button onclick="sendKeyFromOutput('Escape')" title="Cancel">ESC</button>`;
+  } else if (pType === 'permission') {
+    buttons = `
+      <span class="kc-label">PERMISSION:</span>
+      <button onclick="sendKeyFromOutput('Up')" title="Move up">&#x2191;</button>
+      <button onclick="sendKeyFromOutput('Down')" title="Move down">&#x2193;</button>
+      <button onclick="sendKeyFromOutput('Enter')" title="Confirm">ENTER</button>
+      <button onclick="sendKeyFromOutput('Escape')" title="Cancel">ESC</button>`;
+  } else if (pType === 'plan') {
+    buttons = `
+      <span class="kc-label">PLAN:</span>
+      <button onclick="sendKeyFromOutput('Up')" title="Move up">&#x2191;</button>
+      <button onclick="sendKeyFromOutput('Down')" title="Move down">&#x2193;</button>
+      <button onclick="sendKeyFromOutput('Enter')" title="Confirm selection">ENTER</button>
+      <button onclick="sendKeyFromOutput('Escape')" title="Cancel">ESC</button>
+      <span style="color:var(--dim);font-size:10px;margin-left:4px">&middot; or type feedback below</span>`;
+  } else if (pType === 'yesno') {
+    buttons = `
+      <span class="kc-label">CONFIRM:</span>
+      <button onclick="sendKeyFromOutput('Up')" title="Move up">&#x2191;</button>
+      <button onclick="sendKeyFromOutput('Down')" title="Move down">&#x2193;</button>
+      <button onclick="sendKeyFromOutput('Enter')" title="Confirm">ENTER</button>
+      <button onclick="sendKeyFromOutput('Escape')" title="Cancel">ESC</button>`;
+  }
+
+  if (buttons) {
+    kcEl.innerHTML = buttons;
+    kcEl.style.display = 'flex';
+  } else {
+    kcEl.style.display = 'none';
+  }
+
+  // Update output prompt placeholder based on prompt type
+  const outputInput = document.getElementById('outputPromptInput');
+  if (outputInput) {
+    outputInput.placeholder = pType === 'plan' ? 'Type feedback for the plan...' : 'Send a message...';
+  }
+}
+
+async function sendKeyFromOutput(key) {
+  if (!currentOutputAgent) return;
+  await sendKey(currentOutputAgent, key);
+  // Refresh output immediately to show the effect
+  setTimeout(updateOutputViewer, 300);
+}
+
+function closeOutputViewer() {
+  currentOutputAgent = null;
+  document.getElementById('outputOverlay').classList.remove('active');
+  if (outputPollTimer) {
+    clearInterval(outputPollTimer);
+    outputPollTimer = null;
+  }
+}
+
+async function sendFromOutput() {
+  if (!currentOutputAgent) return;
+  const input = document.getElementById('outputPromptInput');
+  const message = input.value.trim();
+  if (!message) return;
+  input.value = '';
+
+  // Check if plan prompt is active - route to plan-feedback endpoint
+  const agent = agents.find(a => a.name === currentOutputAgent);
+  let pType = agent ? agent.promptType : null;
+  if (!pType) {
+    const outputEl = document.getElementById('outputContent');
+    if (outputEl) pType = detectPromptTypeFromText(outputEl.textContent || '');
+  }
+
+  try {
+    if (pType === 'plan') {
+      await fetch(`/api/agents/${currentOutputAgent}/plan-feedback`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message }),
+      });
+    } else {
+      await fetch(`/api/agents/${currentOutputAgent}/send`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message }),
+      });
+    }
+  } catch (e) {
+    console.error('Send from output error:', e);
+  }
+}
+
+// ─── SPAWN MODAL ───────────────────────────────────────────────────────
+function openSpawnModal() {
+  document.getElementById('spawnProject').value = '';
+  document.getElementById('spawnPrompt').value = '';
+  document.getElementById('spawnModal').classList.add('active');
+  loadRecentProjects().then(() => {
+    document.getElementById('spawnProject').focus();
+  });
+}
+
+function closeSpawnModal() {
+  document.getElementById('spawnModal').classList.remove('active');
+  closeProjectDropdown();
+  document.getElementById('folderPicker').classList.remove('active');
+}
+
+// ─── FOLDER PICKER ─────────────────────────────────────────────────────
+async function toggleFolderPicker() {
+  const picker = document.getElementById('folderPicker');
+  if (picker.classList.contains('active')) {
+    picker.classList.remove('active');
+    return;
+  }
+  const current = document.getElementById('spawnProject').value.trim() || '';
+  await loadFolderPicker(current || undefined);
+}
+
+async function loadFolderPicker(dir) {
+  const picker = document.getElementById('folderPicker');
+  try {
+    const url = dir ? `/api/browse?dir=${encodeURIComponent(dir)}` : '/api/browse';
+    const res = await fetch(url);
+    const data = await res.json();
+    if (data.error) {
+      picker.innerHTML = `<div class="fp-empty">${escapeHtml(data.error)}</div>`;
+      picker.classList.add('active');
+      return;
+    }
+
+    let html = `<div class="fp-header">
+      <span>${escapeHtml(data.current)}</span>
+      <button class="fp-select" onclick="selectFolder('${escapeAttr(data.current)}')">SELECT</button>
+    </div>`;
+
+    if (data.current !== data.parent) {
+      html += `<div class="fp-item fp-parent" onclick="loadFolderPicker('${escapeAttr(data.parent)}')">..</div>`;
+    }
+
+    if (data.dirs.length === 0) {
+      html += '<div class="fp-empty">NO SUBDIRECTORIES</div>';
+    } else {
+      for (const d of data.dirs) {
+        const full = data.current === '/' ? '/' + d : data.current + '/' + d;
+        html += `<div class="fp-item" onclick="loadFolderPicker('${escapeAttr(full)}')">${escapeHtml(d)}</div>`;
+      }
+    }
+
+    picker.innerHTML = html;
+    picker.classList.add('active');
+  } catch (e) {
+    picker.innerHTML = '<div class="fp-empty">FAILED TO BROWSE</div>';
+    picker.classList.add('active');
+  }
+}
+
+function selectFolder(path) {
+  document.getElementById('spawnProject').value = path;
+  document.getElementById('folderPicker').classList.remove('active');
+  document.getElementById('spawnPrompt').focus();
+}
+
+function escapeAttr(str) {
+  return str.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+}
+
+// ─── RECENT PROJECTS COMBO BOX ─────────────────────────────────────────
+let recentProjects = [];
+let comboActiveIdx = -1;
+
+async function loadRecentProjects() {
+  try {
+    const res = await fetch('/api/recent-projects');
+    recentProjects = await res.json();
+  } catch (e) {
+    recentProjects = [];
+  }
+}
+
+function renderProjectDropdown(items) {
+  const dd = document.getElementById('projectDropdown');
+  comboActiveIdx = -1;
+  if (!items.length) {
+    dd.innerHTML = '<div class="combo-empty">No recent projects</div>';
+  } else {
+    dd.innerHTML = items.map((p, i) =>
+      `<div class="combo-option" data-index="${i}" onmousedown="selectProject('${p.replace(/'/g, "\\'")}')">${p}</div>`
+    ).join('');
+  }
+  dd.classList.add('open');
+}
+
+function filterRecentProjects() {
+  const q = document.getElementById('spawnProject').value.toLowerCase();
+  const filtered = q ? recentProjects.filter(p => p.toLowerCase().includes(q)) : recentProjects;
+  renderProjectDropdown(filtered);
+}
+
+function toggleProjectDropdown() {
+  const dd = document.getElementById('projectDropdown');
+  if (dd.classList.contains('open')) {
+    closeProjectDropdown();
+  } else {
+    filterRecentProjects();
+    document.getElementById('spawnProject').focus();
+  }
+}
+
+function closeProjectDropdown() {
+  document.getElementById('projectDropdown').classList.remove('open');
+  comboActiveIdx = -1;
+}
+
+function selectProject(p) {
+  document.getElementById('spawnProject').value = p;
+  closeProjectDropdown();
+}
+
+function comboKeydown(e) {
+  const dd = document.getElementById('projectDropdown');
+  const opts = dd.querySelectorAll('.combo-option');
+  if (!dd.classList.contains('open') || !opts.length) {
+    if (e.key === 'Escape') closeProjectDropdown();
+    return;
+  }
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    comboActiveIdx = Math.min(comboActiveIdx + 1, opts.length - 1);
+    updateComboActive(opts);
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    comboActiveIdx = Math.max(comboActiveIdx - 1, 0);
+    updateComboActive(opts);
+  } else if (e.key === 'Enter' && comboActiveIdx >= 0) {
+    e.preventDefault();
+    opts[comboActiveIdx].onmousedown();
+  } else if (e.key === 'Escape') {
+    closeProjectDropdown();
+  }
+}
+
+function updateComboActive(opts) {
+  opts.forEach((el, i) => el.classList.toggle('active', i === comboActiveIdx));
+  if (comboActiveIdx >= 0 && opts[comboActiveIdx]) {
+    opts[comboActiveIdx].scrollIntoView({ block: 'nearest' });
+  }
+}
+
+// Close dropdown on outside click
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.combo-wrapper')) closeProjectDropdown();
+});
+
+// ─── DRAG AND DROP ─────────────────────────────────────────────────────
+function onDragStart(event, agentName) {
+  draggedAgentName = agentName;
+  event.dataTransfer.effectAllowed = 'move';
+  event.dataTransfer.setData('text/plain', agentName);
+  event.target.classList.add('dragging');
+}
+
+function onDragEnd(event) {
+  event.target.classList.remove('dragging');
+  draggedAgentName = null;
+  // Remove all drag-over classes
+  document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+}
+
+function onDragOver(event) {
+  event.preventDefault();
+  event.dataTransfer.dropEffect = 'move';
+  event.currentTarget.classList.add('drag-over');
+}
+
+function onDragLeave(event) {
+  event.currentTarget.classList.remove('drag-over');
+}
+
+function onDrop(event) {
+  event.preventDefault();
+  event.currentTarget.classList.remove('drag-over');
+
+  const agentName = event.dataTransfer.getData('text/plain');
+  if (!agentName) return;
+
+  confirmStop(agentName);
+}
+
+// ─── KEYBOARD SHORTCUTS ───────────────────────────────────────────────
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape') {
+    if (document.getElementById('outputOverlay').classList.contains('active')) {
+      closeOutputViewer();
+    } else if (document.getElementById('spawnModal').classList.contains('active')) {
+      closeSpawnModal();
+    } else if (document.getElementById('confirmOverlay').classList.contains('active')) {
+      closeConfirm();
+    }
+  }
+
+  // 'n' to open spawn modal (when not typing in an input)
+  const tag = document.activeElement.tagName;
+  if (event.key === 'n' && tag !== 'INPUT' && tag !== 'TEXTAREA' && tag !== 'SELECT') {
+    const anyOverlay = document.querySelector('.modal-overlay.active, .output-overlay.active, .confirm-overlay.active');
+    if (!anyOverlay) {
+      event.preventDefault();
+      openSpawnModal();
+    }
+  }
+});
+
+// ─── ANSI TO HTML ─────────────────────────────────────────────────────
+function ansi256ToHex(n) {
+  n = parseInt(n);
+  const std = ['#555','#ff5555','#50fa7b','#f1fa8c','#bd93f9','#ff79c6','#8be9fd','#f8f8f2',
+               '#6272a4','#ff6e6e','#69ff94','#ffffa5','#d6acff','#ff92df','#a4ffff','#ffffff'];
+  if (n < 16) return std[n];
+  if (n >= 232) {
+    const g = 8 + (n - 232) * 10;
+    const h = Math.min(255, g).toString(16).padStart(2, '0');
+    return `#${h}${h}${h}`;
+  }
+  const idx = n - 16;
+  const r = Math.floor(idx / 36);
+  const gc = Math.floor((idx % 36) / 6);
+  const b = idx % 6;
+  const toH = v => (v === 0 ? 0 : 55 + v * 40).toString(16).padStart(2, '0');
+  return `#${toH(r)}${toH(gc)}${toH(b)}`;
+}
+
+function ansiToHtml(str) {
+  if (!str) return '';
+
+  const fgMap = {
+    '30':'#555','31':'#ff5555','32':'#50fa7b','33':'#f1fa8c',
+    '34':'#bd93f9','35':'#ff79c6','36':'#8be9fd','37':'#f8f8f2',
+    '90':'#6272a4','91':'#ff6e6e','92':'#69ff94','93':'#ffffa5',
+    '94':'#d6acff','95':'#ff92df','96':'#a4ffff','97':'#ffffff',
+  };
+  const bgMap = {
+    '40':'#555','41':'#ff5555','42':'#50fa7b','43':'#f1fa8c',
+    '44':'#bd93f9','45':'#ff79c6','46':'#8be9fd','47':'#f8f8f2',
+    '100':'#6272a4','101':'#ff6e6e','102':'#69ff94','103':'#ffffa5',
+    '104':'#d6acff','105':'#ff92df','106':'#a4ffff','107':'#ffffff',
+  };
+
+  // Escape HTML first
+  let out = str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+  let openSpans = 0;
+  out = out.replace(/\x1B\[([0-9;]*)m/g, (_, codes) => {
+    if (!codes || codes === '0') {
+      const c = '</span>'.repeat(openSpans);
+      openSpans = 0;
+      return c;
+    }
+    const parts = codes.split(';');
+    let styles = [];
+    for (let i = 0; i < parts.length; i++) {
+      const p = parts[i];
+      if (p === '1') styles.push('font-weight:bold');
+      else if (p === '2') styles.push('opacity:0.7');
+      else if (p === '3') styles.push('font-style:italic');
+      else if (p === '4') styles.push('text-decoration:underline');
+      else if (fgMap[p]) styles.push('color:' + fgMap[p]);
+      else if (bgMap[p]) styles.push('background:' + bgMap[p]);
+      else if (p === '38' && parts[i+1] === '5' && parts[i+2]) {
+        styles.push('color:' + ansi256ToHex(parts[i+2]));
+        i += 2;
+      } else if (p === '48' && parts[i+1] === '5' && parts[i+2]) {
+        styles.push('background:' + ansi256ToHex(parts[i+2]));
+        i += 2;
+      } else if (p === '38' && parts[i+1] === '2' && parts[i+4]) {
+        // 24-bit color: 38;2;r;g;b
+        styles.push(`color:rgb(${parts[i+2]},${parts[i+3]},${parts[i+4]})`);
+        i += 4;
+      } else if (p === '48' && parts[i+1] === '2' && parts[i+4]) {
+        styles.push(`background:rgb(${parts[i+2]},${parts[i+3]},${parts[i+4]})`);
+        i += 4;
+      }
+    }
+    if (styles.length > 0) {
+      openSpans++;
+      return `<span style="${styles.join(';')}">`;
+    }
+    return '';
+  });
+
+  out += '</span>'.repeat(openSpans);
+
+  // Strip remaining escape sequences
+  out = out.replace(/\x1B\[[0-9;]*[a-zA-Z]/g, '');
+  out = out.replace(/\x1B\][^\x07]*\x07/g, '');
+  out = out.replace(/\x1B\([A-Z0-9]/g, '');
+  out = out.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, '');
+
+  return out;
+}
+
+// ─── FILE DRAG & DROP ON CARDS ────────────────────────────────────────
+function onCardFileDragOver(event, agentName) {
+  // Only react to file drags, not card drags
+  if (draggedAgentName) return;
+  if (!event.dataTransfer.types.includes('Files')) return;
+  event.preventDefault();
+  event.stopPropagation();
+  event.dataTransfer.dropEffect = 'copy';
+  event.currentTarget.closest('.card').classList.add('file-drag-over');
+}
+
+function onCardFileDragLeave(event) {
+  const card = event.currentTarget.closest('.card');
+  // Only remove if we're actually leaving the card (not entering a child)
+  if (!card.contains(event.relatedTarget)) {
+    card.classList.remove('file-drag-over');
+  }
+}
+
+function onCardFileDrop(event, agentName) {
+  event.preventDefault();
+  event.stopPropagation();
+  event.currentTarget.closest('.card').classList.remove('file-drag-over');
+
+  const files = event.dataTransfer.files;
+  if (!files || files.length === 0) return;
+
+  const file = files[0];
+  const formData = new FormData();
+  formData.append('file', file);
+
+  fetch(`/api/agents/${agentName}/upload`, {
+    method: 'POST',
+    body: formData,
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.error) console.error('Drop upload error:', data.error);
+  })
+  .catch(e => console.error('Drop upload failed:', e));
+}
+
+// ─── HELPERS ───────────────────────────────────────────────────────────
+function formatDuration(ms) {
+  const seconds = Math.floor(ms / 1000);
+  if (seconds < 60) return `${seconds}s`;
+  const minutes = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  if (minutes < 60) return `${minutes}m ${secs}s`;
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  return `${hours}h ${mins}m`;
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function promptTypeLabel(type) {
+  const labels = {
+    select: 'SELECT',
+    multiselect: 'MULTI-SELECT',
+    permission: 'PERMISSION',
+    plan: 'PLAN APPROVAL',
+    yesno: 'YES/NO',
+  };
+  return labels[type] || type.toUpperCase();
+}
+
+// ─── MOBILE TAB SWITCHING ───────────────────────────────────────────
+let activeTab = 'running';
+
+function isMobile() {
+  return window.matchMedia('(max-width: 768px)').matches;
+}
+
+function switchTab(tab) {
+  activeTab = tab;
+  document.querySelectorAll('.mobile-tabs .tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.tab === tab);
+  });
+  document.querySelectorAll('.column').forEach(col => {
+    col.classList.toggle('mobile-active', col.dataset.state === tab);
+  });
+}
+
+function updateMobileTabs() {
+  const running = agents.filter(a => a.state === 'running');
+  const idle = agents.filter(a => a.state === 'idle');
+  const completed = agents.filter(a => a.state === 'completed');
+
+  const tabRun = document.getElementById('tabRunCount');
+  const tabIdle = document.getElementById('tabIdleCount');
+  const tabDone = document.getElementById('tabDoneCount');
+  if (tabRun) tabRun.textContent = `[${running.length}]`;
+  if (tabIdle) tabIdle.textContent = `[${idle.length}]`;
+  if (tabDone) tabDone.textContent = `[${completed.length}]`;
+}
+
+function initMobileLayout() {
+  if (isMobile()) {
+    switchTab(activeTab);
+  } else {
+    document.querySelectorAll('.column').forEach(col => {
+      col.classList.remove('mobile-active');
+    });
+  }
+}
+
+window.addEventListener('resize', initMobileLayout);
+
+// ─── INIT ──────────────────────────────────────────────────────────────
+fetchAgents();
+connectSSE();
+initMobileLayout();
+</script>
+</body>
+</html>

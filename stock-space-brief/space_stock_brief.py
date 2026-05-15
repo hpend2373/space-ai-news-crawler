@@ -50,6 +50,7 @@ STATE_PATH = ROOT / ".space_stock_agent_state.json"
 HTML_PATH = ROOT / "stock_feed.html"
 HTML_ERROR_PATH = ROOT / "stock_feed_error.html"
 OPEN_SCRIPT = ROOT / "open_stock_feed_in_atlas.sh"
+TRANSLATION_CACHE_PATH = ROOT / ".cache" / "space_translation_cache.json"
 
 KST = ZoneInfo("Asia/Seoul") if ZoneInfo else timezone(timedelta(hours=9))
 
@@ -618,24 +619,37 @@ def _classify_big_issue(title: str) -> str | None:
     t = title.lower()
 
     # Priority-ish keyword buckets.
-    if re.search(r"\b(acquire|acquisition|merger)\b|인수|합병", t):
+    # 순서가 중요: 부정적/긴급 키워드를 먼저 검사하여 "failure destroys customer payload"가
+    # "customer" 때문에 계약/파트너십으로 잘못 분류되는 것을 방지.
+    if re.search(r"\b(acquir\w*|acquisition|merg\w+)\b|인수|합병", t):
         return "M&A"
-    if re.search(r"\b(funding|financing|offering|raise|debt|investment)\b|자금조달|투자\s*유치|유상증자|발행", t):
+    # 발사사고/지연: 부정적 이벤트 → 높은 가중치, 계약/파트너십보다 먼저 검사
+    if re.search(
+        r"\b(anomal\w*|fail\w*|explosion|crash\w*|destroy\w*|loss|abort\w*|investigat\w*|grounding|mishap)\b|사고|폭발|실패|파손|손실|중단|조사",
+        t,
+    ):
+        return "발사사고/지연"
+    if re.search(
+        r"\b(delay\w*|scrub\w*|postpone\w*|slip\w*|suspend\w*)\b|지연|연기|중지|보류",
+        t,
+    ):
+        return "발사사고/지연"
+    if re.search(r"\b(funding|financ\w+|offering|rais\w+|debt|investment)\b|자금조달|투자\s*유치|유상증자|발행", t):
         return "자금조달"
-    if re.search(r"\b(earnings|results|guidance|forecast|revenue|eps)\b|실적|가이던스|전망", t):
+    if re.search(r"\b(earning\w*|results?|guidance|forecast\w*|revenue|eps)\b|실적|가이던스|전망", t):
         return "실적/가이던스"
-    if re.search(r"\b(contract|award|deal|partnership|agreement|customer)\b|계약|수주|파트너십|협약|고객", t):
+    if re.search(r"\b(contract\w*|award\w*|deal|partnership|agreement|customer)\b|계약|수주|파트너십|협약|고객", t):
         return "계약/파트너십"
+    if re.search(r"\b(faa|fcc|sec|lawsuit|regulat\w+|licens\w+|approv\w+|fine[sd]?)\b|규제|허가|승인|소송|벌금", t):
+        return "규제/법무"
+    if re.search(r"\b(ceo|cfo|resign\w*|appoint\w*|board)\b|경영진|사임|선임", t):
+        return "경영진"
     # Avoid overly broad tokens like "rocket/로켓" which can match company names (e.g., Rocket Lab).
     if re.search(
-        r"\b(launch|mission|anomaly|failure|investigation|delay|scrub|static\s*fire|engine|test\s*flight|orbit|payload|reentry|landing|starship|falcon|dragon|starlink|electron|neutron|pelican|tanager|skysat|dove)\b|발사|임무|지연|사고|조사|엔진|시험",
+        r"\b(launch\w*|mission|static\s*fire|engine|test\s*flight|orbit\w*|payload|reentry|landing|starship|falcon|dragon|starlink|electron|neutron|pelican|tanager|skysat|dove)\b|발사|임무|엔진|시험",
         t,
     ):
         return "발사/운영"
-    if re.search(r"\b(faa|fcc|sec|lawsuit|regulatory|license|approval|fine)\b|규제|허가|승인|소송|벌금", t):
-        return "규제/법무"
-    if re.search(r"\b(ceo|cfo|resign|appointed|board)\b|경영진|사임|선임", t):
-        return "경영진"
     return None
 
 
@@ -648,6 +662,8 @@ def _why_it_matters(category: str | None) -> str:
         return "인수합병은 사업구조 변화와 시너지 기대를 만들지만 통합 리스크도 동반합니다."
     if category == "계약/파트너십":
         return "대형 계약/수주는 매출 가시성과 백로그에 직접 영향을 주는 핵심 촉매입니다."
+    if category == "발사사고/지연":
+        return "발사 사고·실패·지연은 보험비용, 일정 적체, 고객 신뢰에 직접적 타격을 주며 주가 급변동 요인입니다."
     if category == "발사/운영":
         return "발사/운영 이슈는 신뢰도와 일정, 향후 수주 가능성에 직접 연결됩니다."
     if category == "규제/법무":
@@ -655,6 +671,195 @@ def _why_it_matters(category: str | None) -> str:
     if category == "경영진":
         return "경영진 변화는 전략/집행의 연속성에 영향을 줄 수 있어 단기 불확실성이 커질 수 있습니다."
     return "새 정보는 단기 촉매로 작동할 수 있으므로 후속 공지와 파급을 점검할 필요가 있습니다."
+
+
+# ---------------------------------------------------------------------------
+# Translation helpers (Korean) — Google GTX primary, Ollama fallback
+# ---------------------------------------------------------------------------
+
+_TRANSLATION_CACHE: dict[str, str] = {}
+
+
+def _load_translation_cache() -> None:
+    global _TRANSLATION_CACHE
+    try:
+        TRANSLATION_CACHE_PATH.parent.mkdir(parents=True, exist_ok=True)
+        if TRANSLATION_CACHE_PATH.exists():
+            raw = json.loads(TRANSLATION_CACHE_PATH.read_text(encoding="utf-8"))
+            if isinstance(raw, dict):
+                _TRANSLATION_CACHE = raw
+    except Exception:
+        _TRANSLATION_CACHE = {}
+
+
+def _save_translation_cache() -> None:
+    try:
+        TRANSLATION_CACHE_PATH.parent.mkdir(parents=True, exist_ok=True)
+        TRANSLATION_CACHE_PATH.write_text(
+            json.dumps(_TRANSLATION_CACHE, ensure_ascii=False, indent=1),
+            encoding="utf-8",
+        )
+    except Exception:
+        pass
+
+
+def _looks_korean(s: str) -> bool:
+    if not s:
+        return False
+    korean = sum(1 for c in s if 0xAC00 <= ord(c) <= 0xD7AF or 0x3131 <= ord(c) <= 0x3163)
+    total = max(len(s), 1)
+    return korean / total > 0.25
+
+
+def _translate_google_gtx(text: str, timeout_s: int = 10) -> str | None:
+    """Google GTX 무료 번역 API (빠르고 GPU 불필요)."""
+    text = (text or "").strip()
+    if not text:
+        return ""
+    url = (
+        "https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=ko"
+        "&dt=t&q=" + urllib.parse.quote(text)
+    )
+    req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT, "Accept": "*/*"})
+    try:
+        with urllib.request.urlopen(req, timeout=timeout_s) as resp:
+            body = resp.read().decode("utf-8", "ignore")
+        data = json.loads(body)
+        segs = data[0] if isinstance(data, list) and data else []
+        out = ""
+        if isinstance(segs, list):
+            for seg in segs:
+                if isinstance(seg, list) and seg and isinstance(seg[0], str):
+                    out += seg[0]
+        out = out.strip()
+        return out or None
+    except Exception:
+        return None
+
+
+def _clean_ollama_response(raw: str) -> str | None:
+    text = raw or ""
+    while "</think>" in text:
+        text = text.split("</think>", 1)[1]
+    for tok in ("<think>", "</think>", "/no_think", "[KO]", "[EN]"):
+        text = text.replace(tok, "")
+    stripped = text.lstrip()
+    if stripped.lower().startswith("korean:"):
+        text = stripped[len("korean:"):]
+    for marker in ("\nEnglish:", "\n[EN]"):
+        if marker in text:
+            text = text[:text.index(marker)]
+    lines = [l for l in text.split("\n") if not l.strip().startswith("//")]
+    text = "\n".join(lines).strip()
+    if not text:
+        return None
+    low = text.lower()
+    if "the user wants" in low or "let me start" in low:
+        return None
+    if low.startswith("okay,") or low.startswith("ok,"):
+        return None
+    if text.startswith("안녕하세요") and len(text) < 30:
+        return None
+    return text
+
+
+def _translate_ollama(text: str, timeout_s: int = 60) -> str | None:
+    """Ollama 폴백 번역 (GPU 사용)."""
+    text = (text or "").strip()
+    if not text:
+        return ""
+    prompt = (
+        "[EN] OpenAI released a new model today.\n"
+        "[KO] OpenAI가 오늘 새로운 모델을 출시했습니다.\n\n"
+        "[EN] NVIDIA is making AI chips more accessible.\n"
+        "[KO] NVIDIA가 AI 칩을 더 쉽게 접근할 수 있도록 하고 있습니다.\n\n"
+        f"[EN] {text}\n"
+        "[KO]"
+    )
+    payload = json.dumps({
+        "model": "qwen3:8b",
+        "prompt": prompt,
+        "stream": False,
+        "options": {"temperature": 0.1, "num_predict": 400, "stop": ["[EN]", "\n\n"]},
+    }).encode("utf-8")
+    req = urllib.request.Request(
+        "http://localhost:11434/api/generate",
+        data=payload,
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    try:
+        resp = urllib.request.urlopen(req, timeout=timeout_s)
+        body = resp.read().decode("utf-8", "ignore")
+        data = json.loads(body)
+        raw_content = (data.get("response") or "").strip()
+        if not raw_content:
+            return None
+        return _clean_ollama_response(raw_content)
+    except Exception:
+        return None
+
+
+def _translate_to_korean(text: str) -> str:
+    """영어 텍스트를 한국어로 번역. 캐시 사용. 이미 한국어면 그대로 반환."""
+    text = (text or "").strip()
+    if not text or _looks_korean(text):
+        return text
+    # 캐시 확인
+    if text in _TRANSLATION_CACHE:
+        cached = _TRANSLATION_CACHE[text]
+        if cached:
+            return cached
+    # Google GTX 우선 (빠르고 GPU 불필요)
+    result = _translate_google_gtx(text)
+    if result and _looks_korean(result):
+        _TRANSLATION_CACHE[text] = result
+        return result
+    # Ollama 폴백
+    result = _translate_ollama(text)
+    if result and _looks_korean(result):
+        _TRANSLATION_CACHE[text] = result
+        return result
+    # 번역 실패 — 원문 반환
+    return text
+
+
+def _translate_headlines_in_text(text: str) -> str:
+    """' / ' 로 구분된 헤드라인 목록에서 영어 부분만 번역."""
+    if not text or _looks_korean(text):
+        return text
+
+    # '참고 헤드라인: ' 이후에 헤드라인이 올 수 있음
+    if "참고 헤드라인:" in text:
+        prefix, _, headline_part = text.partition("참고 헤드라인:")
+        translated_part = _translate_headline_list(headline_part.strip())
+        return f"{prefix}참고 헤드라인: {translated_part}"
+
+    return _translate_headline_list(text)
+
+
+def _translate_headline_list(text: str) -> str:
+    """' / '로 구분된 헤드라인들을 개별 번역."""
+    parts = text.split(" / ")
+    translated = []
+    for part in parts:
+        part = part.strip()
+        if not part:
+            continue
+        # 타임스탬프 + 제목 + (출처) 형태 분리
+        # 예: "2026-02-17 06:00 Rocket Lab Launches (SpaceNews)"
+        m = re.match(r"^(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2})\s+(.+?)(\s*\([^)]+\))$", part)
+        if m:
+            ts, title, source = m.group(1), m.group(2), m.group(3)
+            if not _looks_korean(title):
+                title = _translate_to_korean(title)
+            translated.append(f"{ts} {title}{source}")
+        else:
+            if not _looks_korean(part):
+                translated.append(_translate_to_korean(part))
+            else:
+                translated.append(part)
+    return " / ".join(translated)
 
 
 def _dedupe(items: Iterable[NewsItem]) -> list[NewsItem]:
@@ -767,7 +972,11 @@ def _source_score(source_name: str) -> int:
     return 0
 
 
-def _evidence_sample(items: list[NewsItem], *, n: int = 3) -> str:
+def _evidence_sample(items: list[NewsItem], *, n: int = 0) -> str:
+    """Return a " / " joined string of headline evidence.
+
+    *n=0* (default) means include **all** usable items (no limit).
+    """
     if not items:
         return ""
 
@@ -780,7 +989,7 @@ def _evidence_sample(items: list[NewsItem], *, n: int = 3) -> str:
     clean = [it for it in items if _title_penalty(it.title) == 0]
     good = [it for it in clean if _source_score(it.source_name) >= 0]
     ranked = sorted((good or clean or items), key=rank_key, reverse=True)
-    picked = ranked[:n]
+    picked = ranked[:n] if n > 0 else ranked
     return " / ".join([f"{_fmt_kst(it.published_at)} {it.title} ({it.source_name})" for it in picked])
 
 
@@ -811,38 +1020,37 @@ def _preview_items(items_new: list[NewsItem], items_search: list[NewsItem], *, l
     return out
 
 
-def _pick_top_issue(items: list[NewsItem]) -> tuple[NewsItem | None, str | None]:
+def _pick_big_issues(items: list[NewsItem]) -> list[tuple[NewsItem, str]]:
+    """Return **all** items whose composite score >= threshold (200).
+
+    Each element is (NewsItem, category_str), sorted by score desc then recency desc.
+    """
     scored: list[tuple[int, datetime, NewsItem, str]] = []
     for it in items:
-        # Big-issue selection should be conservative: avoid triggering on low-quality
-        # aggregators or unrelated coverage.
-        if _source_score(it.source_name) < 3:
-            continue
         cat = _classify_big_issue(it.title)
         if not cat:
+            continue
+        src_score = _source_score(it.source_name)
+        min_src = 2 if cat == "발사사고/지연" else 3
+        if src_score < min_src:
             continue
         base = {
             "M&A": 6,
             "자금조달": 5,
             "실적/가이던스": 5,
+            "발사사고/지연": 5,
             "계약/파트너십": 4,
             "규제/법무": 4,
             "발사/운영": 3,
             "경영진": 3,
         }.get(cat, 1)
-        score = base * 100
-        score += _source_score(it.source_name) * 10
-        score -= _title_penalty(it.title) * 20
+        score = base * 100 + src_score * 10 - _title_penalty(it.title) * 20
         scored.append((score, it.published_at, it, cat))
     if not scored:
-        return None, None
+        return []
     scored.sort(key=lambda x: (x[0], x[1]), reverse=True)
-    top_score, _dt, top_item, top_cat = scored[0]
-
-    # If the best candidate is still low-signal, treat it as "no big issue".
-    if top_score < 250:
-        return None, None
-    return top_item, top_cat
+    # 임계점 이상 전부 반환 (200 → 150)
+    return [(it, cat) for sc, _dt, it, cat in scored if sc >= 150]
 
 
 def _render_html(sections: list[dict], *, generated_at: datetime, new_start: datetime, search_start: datetime, window_end: datetime, watchlist_count: int) -> str:
@@ -1088,7 +1296,13 @@ def main() -> int:
         except Exception:
             last_success_at = None
 
-    new_start = max(last_success_at, search_start) if last_success_at else search_start
+    # 신규 윈도우: 마지막 성공 시각부터 현재까지.
+    # 단, 최소 1시간은 보장 (수동 실행 등으로 간격이 짧을 때도 의미 있는 탐지를 위해).
+    min_new_window = timedelta(hours=1)
+    if last_success_at and last_success_at > search_start:
+        new_start = min(last_success_at, window_end - min_new_window)
+    else:
+        new_start = search_start
 
     # 2) Watchlist
     raw_watch = _read_watchlist(WATCHLIST_PATH)
@@ -1329,7 +1543,7 @@ def main() -> int:
             if new_start.astimezone(timezone.utc) <= f.accepted_at.astimezone(timezone.utc) <= window_end.astimezone(timezone.utc):
                 sec_in_new.append(f)
 
-        top_item, top_cat = _pick_top_issue(in_new)
+        big_issues = _pick_big_issues(in_new)
 
         # Prefer SEC if exists.
         if sec_in_new:
@@ -1358,14 +1572,27 @@ def main() -> int:
                 search_count=search_cnt,
                 items=preview,
             )
-        elif top_item and top_cat:
-            meta = f"신규 큰 이슈 있음 ({top_cat})"
-            what = top_item.title
-            why = _why_it_matters(top_cat)
-            date = f"{_fmt_kst(top_item.published_at)} (발행)"
-            # Include the specific source in HTML if available and distinct.
-            if top_item.source_name and top_item.url:
-                sources_html = [(top_item.source_name, top_item.url)] + sources_html[:2]
+        elif big_issues:
+            big_items = [it for it, _c in big_issues]
+            big_cats = list(dict.fromkeys(c for _it, c in big_issues))  # unique, order preserved
+            cat_label = ", ".join(big_cats)
+            meta = f"신규 큰 이슈 {len(big_issues)}건 ({cat_label})"
+            # 모든 큰 이슈 제목을 what에 포함
+            what = " / ".join(it.title for it in big_items)
+            why = " ".join(dict.fromkeys(_why_it_matters(c) for c in big_cats))
+            date = f"{_fmt_kst(big_items[0].published_at)} (발행)"
+            # 출처에 큰 이슈 소스들 추가
+            for bi in big_items:
+                if bi.source_name and bi.url and (bi.source_name, bi.url) not in sources_html:
+                    sources_html = [(bi.source_name, bi.url)] + sources_html
+            sources_html = sources_html[:5]
+            # 큰 이슈 외 나머지 헤드라인
+            big_set = set(id(it) for it in big_items)
+            other_items = [it for it in _dedupe(list(in_new) + list(in_search)) if id(it) not in big_set]
+            if other_items:
+                sample = _evidence_sample(other_items)
+                if sample:
+                    why = f"{why} 참고 헤드라인: {sample}"
             add_section(title, meta, what, why, date, sources_html, new_count=new_cnt, search_count=search_cnt, items=preview)
         else:
             meta = "신규 큰 이슈 없음 (최근 24시간 전수 검색)"
@@ -1374,9 +1601,9 @@ def main() -> int:
             date = f"{_fmt_kst(new_start)} ~ {_fmt_kst(window_end)}"
             # Always show counts so "검색을 했는지"가 결과에 남도록 한다.
             what = f"{what} (신규 기사 {new_cnt}건, 24시간 내 관련 기사 {search_cnt}건, 큰 이슈 기준 충족 0건)"
-            if search_cnt > 0:
-                sample_items = in_new if in_new else in_search
-                sample = _evidence_sample(sample_items, n=3)
+            if search_cnt > 0 or new_cnt > 0:
+                sample_items = _dedupe(list(in_new) + list(in_search))
+                sample = _evidence_sample(sample_items)
                 if sample:
                     why = f"{why} 참고 헤드라인: {sample}"
             else:
@@ -1442,7 +1669,7 @@ def main() -> int:
 
     space_in_search = _filter_window(space_items, start=search_start, end=window_end)
     space_in_new = _filter_window(space_in_search, start=new_start, end=window_end)
-    top_space, top_space_cat = _pick_top_issue(space_in_new)
+    space_big = _pick_big_issues(space_in_new)
     space_new_cnt = len(space_in_new)
     space_search_cnt = len(space_in_search)
     space_preview = _preview_items(space_in_new, space_in_search, limit=8)
@@ -1455,7 +1682,7 @@ def main() -> int:
 
     space_fetch_ok = bool(spacenews_ok or nasa_ok or space_google_ok)
 
-    if (not space_fetch_ok) and (not top_space):
+    if (not space_fetch_ok) and (not space_big):
         add_section(
             "우주경제",
             "수집 실패 (네트워크/차단/소스 장애)",
@@ -1467,14 +1694,29 @@ def main() -> int:
             search_count=space_search_cnt,
             items=space_preview,
         )
-    elif top_space and top_space_cat:
+    elif space_big:
+        sp_items = [it for it, _c in space_big]
+        sp_cats = list(dict.fromkeys(c for _it, c in space_big))
+        sp_cat_label = ", ".join(sp_cats)
+        space_why = " ".join(dict.fromkeys(_why_it_matters(c) for c in sp_cats))
+        # 큰 이슈 외 나머지 헤드라인 (신규+검색 합산)
+        sp_big_set = set(id(it) for it in sp_items)
+        space_other = [it for it in _dedupe(list(space_in_new) + list(space_in_search)) if id(it) not in sp_big_set]
+        if space_other:
+            space_sample = _evidence_sample(space_other)
+            if space_sample:
+                space_why = f"{space_why} 참고 헤드라인: {space_sample}"
+        sp_src = list(space_sources_html)
+        for bi in sp_items:
+            if bi.source_name and bi.url and (bi.source_name, bi.url) not in sp_src:
+                sp_src = [(bi.source_name, bi.url)] + sp_src
         add_section(
             "우주경제",
-            f"신규 큰 이슈 있음 ({top_space_cat})",
-            top_space.title,
-            _why_it_matters(top_space_cat),
-            f"{_fmt_kst(top_space.published_at)} (발행)",
-            [(top_space.source_name, top_space.url)] + space_sources_html[:2],
+            f"신규 큰 이슈 {len(space_big)}건 ({sp_cat_label})",
+            " / ".join(it.title for it in sp_items),
+            space_why,
+            f"{_fmt_kst(sp_items[0].published_at)} (발행)",
+            sp_src[:5],
             new_count=space_new_cnt,
             search_count=space_search_cnt,
             items=space_preview,
@@ -1485,9 +1727,9 @@ def main() -> int:
         why = "이벤트 부재 구간에서는 다음 정책/예산/대형 계약 발표가 단기 기대를 좌우할 수 있습니다."
         date = f"{_fmt_kst(new_start)} ~ {_fmt_kst(window_end)}"
         what = f"{what} (신규 기사 {space_new_cnt}건, 24시간 내 관련 기사 {space_search_cnt}건, 큰 이슈 기준 충족 0건)"
-        if space_search_cnt > 0:
-            sample_items = space_in_new if space_in_new else space_in_search
-            sample = _evidence_sample(sample_items, n=3)
+        if space_search_cnt > 0 or space_new_cnt > 0:
+            sample_items = _dedupe(list(space_in_new) + list(space_in_search))
+            sample = _evidence_sample(sample_items)
             if sample:
                 why = f"{why} 참고 헤드라인: {sample}"
         else:
@@ -1573,6 +1815,19 @@ def main() -> int:
     elif prev_last_success:
         new_state["last_success_at"] = prev_last_success
     _save_state(STATE_PATH, new_state)
+
+    # 8.5) Translate sections to Korean.
+    _load_translation_cache()
+    for sec in sections:
+        w = sec.get("what", "")
+        if w and not _looks_korean(w):
+            sec["what"] = _translate_headlines_in_text(w)
+        wy = sec.get("why", "")
+        if wy and "참고 헤드라인:" in wy:
+            sec["why"] = _translate_headlines_in_text(wy)
+        elif wy and not _looks_korean(wy):
+            sec["why"] = _translate_to_korean(wy)
+    _save_translation_cache()
 
     # 9) Print Inbox Markdown (Korean).
     lines: list[str] = []

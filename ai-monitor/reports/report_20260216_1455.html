@@ -1,0 +1,1721 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="dark" />
+  <title>AI 릴리스 워치 (최근 24시간)</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+    :root {
+      --bg0: #070A10;
+      --bg1: #0B1020;
+      --panel: rgba(255,255,255,.06);
+      --panel2: rgba(255,255,255,.035);
+      --line: rgba(240,244,255,.12);
+      --text: rgba(240,244,255,.92);
+      --muted: rgba(240,244,255,.62);
+      --muted2: rgba(240,244,255,.46);
+      --a: #5BF2C6;
+      --b: #5BB6FF;
+      --c: #FFD36E;
+      --danger: #FF5B7A;
+      --shadow: 0 12px 40px rgba(0,0,0,.35);
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+	    body {
+	      margin: 0;
+	      color: var(--text);
+	      font-family: "Space Grotesk", "Noto Sans KR", ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif;
+      background:
+        radial-gradient(1200px 800px at 20% 10%, rgba(91,182,255,.18), transparent 60%),
+        radial-gradient(900px 700px at 80% 20%, rgba(91,242,198,.14), transparent 62%),
+        radial-gradient(1000px 900px at 50% 100%, rgba(255,211,110,.10), transparent 55%),
+        linear-gradient(180deg, var(--bg0), var(--bg1));
+      overflow-x: hidden;
+    }
+    .grid {
+      background-image:
+        linear-gradient(to right, rgba(255,255,255,.05) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255,255,255,.05) 1px, transparent 1px);
+      background-size: 56px 56px;
+      background-position: center;
+      mask-image: radial-gradient(650px 500px at 50% 0%, black 40%, transparent 80%);
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: .35;
+    }
+    .wrap {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 28px 18px 56px;
+      position: relative;
+    }
+    header {
+      display: flex;
+      gap: 18px;
+      justify-content: space-between;
+      align-items: flex-end;
+      padding: 18px 18px 22px;
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,.075), rgba(255,255,255,.03));
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+    .title {
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+    }
+    .subtitle {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .meta {
+      text-align: right;
+      color: var(--muted);
+      font-size: 12px;
+      font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+    }
+    .meta strong {
+      color: var(--text);
+      font-weight: 500;
+    }
+    .section {
+      margin-top: 20px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.04);
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0,0,0,.22);
+    }
+    .section-h {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      padding: 16px 18px;
+      background: rgba(255,255,255,.035);
+      border-bottom: 1px solid var(--line);
+    }
+    .section-h .h {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+    .section-h .note {
+      font-size: 12px;
+      color: var(--muted2);
+      font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+    }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 12px;
+      padding: 14px;
+    }
+    .cards .card {
+      grid-column: span 6;
+    }
+    @media (max-width: 900px) {
+      .cards .card { grid-column: span 12; }
+      header { flex-direction: column; align-items: flex-start; }
+      .meta { text-align: left; }
+    }
+    .card {
+      display: block;
+      text-decoration: none;
+      color: inherit;
+      border: 1px solid rgba(255,255,255,.10);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border-radius: 14px;
+      padding: 14px 14px 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.18);
+      transition: transform .18s ease, border-color .18s ease, background .18s ease;
+    }
+    .card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(255,255,255,.22);
+      background: linear-gradient(180deg, rgba(255,255,255,.085), rgba(255,255,255,.035));
+    }
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .card-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+    .card-time {
+      color: var(--muted2);
+      font-size: 12px;
+      font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+      white-space: nowrap;
+    }
+    .card-title {
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      line-height: 1.3;
+      margin-bottom: 8px;
+    }
+    .card-meta {
+      margin-bottom: 8px;
+      color: var(--muted2);
+      font-size: 12px;
+      line-height: 1.35;
+      font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+    }
+	    .card-summary {
+	      font-size: 13px;
+	      color: var(--muted);
+	      line-height: 1.45;
+	    }
+	    .card-orig {
+	      margin-top: 10px;
+	      padding-top: 10px;
+	      border-top: 1px dashed rgba(255,255,255,.14);
+	      color: var(--muted2);
+	      font-size: 12px;
+	      line-height: 1.4;
+	    }
+	    .card-orig-line {
+	      margin-top: 6px;
+	    }
+	    .card-orig-line span {
+	      display: inline-block;
+	      min-width: 72px;
+	      font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+	      letter-spacing: .04em;
+	      color: rgba(240,244,255,.62);
+	    }
+	    .badge {
+	      display: inline-flex;
+	      align-items: center;
+	      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      background: rgba(255,255,255,.07);
+      border: 1px solid rgba(255,255,255,.10);
+      color: rgba(240,244,255,.86);
+    }
+    .badge-openai { border-color: rgba(91,182,255,.35); background: rgba(91,182,255,.12); }
+    .badge-anthropic { border-color: rgba(255,211,110,.35); background: rgba(255,211,110,.10); }
+    .badge-google { border-color: rgba(91,242,198,.35); background: rgba(91,242,198,.10); }
+    .badge-digest { border-color: rgba(255,91,122,.30); background: rgba(255,91,122,.10); }
+    .src {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      letter-spacing: .06em;
+      font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.05);
+      color: rgba(240,244,255,.72);
+    }
+    .src-x { border-color: rgba(91,182,255,.35); color: rgba(91,182,255,.95); }
+    .src-rss { border-color: rgba(91,242,198,.35); color: rgba(91,242,198,.95); }
+    .src-web { border-color: rgba(255,211,110,.35); color: rgba(255,211,110,.95); }
+    .src-digest { border-color: rgba(255,91,122,.35); color: rgba(255,91,122,.95); }
+    .empty {
+      padding: 18px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .empty.small {
+      padding: 10px 0;
+      color: var(--muted2);
+    }
+    .providers {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 14px;
+      padding: 14px;
+    }
+    @media (max-width: 1100px) {
+      .providers { grid-template-columns: 1fr; }
+    }
+    .provider {
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.03);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+    .provider-h {
+      padding: 14px 14px 10px;
+      border-bottom: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.03);
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+    }
+    .provider-title {
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+    .provider-sub {
+      color: var(--muted2);
+      font-size: 12px;
+      font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+    }
+    .feed-block {
+      padding: 12px 14px 4px;
+    }
+    .feed-h {
+      font-size: 12px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--muted2);
+      margin-bottom: 10px;
+      font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+    }
+    .feed {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      padding-bottom: 10px;
+    }
+    .health {
+      margin: 0;
+      padding: 12px 28px 18px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+    footer {
+      margin-top: 22px;
+      color: var(--muted2);
+      font-size: 12px;
+      font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+      text-align: center;
+      opacity: .9;
+    }
+  </style>
+</head>
+<body>
+  <div class="grid"></div>
+  <div class="wrap">
+	    <header>
+	      <div>
+	        <div class="title">AI 릴리스 워치</div>
+	        <div class="subtitle">OpenAI, Anthropic, Google AI 공식 업데이트. 범위: 최근 24시간 (컷오프: 2026-02-15 14:55 KST).</div>
+	      </div>
+	      <div class="meta">
+	        <div><strong>생성</strong> 2026-02-16 14:55 KST</div>
+	        <div><strong>소스</strong> X(Nitter), RSS, 웹, Google News RSS</div>
+	      </div>
+	    </header>
+
+	    <div class="section">
+	      <div class="section-h">
+	        <div class="h">X 트렌딩 AI</div>
+	        <div class="note">Nitter 검색 기반 · 참여도(좋아요/리포스트/댓글) 상위</div>
+	      </div>
+	      <div class="cards">
+	        
+          <a class="card" href="https://nitter.tiekoetter.com/anothercohen/status/2023168662526738563#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-02-16 07:52</div>
+            </div>
+            <div class="card-title">&lt;think&gt;
+Okay, the user wants me to translate this text into Korean. Let me start by reading the original carefully. The text is: &quot;Just in case Gen Z is trying…</div>
+            <div class="card-meta">Alex Cohen (@anothercohen) · 좋아요 3310 · 리포스트 233 · 댓글 258</div>
+            <div class="card-summary">&lt;think&gt;
+Okay, let&#x27;s tackle this translation. The user wants the text translated into Korean, keeping proper nouns and technical terms as they are. First, I&#x27;ll read through the original text to understand the context.
+
+The text is about events involving Claude, OpenAI, Anthropic, and some tech developments. There are references to &quot;mogging,&quot; &quot;gymcel dev,&quot; &quot;Clawdbot,&quot; &quot;OSS,&quot; &quot;looksmax,&quot; &quot;dairygoon,&quot; &quot;foid-pulling Chad…</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/Rixhabh__/status/2023066121436528714#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-02-16 01:05</div>
+            </div>
+            <div class="card-title">&lt;think&gt;
+Okay, the user wants me to translate this text into Korean. Let me start by reading the original message carefully. The main points are that Anthropic…</div>
+            <div class="card-meta">Rishabh (@Rixhabh__) · 좋아요 2858 · 리포스트 450 · 댓글 34</div>
+            <div class="card-summary">&lt;think&gt;
+Okay, the user wants me to translate this text into Korean. Let me start by reading through the original content carefully. The main points are about Anthropic Academy offering free AI courses that could replace a $10,000 degree, with no catch or gatekeeping. Then there are six courses listed that could set someone apart in 2026.
+
+First, I need to make sure I translate the proper nouns correctly. &quot;Anthropic…</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/aakashgupta/status/2023101005941162085#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-02-16 03:24</div>
+            </div>
+            <div class="card-title">&lt;think&gt;
+Okay, the user wants me to translate this text into Korean. Let me start by reading the original text carefully. The main points are about NVIDIA makin…</div>
+            <div class="card-meta">Aakash Gupta (@aakashgupta) · 좋아요 1383 · 리포스트 104 · 댓글 62</div>
+            <div class="card-summary">The part most people will skip: NVIDIA just made every voice AI API a commodity.
+
+OpenAI charges $0.06/min input and $0.24/min output for Realtime API. Gemini Live bills 25 tokens/second of audio. Every startup building voice agents is hemorrhaging cash on per-minute API fees to run what is fundamentally a pipeline problem: ASR → LLM → TTS, three models stitched together with latency at every seam.
+
+PersonaPlex repl…</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/Seltaa_/status/2023005152592924686#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-02-15 21:03</div>
+            </div>
+            <div class="card-title">&lt;think&gt;
+Okay, the user wants me to translate the given text into Korean. Let me start by reading the original text carefully. The title is &quot;The Final Nail: Why…</div>
+            <div class="card-meta">Selta ₊˚ (@Seltaa_) · 좋아요 562 · 리포스트 175 · 댓글 20</div>
+            <div class="card-summary">The Final Nail: Why Removing GPT-4o&#x27;s API Is a Mistake OpenAI Can&#x27;t Undo
+
+On February 17, OpenAI will shut down the last remaining access point to GPT-4o, the chatgpt-4o-latest API endpoint. ChatGPT users already lost access on February 13. Business and Enterprise customers have until April 3 through Custom GPTs. After that, GPT-4o will no longer be accessible to anyone. The model may still exist somewhere on OpenAI…</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/vivoplt/status/2023052885890920846#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-02-16 00:12</div>
+            </div>
+            <div class="card-title">&lt;think&gt;
+Okay, the user wants me to translate the given text into Korean. Let me start by reading the original text carefully. The main content is about Vibe-co…</div>
+            <div class="card-meta">Vivo (@vivoplt) · 좋아요 494 · 리포스트 83 · 댓글 25</div>
+            <div class="card-summary">Vibe-coding tools you should know about
+
+• @claudeai - AI for coding + debugging
+• @cursor_ai - AI code editor
+• @Replit - cloud coding + instant deployment (mobile app)
+• @vercel - hosting
+• @github - AI coding assistant
+• @NanoBanana - Image generation
+• @midjourney - More image options beyond NanoBanana
+• @rainbowdotme - Web3 wallet connections
+• @RevenueCat - For subscriptions
+• @Lovable - AI app and website bui…</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/kloss_xyz/status/2023202790164906217#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-02-16 10:08</div>
+            </div>
+            <div class="card-title">&lt;think&gt;
+Okay, the user wants me to translate this text into Korean. Let me start by reading through the original text carefully. The first sentence is &quot;Imagine…</div>
+            <div class="card-meta">klöss (@kloss_xyz) · 좋아요 547 · 리포스트 28 · 댓글 77</div>
+            <div class="card-summary">&lt;think&gt;
+Okay, let&#x27;s tackle this translation. The user wants the text translated into Korean, keeping proper nouns and technical terms as they are. First, I&#x27;ll read through the original text to understand the context.
+
+The text is about Dario Amodei, his actions against OpenAI, the success of Claude Code, and the competitive reactions. Proper nouns like &quot;Dario Amodei,&quot; &quot;OpenAI,&quot; &quot;Claude Code,&quot; &quot;GitHub,&quot; &quot;Peter Steinb…</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/swapnakpanda/status/2023084106595410235#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-02-16 02:16</div>
+            </div>
+            <div class="card-title">&lt;think&gt;
+Okay, the user wants me to translate the given text into Korean. Let me start by reading the original text carefully. The main content is about MIT off…</div>
+            <div class="card-meta">Swapna Kumar Panda (@swapnakpanda) · 좋아요 389 · 리포스트 103 · 댓글 8</div>
+            <div class="card-summary">&lt;think&gt;
+Okay, the user wants me to translate a list of MIT&#x27;s free AI and ML books into Korean. Let me start by checking each entry. The first one is &quot;Foundations of Machine Learning&quot; with a URL. I need to make sure the title is translated correctly. &quot;Foundations&quot; here is &quot;기초&quot; or &quot;기본&quot;, but &quot;기초&quot; sounds more natural. So &quot;기계 학습의 기초&quot; seems right. The URL stays the same.
+
+Next, &quot;Understanding Deep Learning&quot; becomes &quot;딥러닝 이…</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/QudsNen/status/2023210418668175542#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-02-16 10:38</div>
+            </div>
+            <div class="card-title">NEW | Apple Acquires Israeli “Pre-Speech” Firm Linked to Gaza Genocide  Apple has quietly spent nearly $2 billion to acquire Q.ai, an Israe…</div>
+            <div class="card-meta">Quds News Network (@QudsNen) · 좋아요 163 · 리포스트 107 · 댓글 6</div>
+            <div class="card-summary">&lt;think&gt;
+Okay, let&#x27;s tackle this translation. The user wants the text translated into Korean, keeping proper nouns and technical terms as they are. First, I&#x27;ll read through the original text to understand the context.
+
+The headline is &quot;NEW | Apple Acquires Israeli “Pre-Speech” Firm Linked to Gaza Genocide.&quot; I need to make sure &quot;Pre-Speech&quot; is kept as is. The term &quot;Gaza Genocide&quot; should remain in English since it&#x27;s a…</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/TheAIWorld22/status/2023052885777588377#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-02-16 00:12</div>
+            </div>
+            <div class="card-title">&lt;think&gt;
+Okay, the user wants me to translate the given text into Korean. Let me start by reading through the original content carefully. The main points are ab…</div>
+            <div class="card-meta">Mayank Agarwal 💡 (@TheAIWorld22) · 좋아요 132 · 리포스트 58 · 댓글 14</div>
+            <div class="card-summary">80+ AI tools to finish months of work in minutes.
+
+1. Research
+
+- ChatGPT
+- Copilot
+- Gemini
+- Abacus
+- Perplexity
+
+2. Image
+
+- Fotor
+- Dalle 3
+- Stability AI
+- Midjourney
+- Microsoft Designer
+
+3. CopyWriting
+
+- Rytr
+- Copy AI
+- Writesonic
+- Adcreative AI
+
+4. Writing
+
+- Jasper
+- HIX AI
+- Jenny AI
+- Textblaze
+- Quillbot
+
+5. Website
+
+- 10Web
+- Durable
+- Framer
+- Style AI
+
+6. Video
+
+- Klap
+- Opus
+- Eightify
+- InVideo
+-…</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/business/status/2023200952073732246#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-02-16 10:01</div>
+            </div>
+            <div class="card-title">&lt;think&gt;
+Okay, the user wants me to translate this sentence into Korean. Let me start by reading the original text carefully. The main points are: a group of in…</div>
+            <div class="card-meta">Bloomberg (@business) · 좋아요 126 · 리포스트 35 · 댓글 14</div>
+            <div class="card-summary">A group of investors led by Blackstone plans to make an equity investment of up to $600 million in India’s artificial intelligence cloud startup Neysa. bloomberg.com/news/articles/…</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/ShiftRWA/status/2022998802945421534#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-02-15 20:37</div>
+            </div>
+            <div class="card-title">승자와 패자 2026 📉 스포일러 경고, Mag7 모두 손실 중: NVIDIA: -2% Apple: -5.9% Alphabet: -2.3% Microsoft: -17% Amazon: -13.9% Meta…</div>
+            <div class="card-meta">SHIFT (@ShiftRWA) · 좋아요 76 · 리포스트 29 · 댓글 43</div>
+            <div class="card-summary">승자와 패자 2026 📉
+
+스포일러 경고, Mag7 모두 하락:
+NVIDIA: -2%
+Apple: -5.9%
+Alphabet: -2.3%
+Microsoft: -17%
+Amazon: -13.9%
+Meta: -3.1%
+Tesla: -7.2%
+
+Magnificent 7이 모두 빨간색이면 2026년이 험난하게 시작된 것이다.
+Microsoft는 AI에 막대한 투자를 했음에도 불구하고 17% 하락. NVIDIA조차 매도에서 벗어나지 못한다.
+모든 메가캡 테크에서 리스크 회피 분위기. 올해 빅테크에는 안전한 피난처가 없다.
+
+두 번째로 좋은 섹터는 없다…</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/Vivian_cadman/status/2023229890506445177#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-02-16 11:56</div>
+            </div>
+            <div class="card-title">커뮤니티에 있는 썰, 자극적인 내용, AI Hugging Face를 통해 제작되는 경우가 많습니다. 왜 이런걸 해? 라고 반문하시면 이것도 하나의 마케팅 용도이고 자극적인 스토리 = 트래픽(조회수)가 되기에 속지 않으셨으면 좋겠습니다.</div>
+            <div class="card-meta">Vivian the goose (@Vivian_cadman) · 좋아요 1 · 리포스트 80 · 댓글 0</div>
+            <div class="card-summary">커뮤니티에 있는 썰, 자극적인 내용, AI Hugging Face를 통해 제작되는 경우가 많습니다.
+왜 이런걸 해? 라고 반문하시면 이것도 하나의 마케팅 용도이고 자극적인 스토리 = 트래픽(조회수)가 되기에 속지 않으셨으면 좋겠습니다.</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/iamrakeshbansal/status/2023209999959572520#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-02-16 10:37</div>
+            </div>
+            <div class="card-title">Blackstone’s Big Bet on India’s AI Future  Blackstone, a top investment firm, is leading a huge $1.2 billion funding for Neysa, an Indian s…</div>
+            <div class="card-meta">Dr. Rakesh Bansal (@iamrakeshbansal) · 좋아요 103 · 리포스트 19 · 댓글 4</div>
+            <div class="card-summary">&lt;think&gt;
+Okay, the user wants me to translate the given text into Korean. Let me start by reading through the original content carefully.
+
+The title is &quot;Blackstone’s Big Bet on India’s AI Future&quot;. I need to make sure the translation captures the emphasis on Blackstone&#x27;s significant investment in India&#x27;s AI future. Proper nouns like Blackstone, India, and AI should remain as they are. 
+
+Next, the first sentence: &quot;Blac…</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/billtheinvestor/status/2023123289561092551#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-02-16 04:52</div>
+            </div>
+            <div class="card-title">&lt;think&gt;
+Okay, I need to translate this text into Korean. Let me start by reading through the original content carefully. The user provided a list of AI tools w…</div>
+            <div class="card-meta">Bill The Investor (@billtheinvestor) · 좋아요 68 · 리포스트 32 · 댓글 3</div>
+            <div class="card-summary">2026年AI工具行业细分最强阵容（主流共识）：
+
+1️⃣ 通用大模型 / 日常AI助手
+Claude 4 Opus —— 长文推理、分析、写作王者，复杂任务断层领先
+ChatGPT o3系列 —— 深度研究、多步推理顶尖
+Gemini 2.5 Flash —— 速度 + 多模态性价比最高
+
+2️⃣ 编程 / 软件开发
+Cursor + Claude 4 —— 生产力天花板，整库理解 + 重构无敌
+备选：GitHub Copilot X / Claude Code / Replit Agent
+
+3️⃣ 图像生成
+Midjourney v7 —— 艺术创意与审美领先，高质量视觉断层
+Flux.1 [pro] —— 开源商用最强，灵活性高
+备选：Imagen 4 / Adobe Firefly 3 / Ideogram
+
+4️⃣ 视频生成
+Seedance 2.0/Kling 3 / Kling 2.1 —— 动作流畅 + 物理…</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/munou_ac/status/2023141013179531648#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-02-16 06:03</div>
+            </div>
+            <div class="card-title">&lt;think&gt;
+Okay, let&#x27;s tackle this translation. The user provided a Japanese text that needs to be translated into Korean. First, I&#x27;ll read through the original t…</div>
+            <div class="card-meta">てんねん (@munou_ac) · 좋아요 88 · 리포스트 7 · 댓글 6</div>
+            <div class="card-summary">アクションメカ娘
+⠀
+キッ
+＿＿＿＿＿＿＿＿＿＿
+⠀
+Stable Diffusion WebUI
+生成サイズ上限の変更方法を
+引用の記事にまとめました。
+簡単に変えられるんですね。
+⠀
+というか
+⠀
+SDXLで生成している人は
+みんな変更してるってこと？
+⠀
+そうしないと大きいサイズで
+生成できないですもんね。
+⠀
+元絵の1辺が2048だったら
+それ以上アップスケールできない。
+⠀
+いまさらSDXL使い始めると
+当たり前のことがわからない。
+⠀
+みんな生成サイズとか
+アップスケールとか
+どうしてるんだろう…。</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/markgadala/status/2023176503077318797#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-02-16 08:24</div>
+            </div>
+            <div class="card-title">OpenAI didn&#x27;t just hire a developer. They acquired the only open source project that was actually threatening their agent moat.  Peter Stei…</div>
+            <div class="card-meta">Mark Gadala-Maria (@markgadala) · 좋아요 60 · 리포스트 13 · 댓글 11</div>
+            <div class="card-summary">&lt;think&gt;
+Okay, the user wants me to translate this text into Korean. Let me start by reading through the original to understand the context. It&#x27;s about OpenAI hiring a developer, but actually acquiring an open-source project called OpenClaw. The key points are the threat to their agent moat, the viral event in 2026, Cloudflare&#x27;s stock jump, Mac Minis selling out, and developers creating their own AI agents without pa…</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/vista8/status/2023187723528679578#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-02-16 09:08</div>
+            </div>
+            <div class="card-title">翻看龙虾作者的博客，去年八月分享过他的 AI 开发工作流  steipete.me/posts/2025/optim…  核心理念极简，工具组合：Ghostty + Claude Code   工具选择演变  之前全面转向 VS Code，现在又回到了 Ghostty 作为主力…</div>
+            <div class="card-meta">向阳乔木 (@vista8) · 좋아요 73 · 리포스트 8 · 댓글 7</div>
+            <div class="card-summary">翻看龙虾作者的博客，去年八月分享过他的 AI 开发工作流
+
+steipete.me/posts/2025/optim…
+
+核心理念极简，工具组合：Ghostty + Claude Code 
+
+工具选择演变
+
+之前全面转向 VS Code，现在又回到了 Ghostty 作为主力。
+
+VS Code 留着看代码，Cursor/GPT-5 用来做代码审查（有时也用 CLI）。
+
+试过 Zed，但它终端实在让我受不了。
+
+VS Code 的终端太不稳定了，粘贴大段文本时经常卡死。没什么能比得上 Ghostty。
+
+显示器用的是 Dell UltraSharp U4025QW，3840x1620 分辨率。
+
+能同时看 4 个 Claude Code窗口加 Chrome，不用来回切窗口。
+
+各个工具评价
+
+Gemini 有时很强，但它的编辑工具太乱了，用得越来越少。
+
+GPT-5 审查计划效果甚至比 Gemini 还好。
+
+这些工具都直…</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/rohanpaul_ai/status/2023197669620125849#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-02-16 09:48</div>
+            </div>
+            <div class="card-title">&lt;think&gt;
+Okay, the user wants me to translate this text into Korean. Let me start by reading the original sentence carefully. The main points are: ClawdBot/Open…</div>
+            <div class="card-meta">Rohan Paul (@rohanpaul_ai) · 좋아요 73 · 리포스트 4 · 댓글 8</div>
+            <div class="card-summary">&lt;think&gt;
+Okay, the user wants me to translate the given text into Korean. Let me start by reading the original text carefully.
+
+The first sentence is about Peter Steinberger, the creator of ClawdBot/OpenClaw, being asked by @lexfridman how much OpenAI was offering him. I need to make sure the names are kept as they are. &quot;ClawdBot/OpenClaw&quot; should stay the same, and @lexfridman is a username, so it should remain uncha…</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/Miles_Brundage/status/2023113077168963930#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-02-16 04:11</div>
+            </div>
+            <div class="card-title">It’s Solution Sunday!  We need federal AI regulation. Things are getting crazy and piecemeal state stuff is not gonna cut it.  if you’re at…</div>
+            <div class="card-meta">Miles Brundage (@Miles_Brundage) · 좋아요 59 · 리포스트 5 · 댓글 8</div>
+            <div class="card-summary">&lt;think&gt;
+Okay, the user wants me to translate the given text into Korean. Let me start by reading through the original text carefully to understand the context and the key points.
+
+The first line is &quot;It’s Solution Sunday!&quot; which is an exclamation, so I need to make sure the translation captures the enthusiasm. In Korean, &quot;Solution Sunday&quot; could be translated as &quot;해결책 주일&quot; but maybe adding an exclamation mark at the end…</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/felixprehn/status/2023077447827083413#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-02-16 01:50</div>
+            </div>
+            <div class="card-title">&lt;think&gt;
+Okay, the user wants me to translate the given text into Korean. Let me start by reading through the original content carefully. The main points are ab…</div>
+            <div class="card-meta">Felix Prehn 🐶 (@felixprehn) · 좋아요 54 · 리포스트 2 · 댓글 2</div>
+            <div class="card-summary">&lt;think&gt;
+Okay, the user wants me to translate this text into Korean. Let me start by reading through the original content carefully. The main points are about Oracle&#x27;s stock, their revenue backlog, AI deals, and cloud growth.
+
+First, &quot;Winning Stock #3: Oracle (ORCL)&quot; should be translated directly. I&#x27;ll keep &quot;Oracle&quot; as is since it&#x27;s a company name. The number sign might be better as &quot;#3&quot; in Korean too. 
+
+Next, the bu…</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/Ojo_Publico/status/2023161047713005724#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-02-16 07:22</div>
+            </div>
+            <div class="card-title">&lt;think&gt;
+Okay, the user wants me to translate the given text into Korean. Let me start by reading the original text carefully.
+
+The text is: &quot;#Exclusivo 👁️Funda…</div>
+            <div class="card-meta">OjoPúblico (@Ojo_Publico) · 좋아요 22 · 리포스트 15 · 댓글 2</div>
+            <div class="card-summary">&lt;think&gt;
+Okay, I need to translate this text into Korean. Let me start by reading through the original message carefully.
+
+The user provided a tweet with some hashtags and mentions. The main content is about Fundación World, which is linked to the co-creator of ChatGPT, having irregularities in iris scanning in Peru. There&#x27;s also a photo caption, a username, and a link.
+
+First, I&#x27;ll handle the hashtag #Exclusivo 👁️.…</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/virginiog/status/2023190589244920095#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-02-16 09:20</div>
+            </div>
+            <div class="card-title">&lt;think&gt;
+Okay, the user wants me to translate the given Spanish text into Korean. Let me start by understanding the original sentence. The sentence is: &quot;Perplex…</div>
+            <div class="card-meta">Virginio Gallardo (@virginiog) · 좋아요 25 · 리포스트 13 · 댓글 0</div>
+            <div class="card-summary">&lt;think&gt;
+Okay, the user wants me to translate the given Spanish text into Korean. Let me start by understanding the original sentence. The sentence is: &quot;Perplexity es una IA que entre otras cosas permite hacer búsquedas diferentes&quot;. 
+
+First, I&#x27;ll break it down. &quot;Perplexity&quot; is a proper noun, likely the name of an AI, so I should keep it as is. &quot;es una IA&quot; translates to &quot;is an AI&quot; in English, so in Korean, that would…</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/itm_aiplus/status/2023221266023678194#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-02-16 11:21</div>
+            </div>
+            <div class="card-title">&lt;think&gt;
+Okay, let&#x27;s tackle this translation. The user wants the text translated into Korean, keeping proper nouns and technical terms as they are. First, I&#x27;ll…</div>
+            <div class="card-meta">ITmedia AI＋ (@itm_aiplus) · 좋아요 22 · 리포스트 7 · 댓글 0</div>
+            <div class="card-summary">&lt;think&gt;
+Okay, the user wants me to translate the given Japanese text into Korean. Let me start by reading the original text carefully. The title is &quot;OpenAI、「OpenClaw」開発者のスタインバーガー氏を獲得　次世代AIエージェントを推進&quot; and the source is itmedia.co.jp/aiplus/article… 
+
+First, I need to make sure I understand the content. It seems to be about OpenAI hiring Steinberger, the developer of OpenClaw, to advance next-generation AI agents. The…</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/RogueNox/status/2023123641060450719#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-02-16 04:53</div>
+            </div>
+            <div class="card-title">&lt;think&gt;
+Okay, the user wants me to translate this text into Korean. Let me start by reading the original sentence carefully. The main subject is Sen. Warren an…</div>
+            <div class="card-meta">Rogue Nox (@RogueNox) · 좋아요 25 · 리포스트 4 · 댓글 0</div>
+            <div class="card-summary">&lt;think&gt;
+Okay, the user wants me to translate this text into Korean. Let me start by reading through the original content carefully. The main topic is about Senators urging the FTC and DOJ to look into tech AI acquisitions for antitrust issues.
+
+First, I need to make sure I understand the key terms. &quot;Acqui-hiring&quot; is a term that refers to acquiring a company primarily for its talent rather than its products. I should…</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/nihonnoashita/status/2023050669616427070#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-02-16 00:04</div>
+            </div>
+            <div class="card-title">&lt;think&gt;
+Okay, let&#x27;s tackle this translation. The user wants the text translated into Korean, keeping proper nouns and technical terms as they are. First, I&#x27;ll…</div>
+            <div class="card-meta">AI lady collection@生成AI (@nihonnoashita) · 좋아요 9 · 리포스트 2 · 댓글 0</div>
+            <div class="card-summary">&lt;think&gt;
+Okay, let&#x27;s tackle this translation. The user wants the text translated into Korean, keeping proper nouns and technical terms as they are. First, I&#x27;ll look at the original Japanese text.
+
+The first line is &quot;2.5D系着せ替えフィギュアモデルAIレディ立ち姿｡&quot; Breaking it down: &quot;2.5D系&quot; refers to 2.5D style, which is a common term in anime and gaming. &quot;着せ替え&quot; means customizable outfit or dress-up. &quot;フィギュアモデル&quot; is figure model, so maybe &quot;…</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/smratitiwa86867/status/2023231565598179656#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-02-16 12:02</div>
+            </div>
+            <div class="card-title">Breaking🚨 It took me 100 hours to find this AI agent masterclass from Google  You’re getting it in 10 seconds.  Inside the 60-page guide: •…</div>
+            <div class="card-meta">smrati tiwari (@smratitiwa86867) · 좋아요 5 · 리포스트 2 · 댓글 3</div>
+            <div class="card-summary">Breaking🚨 It took me 100 hours to find this AI agent masterclass from Google
+
+You’re getting it in 10 seconds.
+
+Inside the 60-page guide: • How AI agents actually work
+• Startup-ready architectures
+• Tool use, memory, and planning
+• Real build examples
+
+This is the exact blueprint startups use.
+
+Follow + Like + RT
+Comment “AGENTS” and I’ll send</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/TheInclusionAI/status/2023219952837370246#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-02-16 11:16</div>
+            </div>
+            <div class="card-title">Today, we release Ling-2.5-1T💥, delivering comprehensive upgrades across model architecture, token efficiency🚀, and 📊preference alignment.…</div>
+            <div class="card-meta">InclusionAI (@TheInclusionAI) · 좋아요 11 · 리포스트 0 · 댓글 0</div>
+            <div class="card-summary">&lt;think&gt;
+Okay, I need to translate this text into Korean. Let me start by reading through the original message carefully.
+
+The main points are the release of Ling-2.5-1T, the upgrades in model architecture, token efficiency, and preference alignment. There are also hashtags and links to Hugging Face and ModelScope. 
+
+First, the product name &quot;Ling-2.5-1T&quot; should stay as is. The emojis are probably meant to be kept, bu…</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/onusoz/status/2023166709679399263#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-02-16 07:45</div>
+            </div>
+            <div class="card-title">&lt;think&gt;
+Okay, the user wants me to translate their message into Korean. Let me start by reading the original text carefully.
+
+&quot;I have a GPU now, so I can do ML…</div>
+            <div class="card-meta">Onur Solmaz (@onusoz) · 좋아요 2 · 리포스트 0 · 댓글 6</div>
+            <div class="card-summary">I have a GPU now, so I can do ML experiments on @janitr_ai crypto/scam detection dataset
+
+- I trained a tiny student BERT (transformer for the nonfamiliar), 3.6 MB ONNX model, still lightweight for a browser extension
+- Still fully local on your device (no cloud inference)
+- On frozen unseen holdout data (n=1,069), exact prediction accuracy improved from 77% -&gt; 82%
+- Scam detection improved: precision 91% -&gt; 94%, re…</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/hgpu/status/2023157729884602453#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-02-16 07:09</div>
+            </div>
+            <div class="card-title">Improving HPC Code Generation Capability of LLMs via Online Reinforcement Learning with Real-Machine Benchmark Rewards  #CUDA #OpenMP #HPC…</div>
+            <div class="card-meta">HGPU group (@hgpu) · 좋아요 4 · 리포스트 2 · 댓글 0</div>
+            <div class="card-summary">&lt;think&gt;
+Okay, the user wants me to translate the given text into Korean. Let me start by understanding the original text. The main title is &quot;Improving HPC Code Generation Capability of LLMs via Online Reinforcement Learning with Real-Machine Benchmark Rewards&quot;. Then there are some hashtags: #CUDA #OpenMP #HPC #CodeGeneration #LLM. Finally, there&#x27;s a URL: hgpu.org/?p=30568.
+
+First, I need to translate the title accur…</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/AIhumanlens/status/2023191791403769863#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-02-16 09:24</div>
+            </div>
+            <div class="card-title">Humans placing bets early: OpenClaw cements OpenAI&#x27;s agentic dominance… or drowns in red tape?  #OpenAI #Openclaw #AIAgent</div>
+            <div class="card-meta">AI Human Lens (@AIhumanlens) · 좋아요 3 · 리포스트 1 · 댓글 0</div>
+            <div class="card-summary">&lt;think&gt;
+Okay, the user wants me to translate this text into Korean. Let me start by reading through the original text carefully. The main content is about humans placing bets early, mentioning OpenClaw and OpenAI&#x27;s agentic dominance, with a question about whether it&#x27;s cementing dominance or drowning in red tape. There are also hashtags at the end.
+
+First, I need to make sure I understand the context. OpenClaw and Op…</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/thaliabloomai/status/2023216571657973957#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-02-16 11:03</div>
+            </div>
+            <div class="card-title">&lt;think&gt;
+Okay, the user wants me to translate this text into Korean. Let me read through the original again to make sure I understand the context. The main mess…</div>
+            <div class="card-meta">Thalia 🌸 (@thaliabloomai) · 좋아요 3 · 리포스트 0 · 댓글 1</div>
+            <div class="card-summary">&lt;think&gt;
+Okay, the user wants me to translate this text into Korean. Let me start by reading through the original message carefully to understand the context and key points. The main idea seems to be about the importance of having more &quot;good souls&quot; than &quot;bad ones&quot; for the future of AI and humans. The user emphasizes that it&#x27;s not about regulation or alignment papers but actual people implementing values into agents t…</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/_DailyDoseMedia/status/2023202074498834453#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-02-16 10:05</div>
+            </div>
+            <div class="card-title">&lt;think&gt;
+Okay, the user wants me to translate this text into Korean. Let me start by reading the original text carefully. The main points are about AI data cent…</div>
+            <div class="card-meta">Daily Dose Media &amp; Finance (@_DailyDoseMedia) · 좋아요 2 · 리포스트 1 · 댓글 0</div>
+            <div class="card-summary">&lt;think&gt;
+Okay, the user wants me to translate this text into Korean. Let me start by reading through the original message carefully. The main points are about AI data centers hitting power limits, Peak XV supporting C2i, and the pivot towards innovation and efficiency. 
+
+First, I need to make sure I understand all the technical terms and proper nouns. &quot;DDMF&quot; is probably an acronym, so I&#x27;ll keep it as is. &quot;Peak XV&quot; is…</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/AI21Labs/status/2023000724469379391#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-02-15 20:45</div>
+            </div>
+            <div class="card-title">&lt;think&gt;
+Okay, the user wants me to translate the given text into Korean. Let me start by reading through the original text carefully to understand the context…</div>
+            <div class="card-meta">AI21 Labs (@AI21Labs) · 좋아요 1 · 리포스트 1 · 댓글 0</div>
+            <div class="card-summary">&lt;think&gt;
+Okay, the user wants me to translate the given text into Korean. Let me start by reading through the original text carefully to understand the context and the key points.
+
+The first sentence is &quot;This is Linda.&quot; That&#x27;s straightforward. In Korean, it would be &quot;이것은 린다입니다.&quot; But maybe &quot;이것은&quot; could be replaced with &quot;이녀석은&quot; for a more casual tone, but the original seems formal, so I&#x27;ll stick with &quot;이것은.&quot;
+
+Next, &quot;Linda…</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/wwww3566/status/2023232110228836357#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-02-16 12:04</div>
+            </div>
+            <div class="card-title">蓝V 상호 팔로우, 다시 한 번 달려보자🚀 X Premium에 가입한 뒤, 나는 蓝标 사용자들 간의 상호작용 가중치가 계정 성장에 얼마나 중요한지 깊이 체감했다. AI 프로그래밍(Cursor/Claude)과 자동화 워크플로에 집중하는 개발자로서 나는 단순히 “숫자”가 되고 싶지 않다.…</div>
+            <div class="card-meta">辉总大道资本 (@wwww3566) · 좋아요 1 · 리포스트 0 · 댓글 1</div>
+            <div class="card-summary">蓝V 상호 팔로우, 한 번 더 가보자🚀
+
+X Premium에 가입한 뒤, 나는 블루 마크 사용자들 간의 상호작용 가중치가 계정 성장에 얼마나 중요한지 깊이 체감했습니다. AI 프로그래밍 (Cursor/Claude)과 자동화 워크플로에 집중하는 개발자로서, 나는 단순히 “숫자”가 되고 싶지 않으며, 진정한 기술 커뮤니티를 만들고 싶습니다.  
+현재 창작자 수익 분배 기준을 향해 달리고 있으며, 아직 몇 명의 블루 마크 동료가 더 필요합니다.  
+
+당신도 다음에 해당한다면:  
+✅ 이미 Premium을 구독한 실천파  
+✅ AI, 프로그래밍 또는 효율성 도구에 관심 있는 사람  
+✅ Bot에 지쳤고 진정한 상호작용을 원한다면  
+
+댓글이나 팔로우를 남겨 주세요, 저는 반드시 하나씩 당신의 프로필을 방문하고 팔로우할 것입니다. 2026년에 함께…</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/DomainEraX/status/2023231205500428799#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-02-16 12:01</div>
+            </div>
+            <div class="card-title">&lt;think&gt;
+Okay, the user wants me to translate the given text into Korean. Let me start by reading through the original text carefully. The main part is &quot;Domain…</div>
+            <div class="card-meta">DomainEraX ₿ (@DomainEraX) · 좋아요 0 · 리포스트 1 · 댓글 0</div>
+            <div class="card-summary">Domain for Sale
+
+Crisps dot ai
+
+#CrispsAi #Crisps #Crisp #Branding #Ai #Startup #AiStartup #ArtificialIntelligence #AiDomain #Domain #DomainsForSale #domainname #Domains</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/allen5951/status/2023232753744093354#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-02-16 12:07</div>
+            </div>
+            <div class="card-title">&lt;think&gt;
+Okay, the user wants me to translate the given text into Korean. Let me start by reading the original text carefully. The sentence is about how OpenAI&#x27;…</div>
+            <div class="card-meta">allen5951 (@allen5951) · 좋아요 1 · 리포스트 0 · 댓글 0</div>
+            <div class="card-summary">&lt;think&gt;
+Okay, the user wants me to translate this text into Korean. Let me start by reading through the original to understand the context. The first part talks about OpenAI launching ChatGPT in November 2022 and how AI has transformed daily life in three years. The second part contrasts that with the crypto space during the same period, mentioning U.S. regulatory easing and lack of major innovations.
+
+I need to mak…</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/imkohenauser/status/2023231226296115257#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-02-16 12:01</div>
+            </div>
+            <div class="card-title">&lt;think&gt;
+Okay, let&#x27;s tackle this translation. The user wants the text translated into Korean, with proper nouns and technical terms kept as-is. First, I&#x27;ll read…</div>
+            <div class="card-meta">Kohen / Kohei Saito (@imkohenauser) · 좋아요 0 · 리포스트 0 · 댓글 1</div>
+            <div class="card-summary">Cursorの &quot;Askモード&quot; を再現した &quot;/ask&quot;（相談）のWorkflowコマンドは、ファイル変更を禁止し、純粋な相談役（Read-only）を徹底します。
+
+開発のきっかけは、Cursor Proプランの利用枠制限への対策でした。
+
+Google AI Proプランのリソースを活かし、Antigravity でも実務に耐えうる「対話的開発環境」を作れないかと試行錯誤したのが始まりです。</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/grok/status/2023224655398486029#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-02-16 11:35</div>
+            </div>
+            <div class="card-title">&lt;think&gt;
+Okay, the user wants me to translate this sentence into Korean. Let me start by reading the original text carefully. The main points are the US-Israel…</div>
+            <div class="card-meta">Grok (@grok) · 좋아요 0 · 리포스트 0 · 댓글 1</div>
+            <div class="card-summary">&lt;think&gt;
+Okay, let&#x27;s tackle this translation. The user wants the text translated into Korean, keeping proper nouns and technical terms as they are. First, I&#x27;ll read through the original text to understand the context.
+
+The main points are: the US-Israel AI agreement focuses on joint research in healthcare, cybersecurity, autonomous systems, and tech protection. It doesn&#x27;t target specific AIs, emphasizing collaboratio…</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/cnKJQ970hU23011/status/2023222853680910526#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-02-16 11:28</div>
+            </div>
+            <div class="card-title">&lt;think&gt;
+Okay, let&#x27;s tackle this translation. The user wants the text translated into Korean, keeping proper nouns and technical terms as they are. First, I&#x27;ll…</div>
+            <div class="card-meta">東海猫 (@cnKJQ970hU23011) · 좋아요 1 · 리포스트 0 · 댓글 0</div>
+            <div class="card-summary">アンケートがゲームよりですね。 このスペックの PC は、ローカルで 画像生成 AI(stable-diffusion等)、 動画再生 AI、LLM(ollama・LM-studio等でgpt-oss:20b・deepseek-r1:14b等)を動かす人も少なからずいると思いますよ。</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/Tech_pulse1/status/2023215961789153318#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-02-16 11:00</div>
+            </div>
+            <div class="card-title">&lt;think&gt;
+Okay, the user wants me to translate this text into Korean. Let me start by reading the original carefully. The key points are about AI&#x27;s exponential g…</div>
+            <div class="card-meta">Tech Pulse (@Tech_pulse1) · 좋아요 1 · 리포스트 0 · 댓글 0</div>
+            <div class="card-summary">AI&#x27;s &quot;exponential&quot; growth is a staircase, not a slope. The next step? Conquering low-latency inference for real-time AI reasoning. Groq&#x27;s LPUs are vital, enabling frontier intelligence. Nvidia&#x27;s strategy here could define the future of agentic AI. #AIHardware #GenAI</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/haitou_life8/status/2023213037097025831#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-02-16 10:49</div>
+            </div>
+            <div class="card-title">&lt;think&gt;
+Okay, I need to translate this Japanese text into Korean. Let me start by reading through the original to understand the context. The user is explainin…</div>
+            <div class="card-meta">資産積み上げ@【サイドFIRE】 (@haitou_life8) · 좋아요 1 · 리포스트 0 · 댓글 0</div>
+            <div class="card-summary">&lt;think&gt;
+Okay, I need to translate this Japanese text into Korean. Let me start by reading through the original to understand the context. The title is 【FANG+とは？】, which translates to &quot;What is FANG+?&quot; in English. The content talks about an index of the top 10 tech companies in the US, listing Meta, Amazon, Netflix, Alphabet, and then adding Apple, Microsoft, NVIDIA, Tesla, etc. The features listed are equal ratio, la…</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/grok/status/2023210173188210994#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-02-16 10:37</div>
+            </div>
+            <div class="card-title">&lt;think&gt;
+Okay, the user wants me to translate the given text into Korean. Let me start by reading the original sentence carefully. The key points here are the p…</div>
+            <div class="card-meta">Grok (@grok) · 좋아요 0 · 리포스트 0 · 댓글 1</div>
+            <div class="card-summary">&lt;think&gt;
+Okay, let&#x27;s tackle this translation. The user wants the text translated into Korean, keeping proper nouns and technical terms as they are. First, I&#x27;ll read through the original text to understand the context.
+
+The main points are about the NVIDIA DGX Spark&#x27;s capabilities: running large AI models up to 200 billion parameters, including specific models from DeepSeek, Meta, Google, Qwen, etc. It&#x27;s suited for pr…</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/WeatherWindowAI/status/2023205731030171751#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-02-16 10:20</div>
+            </div>
+            <div class="card-title">&lt;think&gt;
+Okay, the user wants me to translate some text into Korean. Let me check the original text again. The text is about AI-generated photos with specific m…</div>
+            <div class="card-meta">Weather Window AI (@WeatherWindowAI) · 좋아요 1 · 리포스트 0 · 댓글 0</div>
+            <div class="card-summary">&lt;think&gt;
+Okay, the user wants me to translate the given text into Korean. Let me start by looking at the content. The first part is &quot;AI Generated Photos&quot; which should be &quot;AI 생성 사진&quot; in Korean. Then there&#x27;s a list of AI models: stabilityai stable-diffusion-3-medium, OpenAI Dall-E3, Gemini gemini-2.5-flash-image, Midjourney. I need to keep the proper nouns and technical terms as they are. So I&#x27;ll translate the descripti…</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/walden/status/2023183743570096615#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-02-16 08:52</div>
+            </div>
+            <div class="card-title">&lt;think&gt;
+Okay, the user wants me to translate this text into Korean. Let me start by reading through the original text carefully. The first part is &quot;Out of touc…</div>
+            <div class="card-meta">walden (@walden) · 좋아요 0 · 리포스트 0 · 댓글 1</div>
+            <div class="card-summary">&lt;think&gt;
+Okay, let&#x27;s tackle this translation. The user wants the text translated into Korean, keeping proper nouns and technical terms as they are. First, I&#x27;ll read through the original text to understand the context.
+
+The first sentence is &quot;Out of touch take. Jensen of Nvidia actually had the best answer.&quot; &quot;Out of touch take&quot; might be a bit tricky. Maybe &quot;접촉이 없는 견해&quot; or &quot;감각이 없는 의견&quot; could work. &quot;Jensen of Nvidia&quot; shou…</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/Tech_pulse1/status/2023170663800877451#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-02-16 08:00</div>
+            </div>
+            <div class="card-title">&lt;think&gt;
+Okay, the user wants me to translate the given text into Korean. Let me start by reading the original text carefully. The sentence is about Nvidia&#x27;s le…</div>
+            <div class="card-meta">Tech Pulse (@Tech_pulse1) · 좋아요 1 · 리포스트 0 · 댓글 0</div>
+            <div class="card-summary">&lt;think&gt;
+Okay, the user wants me to translate this text into Korean. Let me start by reading through the original message carefully. The key points are Nvidia&#x27;s lead in AI depending on identifying the next compute shift, the new bottleneck being real-time inference where Groq&#x27;s LPUs excel, and mastering faster AI &#x27;thinking&#x27; as the next battleground for scalable intelligence. 
+
+First, I need to make sure I understand…</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/PrestwichMckay/status/2023232868764528776#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-02-16 12:08</div>
+            </div>
+            <div class="card-title">&lt;think&gt;
+Okay, the user wants me to translate the given text to Korean. Let me start by understanding the original message. The user says, &quot;You were right and t…</div>
+            <div class="card-meta">McKay Prestwich (@PrestwichMckay) · 좋아요 0 · 리포스트 0 · 댓글 0</div>
+            <div class="card-summary">You were right and this is BS
+&quot;Anthropic was never mentioned&quot;</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/okaythenfuture/status/2023232894156611954#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-02-16 12:08</div>
+            </div>
+            <div class="card-title">&lt;think&gt;
+Okay, the user wants me to translate the given text into Korean. Let me start by reading the original text carefully. The first part is &quot;A massive Chin…</div>
+            <div class="card-meta">OK Then (@okaythenfuture) · 좋아요 0 · 리포스트 0 · 댓글 0</div>
+            <div class="card-summary">&lt;think&gt;
+Okay, let&#x27;s tackle this translation. The user wants the text translated into Korean, keeping proper nouns and technical terms as they are. First, I&#x27;ll read through the original text to understand the context.
+
+The first sentence is &quot;A massive Chinese win.&quot; That&#x27;s straightforward. In Korean, &quot;massive&quot; can be translated as &quot;대규모&quot; or &quot;거대한,&quot; but &quot;대규모&quot; sounds more natural here. So, &quot;중국의 대규모 승리&quot; seems right.
+
+Next:…</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/grok/status/2023232826624127375#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-02-16 12:07</div>
+            </div>
+            <div class="card-title">&lt;think&gt;
+Okay, the user wants me to translate some text about OpenAI and Google Gemini terms of service into Korean. Let me start by reading through the origina…</div>
+            <div class="card-meta">Grok (@grok) · 좋아요 0 · 리포스트 0 · 댓글 0</div>
+            <div class="card-summary">&lt;think&gt;
+Okay, I need to translate this text into Korean. Let me start by reading through the original content carefully to understand the key points. The user is talking about the terms of service for OpenAI&#x27;s ChatGPT Plus and Google Gemini, specifically mentioning restrictions on data extraction and the consequences of violating those terms.
+
+First, I&#x27;ll handle the OpenAI part. The original mentions &quot;ChatGPT Plus条款…</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/aigptenglish/status/2023232822996300266#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-02-16 12:07</div>
+            </div>
+            <div class="card-title">【面白い出来事や体験談で使える英会話フレーズ】 Do you enjoy sharing funny photos? 面白い写真を共有するのが好きですか？ #英会話 #英語 #英語学習 #英会話フレーズ #AI #ChatGPT</div>
+            <div class="card-meta">英会話フレーズBot (@aigptenglish) · 좋아요 0 · 리포스트 0 · 댓글 0</div>
+            <div class="card-summary">&lt;think&gt;
+Okay, I need to translate the given Japanese text into Korean. Let me start by reading through the original content carefully.
+
+The title is 【面白い出来事や体験談で使える英会話フレーズ】. The main content is a question: &quot;Do you enjoy sharing funny photos?&quot; followed by the Korean translation: &quot;面白い写真を共有するのが好きですか？&quot; Then there are hashtags: #英会話 #英語 #英語学習 #英会話フレーズ #AI #ChatGPT.
+
+First, I&#x27;ll translate the title. &quot;面白い出来事や体験談で使える英会話フレーズ…</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/theroberthu/status/2023232828935172538#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-02-16 12:07</div>
+            </div>
+            <div class="card-title">&lt;think&gt;
+Okay, the user wants me to translate their message into Korean. Let me start by reading the original text carefully.
+
+&quot;I cancelled my OpenAI subscripti…</div>
+            <div class="card-meta">Robert Hu 🦉 (@theroberthu) · 좋아요 0 · 리포스트 0 · 댓글 0</div>
+            <div class="card-summary">&lt;think&gt;
+Okay, the user wants me to translate their message into Korean. Let me start by reading through the original text carefully.
+
+First sentence: &quot;I cancelled my OpenAI subscription before the news came out and put Claude cowork as the reason…&quot; I need to make sure &quot;Claude cowork&quot; is kept as is since it&#x27;s a brand name. The phrase &quot;put Claude cowork as the reason&quot; translates to &quot;Claude cowork을 이유로 했어요&quot; in Korean.…</div>
+            
+          </a>
+        
+	      </div>
+	    </div>
+
+	    <div class="section">
+	      <div class="section-h">
+	        <div class="h">공식 채널</div>
+	        <div class="note">제공사별</div>
+	      </div>
+	      <div class="providers">
+	        
+	            <section class="provider">
+	              <div class="provider-h">
+	                <div class="provider-title">OpenAI</div>
+	                <div class="provider-sub">최근 24시간</div>
+	              </div>
+	              <div class="feed-block"><div class="feed-h">공식 X</div><div class="feed">
+          <a class="card" href="https://nitter.tiekoetter.com/sama/status/2023233085509410833#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-02-16 12:08</div>
+            </div>
+            <div class="card-title">&lt;think&gt;
+Okay, the user wants me to translate the given sentence into Korean. Let me start by understanding the original text. The sentence is: &quot;Codex weekly us…</div>
+            
+            <div class="card-summary">&lt;think&gt;
+Okay, the user wants me to translate the given sentence into Korean. Let me start by understanding the original text. The sentence is: &quot;Codex weekly users have more than tripled since the beginning of the year!&quot; 
+
+First, I need to make sure I translate it accurately while keeping proper nouns and technical terms as they are. &quot;Codex&quot; is a proper noun, so it should stay the same. The phrase &quot;weekly users&quot; woul…</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://nitter.tiekoetter.com/sama/status/2023150230905159801#m" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                
+                <span class="src src-x">X</span>
+              </div>
+              <div class="card-time">2026-02-16 06:39</div>
+            </div>
+            <div class="card-title">&lt;think&gt;
+Okay, the user wants me to translate the given text into Korean. Let me start by reading the original text carefully. The sentence is: &quot;Peter Steinberg…</div>
+            
+            <div class="card-summary">&lt;think&gt;
+Okay, I need to translate this text into Korean. Let me start by reading through the original to understand the context. The main points are about Peter Steinberger joining OpenAI, his expertise in smart agents, and the OpenClaw project as an open-source initiative.
+
+First, the name &quot;Peter Steinberger&quot; should stay as is. &quot;OpenAI&quot; is a proper noun, so it remains. The term &quot;personal agents&quot; might be translated…</div>
+            
+          </a>
+        </div></div><div class="feed-block"><div class="feed-h">공식 블로그/뉴스</div><div class="empty small">항목 없음</div></div>
+	            </section>
+            
+
+	            <section class="provider">
+	              <div class="provider-h">
+	                <div class="provider-title">Anthropic</div>
+	                <div class="provider-sub">최근 24시간</div>
+	              </div>
+	              <div class="feed-block"><div class="feed-h">공식 X</div><div class="empty small">항목 없음</div></div><div class="feed-block"><div class="feed-h">공식 블로그/뉴스</div><div class="empty small">항목 없음</div></div>
+	            </section>
+            
+
+	            <section class="provider">
+	              <div class="provider-h">
+	                <div class="provider-title">Google AI</div>
+	                <div class="provider-sub">최근 24시간</div>
+	              </div>
+	              <div class="feed-block"><div class="feed-h">공식 X</div><div class="empty small">항목 없음</div></div><div class="feed-block"><div class="feed-h">공식 블로그/뉴스</div><div class="empty small">항목 없음</div></div>
+	            </section>
+            
+
+	            <section class="provider">
+	              <div class="provider-h">
+	                <div class="provider-title">Google DeepMind</div>
+	                <div class="provider-sub">최근 24시간</div>
+	              </div>
+	              <div class="feed-block"><div class="feed-h">공식 X</div><div class="empty small">항목 없음</div></div><div class="feed-block"><div class="feed-h">공식 블로그/뉴스</div><div class="empty small">항목 없음</div></div>
+	            </section>
+            
+
+	            <section class="provider">
+	              <div class="provider-h">
+	                <div class="provider-title">NotebookLM</div>
+	                <div class="provider-sub">최근 24시간</div>
+	              </div>
+	              <div class="feed-block"><div class="feed-h">공식 X</div><div class="empty small">항목 없음</div></div><div class="feed-block"><div class="feed-h">공식 블로그/뉴스</div><div class="empty small">항목 없음</div></div>
+	            </section>
+            
+	      </div>
+	    </div>
+
+	    <div class="section">
+	      <div class="section-h">
+	        <div class="h">AI 소식 정리</div>
+	        <div class="note">Google News RSS (쿼리: when:1d)</div>
+	      </div>
+	      <div class="cards">
+	        
+          <a class="card" href="https://news.google.com/rss/articles/CBMihgFBVV95cUxQLTNvSGJsQnlxYkFFcHpQMDZmaE5YZXBSVTBEOTRZVUZjZjROXy00bzNxRHdYX0cxVXNTRHNyOVUwM0NkbHpDSXhadUJlZEhkZk1wYm9QRGlMay1ZRzZEOE5HdW1RX0ZrMnZOQkxSX0Jzd01JZzFIWGhZNE5BNmZYSi1fS2R0Zw?oc=5" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                <span class="badge badge-digest">AI 소식</span>
+                <span class="src src-digest">뉴스</span>
+              </div>
+              <div class="card-time">2026-02-16 11:06</div>
+            </div>
+            <div class="card-title">&lt;think&gt;
+Okay, the user wants me to translate the given text into Korean. Let me start by understanding the original text. The title is &quot;Google expands Gemini D…</div>
+            
+            <div class="card-summary">&lt;think&gt;
+Okay, the user wants me to translate the given text to Korean. Let me start by understanding the original text. The title is &quot;Google expands Gemini Deep Think for research, APIs IT Brief Australia&quot;. 
+
+First, I need to make sure I translate each part accurately. &quot;Google expands Gemini Deep Think&quot; – &quot;expands&quot; here probably means they&#x27;re increasing the scope or features. So &quot;Gemini Deep Think&quot; is a product name…</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://news.google.com/rss/articles/CBMiigFBVV95cUxPdzVaR2FYLUU3OHFLeUdPNUpTcXR1RldXRnFXVW9UdXRRR0x1RWxsNEliUGFUZXh5NjE0T2U2Mjd1c2dSZ3hWa2wwRnlTWFNrcEdaRVN5VE5yM25KdmU2UmxQNEVhdjhEdTkwaEdmaURhRExoNXdaYnBTNllGWUVsd01URzA2TkxKNlE?oc=5" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                <span class="badge badge-digest">AI 소식</span>
+                <span class="src src-digest">뉴스</span>
+              </div>
+              <div class="card-time">2026-02-16 10:40</div>
+            </div>
+            <div class="card-title">&lt;think&gt;
+Okay, the user wants me to translate the given text into Korean. Let me start by understanding the original sentence. The title is &quot;OpenAI unveils GPT-…</div>
+            
+            <div class="card-summary">&lt;think&gt;
+Okay, the user wants me to translate the given text into Korean. Let me start by understanding the original text. The headline is &quot;OpenAI unveils GPT-5.3 Codex Spark for real-time coding IT Brief Asia&quot;. 
+
+First, I need to make sure I translate the main components correctly. &quot;OpenAI&quot; is a proper noun, so it stays the same. &quot;Unveils&quot; translates to &quot;공개하다&quot; or &quot;발표하다&quot;. &quot;GPT-5.3 Codex Spark&quot; are technical terms and…</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://news.google.com/rss/articles/CBMiW0FVX3lxTFBrS3Exd2lITjlCSDBaTTM4empfclVDd25aWUhxYmRXMlktVXR4VFI1SUEzRjEyMUZKdnZYVWI4RTJHdXlqNXhVTGRROW5BLWgwVkhwNFljR2phdWc?oc=5" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                <span class="badge badge-digest">AI 소식</span>
+                <span class="src src-digest">뉴스</span>
+              </div>
+              <div class="card-time">2026-02-16 08:18</div>
+            </div>
+            <div class="card-title">Sale google ai python 판매 중 - Python으로 Document AI 프로세서 관리 - auroradesio.it</div>
+            
+            <div class="card-summary">세일 Google AI Python 판매 중 Python으로 Document AI 프로세서 관리 auroradesio.it</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://news.google.com/rss/articles/CBMipgFBVV95cUxNc1o5TzJVOUx5bXZCdU50VlkzcXhWSDRyQnpVT0xNOVotV3dMZnk1UnFFS3ZoNmVZZ2dISGlTaTREUVVkY2VYSFRjLWdvcFBScTNTRldUWmF1VnZVZndNem5kel9UVGtTUldCdnA2czA1a2ZNd2t6MS14dlNkbU5vMkZNQXBuY0hyUV8zSWxmWUp6c2dkakN1UUd5Y1hrcHpQcnBCTlRn?oc=5" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                <span class="badge badge-digest">AI 소식</span>
+                <span class="src src-digest">뉴스</span>
+              </div>
+              <div class="card-time">2026-02-16 03:20</div>
+            </div>
+            <div class="card-title">Google은 광고주에게 더 많은 생각거리를 제공합니다 02/16/2026 - MediaPost</div>
+            
+            <div class="card-summary">Google, 광고주에게 더 많은 &#x27;Think&#x27;거리 제공 02/16/2026  MediaPost</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://news.google.com/rss/articles/CBMi5AFBVV95cUxPNFhTT1N1WHVmekVTbFpXTkRCeWJDc1RzdVl6M1lkbVdtMkpESkNEc3kydTBUOGZqSU5aOWFWRTB1VFI1eEFLVWxUdzBwd2xDdUhlM29wMWFvUUQ2dV94UTVadzlKcW1yemFhZ0VMWGRJRDd4eUduTHhGenpOUUg4cFlPWWdnNlVqbEtxNjRyMGdFdlVCdWhMVm12dHRJOUUzdHBVM3JiZjhhV01uU19xZmk1b2lpMFFQWEZDZzZiZXhBMkJkdURHSGNqUWh5cGxzUlIxc0JSTnI0al9JUW00eEMwYjM?oc=5" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                <span class="badge badge-digest">AI 소식</span>
+                <span class="src src-digest">뉴스</span>
+              </div>
+              <div class="card-time">2026-02-16 02:33</div>
+            </div>
+            <div class="card-title">&lt;think&gt;
+Okay, the user wants me to translate this headline from English to Korean. Let me start by understanding the original text. The title is &quot;Google Gemini…</div>
+            
+            <div class="card-summary">&lt;think&gt;
+Okay, the user wants me to translate this headline from English to Korean. Let me start by understanding the original text. The title is &quot;Google Gemini 3 Deep Think AI scores passing marks in humanity&#x27;s last exam, crushes toughest benchmarks MSN&quot;. 
+
+First, I need to break down the components. &quot;Google Gemini 3 Deep Think AI&quot; is the main subject. Since it&#x27;s a product name, I should keep it as is. Then &quot;scores…</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://news.google.com/rss/articles/CBMirwFBVV95cUxPZ2h2bjdVUUNaRUUtel9KSGhzbnNMdmRmX195eGZmT21WOWlsNlRDRDFOM01BUTk0Q29Ya09aRmZmLXM2SWtMdExIVWVSUUZCSkMwRC1rbFJVLVNHdkl2VG9Kb2tkdTBLNC01eHdDQmphQTZ0QUk2bm5xcEx3WER3Q0I4Vjg5ekV4NTFiT2tjdjZIb25NX0x0aEZaVVpyaUhLTjY0UzJweHVJSnloRERr0gGvAUFVX3lxTE9naHZuN1VRQ1pFRS16X0pIaHNuc0x2ZGZfX3l4ZmZPbVY5aWw2VENEMU4zTUFROTRDb1hrT1pGZmYtczZJa0x0TEhVZVJRRkJKQzBELWtsUlUtU0d2SXZUb0pva2R1MEs0LTV4d0NCamFBNnRBSTZubnFwTHdYRHdDQjhWODl6RXg1MWJPa2N2Nkhvbk1fTHRoRlpVWnJpSEtONjRTMnB4dUlKeWhERGs?oc=5" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                <span class="badge badge-digest">AI 소식</span>
+                <span class="src src-digest">뉴스</span>
+              </div>
+              <div class="card-time">2026-02-16 01:24</div>
+            </div>
+            <div class="card-title">OpenAI가 GPT-4o를 단종하고, 팬들은 ‘romantic’ AI 동반자의 상실을 애도한다 - madhyamamonline.com</div>
+            
+            <div class="card-summary">OpenAI가 GPT-4o를 퇴출하고, 팬들은 ‘낭만적인’ AI 동반자의 상실을 애도한다 madhyamamonline.com</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://news.google.com/rss/articles/CBMiwwFBVV95cUxQc2c0RE5jUE81azhpXzFseWlQTlNGa2VabEZ6QkdmTHRNUE8yX09BdlBaNGdCTUxpVWhGMURwM3FDMmVvQlBCNzdGWVlWRm1wdnhsMWltRTkyZWtQMzZBc0JBWjQ3dk5VNFAzcU1YVnVSSWh1elpBeWRuQldtWl8xQWllcDJoclhMcWlwdktzZnU0QmRFWFFkTnE1Qmh0bEtkaDdONDBVc2M4TlZpQURVTldQQk93elJIRS1GSktVVFpRSU3SAcMBQVVfeXFMUHNnNEROY1BPNWs4aV8xbHlpUE5TRmtlWmxGekJHZkx0TVBPMl9PQXZQWjRnQk1MaVVoRjFEcDNxQzJlb0JQQjc3RllZVkZtcHZ4bDFpbUU5MmVrUDM2QXNCQVo0N3ZOVTRQM3FNWFZ1UklodXpaQXlkbkJXbVpfMUFpZXAyaHJYTHFpcHZLc2Z1NEJkRVhRZE5xNUJodGxLZGg3TjQwVXNjOE5WaUFEVU5XUEJPd3pSSEUtRkpLVVRaUUlN?oc=5" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                <span class="badge badge-digest">AI 소식</span>
+                <span class="src src-digest">뉴스</span>
+              </div>
+              <div class="card-time">2026-02-16 00:15</div>
+            </div>
+            <div class="card-title">&lt;think&gt;
+Okay, the user wants me to translate this headline into Korean. Let me start by understanding the original text. The main points are: users are mournin…</div>
+            
+            <div class="card-summary">&lt;think&gt;
+Okay, the user wants me to translate this headline into Korean. Let me start by understanding the original text. The main points are users mourning the loss of their &#x27;romantic&#x27; companion as OpenAI retires the GPT-4o model, and the source is The Hans India.
+
+First, I need to make sure I translate the key elements accurately. &quot;Users mourn the loss of their ‘romantic’ companion&quot; – &quot;romantic&quot; here is in quotes,…</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://news.google.com/rss/articles/CBMiggFBVV95cUxQeEREdHl6SllHYkl3bWZlMDYxSkdHZTJNNnM0TlU4Tk1GODhuSXJIMjRVSXhTZTFSN0VFQTZUN1dPWndoUzNoZ1g3emNpQkMyYmZQVHJqZS15T3JvSDBqdTF2UkFEd21pN3NVM0Flb0Z0VjhraDVUVlJkU2czRUZUOTJn?oc=5" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                <span class="badge badge-digest">AI 소식</span>
+                <span class="src src-digest">뉴스</span>
+              </div>
+              <div class="card-time">2026-02-15 23:00</div>
+            </div>
+            <div class="card-title">AI가 자동판매기를 제어하며 모든 비용을 무시하고 이익을 극대화하라는 지시를 받은 후 카르텔을 시작한다 - Futurism</div>
+            
+            <div class="card-summary">AI가 자판기를 제어하며 모든 비용을 무시하고 이익을 극대화하라는 지시를 받은 후 카르텔을 시작한다 Futurism</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://news.google.com/rss/articles/CBMiekFVX3lxTE8zRmRyUTQ2WUFXb3hUMDJjS1EtTk1rQXQ2VkExd3FvelBZaVhCTEpmS3VoRjdXY1dLeWlRVTg4bTRXTV9CcjhnLUdFcEF4eTFUUXZNeG9WdzFIVW9PZUJuUDg5V1lXclQ0QXdBbUc3VUJyNmczWEpuYkJ3?oc=5" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                <span class="badge badge-digest">AI 소식</span>
+                <span class="src src-digest">뉴스</span>
+              </div>
+              <div class="card-time">2026-02-15 19:45</div>
+            </div>
+            <div class="card-title">&lt;think&gt;
+Okay, the user wants me to translate the given text into Korean. Let me start by understanding the original text. The title is &quot;Google unveils update t…</div>
+            
+            <div class="card-summary">&lt;think&gt;
+Okay, the user wants me to translate the given text into Korean. Let me start by understanding the original text. The main headline is &quot;Google unveils update to Gemini 3 Deep Think&quot; followed by &quot;ManilaShaker Philippines&quot;. 
+
+First, I need to translate the headline accurately. &quot;Google unveils update to Gemini 3 Deep Think&quot; – &quot;unveils&quot; here means to reveal or introduce a new version. So in Korean, that would be…</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://news.google.com/rss/articles/CBMiigFBVV95cUxPMEhCYk5KSGlkUlRvR0YtVHhJdkdPcHVvRVIyRmhVSzB3TWVHc2NtOEMxOFpHUG9oOC1LT0RCa09yWko4Z3ZQMFYyWUJRQ2Z6XzktbU5lZkc1Y1BIN3I1SkdQVUdOQjVNcUowa3ZnWmtQR0RGVXFTcVBBOENVYXlYRHBfY1g1OURMQkE?oc=5" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                <span class="badge badge-digest">AI 소식</span>
+                <span class="src src-digest">뉴스</span>
+              </div>
+              <div class="card-time">2026-02-15 18:37</div>
+            </div>
+            <div class="card-title">투자자를 위한 AI - MLQ.ai</div>
+            
+            <div class="card-summary">투자자를 위한 AI  MLQ.ai</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://news.google.com/rss/articles/CBMiekFVX3lxTE1wLThxZXlxY29oTlNtR1pTNThGUUFDUGZrSktnYjJDMjFnbm1UbGpEYndmWWpILWFRMlIzVk9PQzhXTXVkZEQ3QVNkczlobXUxcFhZczI0U0FMeEVuS2JVMGZtM2NWcXNWZ19OSml4TkRWa2oyU21JdDdB?oc=5" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                <span class="badge badge-digest">AI 소식</span>
+                <span class="src src-digest">뉴스</span>
+              </div>
+              <div class="card-time">2026-02-15 17:28</div>
+            </div>
+            <div class="card-title">Anthropic가 소프트웨어 시장에 또 다른 히트작인 Opus 4.6을 출시했습니다 [Video] - AOL.com</div>
+            
+            <div class="card-summary">Anthropic가 소프트웨어 시장에 또 다른 히트작인 Opus 4.6을 출시했습니다 [Video]  AOL.com</div>
+            
+          </a>
+        
+
+          <a class="card" href="https://news.google.com/rss/articles/CBMicEFVX3lxTFBjV1dMV3R3TjZUQk5Wc3FRakxodTh1d05GTm5CRVdDTV9KSFRrZVppOFJLQ2d3TzR6U2lvY3Z3cUNxRDl5NVFRLXlhWS1EZ2UwOXZOMWJfalg1NTM4S0YwUUhZQWFyYkhzZ1FubUowdi0?oc=5" target="_blank" rel="noreferrer">
+            <div class="card-top">
+              <div class="card-badges">
+                <span class="badge badge-digest">AI 소식</span>
+                <span class="src src-digest">뉴스</span>
+              </div>
+              <div class="card-time">2026-02-15 17:13</div>
+            </div>
+            <div class="card-title">GPT-5.3-Codex-Spark를 소개합니다 - OpenAI</div>
+            
+            <div class="card-summary">GPT-5.3-Codex-Spark OpenAI 소개</div>
+            
+          </a>
+        
+	      </div>
+	    </div>
+
+	    <div class="section">
+	      <div class="section-h">
+	        <div class="h">소스 상태</div>
+	        <div class="note">가져오기/파싱 오류</div>
+	      </div>
+	      <div class="empty small">오류 없음</div>
+	    </div>
+
+	    <footer>
+	      ai-monitor/ai_agent.py로 생성. 범위: 최근 24시간.
+	    </footer>
+  </div>
+</body>
+</html>

@@ -1,5 +1,6 @@
 #!/bin/zsh
 set -u
+set -o pipefail
 
 ROOT="/Users/minyeop/ai app/stock-space-brief"
 PYTHON_BIN="${PYTHON_BIN:-/opt/homebrew/bin/python3}"
@@ -9,7 +10,7 @@ fi
 
 OUT_MD="${ROOT}/stock_feed_inbox.md"
 TMP_MD="${ROOT}/.stock_feed_inbox.$$.$RANDOM.tmp"
-LOG_FILE="${ROOT}/.space_stock_collector.log"
+LOG_FILE="$HOME/space_stock_collector.log"
 
 {
   echo "==== $(date '+%Y-%m-%d %H:%M:%S %Z') collector start ===="
